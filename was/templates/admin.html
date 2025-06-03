@@ -1,0 +1,614 @@
+{% extends "base.html" %}
+
+{% block title %}관리자 대시보드 - 아티스트 포트폴리오{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Admin Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">관리자 대시보드</h1>
+                    <p class="text-muted mb-0">포트폴리오 관리 및 콘텐츠 업데이트</p>
+                </div>
+                <div>
+                    <span class="badge bg-success me-2">
+                        <i class="fas fa-user me-1"></i>{{ current_user.username }}
+                    </span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-sign-out-alt me-1"></i>로그아웃
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                총 작품 수
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ works|length if works else 0 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-images fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                주요 작품
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ works|selectattr('is_featured')|list|length if works else 0 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                경험 기록
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ experiences|length if experiences else 0 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-globe fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                최근 업데이트
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% if works %}
+                                {{ works[0].created_at.strftime('%m/%d') }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="row">
+        <!-- Portfolio Management -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-images me-2"></i>포트폴리오 관리
+                    </h5>
+                    <a href="{{ url_for('add_work') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>새 작품 추가
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if works %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>작품명</th>
+                                    <th>카테고리</th>
+                                    <th>재료</th>
+                                    <th>등록일</th>
+                                    <th>주요작품</th>
+                                    <th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for work in works[:10] %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if work.image_path %}
+                                            <img src="{{ url_for('uploaded_file', filename=work.image_path) }}" 
+                                                 class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" 
+                                                 style="width: 40px; height: 40px;">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-bold">{{ work.title }}</div>
+                                                <small class="text-muted">ID: {{ work.id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if work.category %}
+                                        <span class="badge bg-secondary">{{ work.category }}</span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ work.medium or '-' }}</td>
+                                    <td>{{ work.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        {% if work.is_featured %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-star"></i> 주요작품
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" 
+                                                    onclick="editWork({{ work.id }})">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" 
+                                                    onclick="deleteWork({{ work.id }}, '{{ work.title }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if works|length > 10 %}
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-outline-primary">
+                            모든 작품 보기 ({{ works|length }}개)
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-images fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">등록된 작품이 없습니다</h5>
+                        <p class="text-muted">첫 번째 작품을 추가해보세요!</p>
+                        <a href="{{ url_for('add_work') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>작품 추가하기
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions & Info -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>빠른 작업
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('add_work') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-2"></i>새 작품 추가
+                        </a>
+                        <button class="btn btn-success btn-sm" onclick="backupData()">
+                            <i class="fas fa-download me-2"></i>데이터 백업
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-info btn-sm" target="_blank">
+                            <i class="fas fa-eye me-2"></i>사이트 미리보기
+                        </a>
+                        <button class="btn btn-warning btn-sm" onclick="clearCache()">
+                            <i class="fas fa-sync me-2"></i>캐시 지우기
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>최근 활동
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% if works %}
+                        {% for work in works[:5] %}
+                        <div class="timeline-item mb-3">
+                            <div class="d-flex">
+                                <div class="timeline-marker me-3">
+                                    <i class="fas fa-image text-primary"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">{{ work.title }}</h6>
+                                    <small class="text-muted">
+                                        {{ work.created_at.strftime('%m월 %d일 %H:%M') }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-clock fa-2x mb-2"></i>
+                            <p>최근 활동이 없습니다</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Info -->
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>시스템 정보
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="border-end">
+                                <h6 class="text-primary">디스크 용량</h6>
+                                <span class="h5">75%</span>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h6 class="text-success">업타임</h6>
+                            <span class="h5">99.9%</span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="small text-muted">
+                        <div class="d-flex justify-content-between">
+                            <span>마지막 백업:</span>
+                            <span>2024-01-15</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Flask 버전:</span>
+                            <span>2.3.3</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Python 버전:</span>
+                            <span>3.9.0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Distribution Chart -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>카테고리별 작품 분포
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <canvas id="categoryChart" width="400" height="200"></canvas>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mt-4">
+                                <h6 class="mb-3">카테고리별 통계</h6>
+                                {% set category_counts = {} %}
+                                {% if works %}
+                                    {% for work in works %}
+                                        {% set category = work.category or '미분류' %}
+                                        {% if category_counts.update({category: category_counts.get(category, 0) + 1}) %}{% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                {% for category, count in category_counts.items() %}
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-primary">{{ category }}</span>
+                                    <span class="fw-bold">{{ count }}개</span>
+                                </div>
+                                {% endfor %}
+                                
+                                {% if not category_counts %}
+                                <p class="text-muted">데이터가 없습니다</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>작품 삭제
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>정말로 이 작품을 삭제하시겠습니까?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-warning me-2"></i>
+                    <strong id="deleteWorkTitle"></strong> 작품이 영구적으로 삭제됩니다.
+                </div>
+                <p class="text-muted small">이 작업은 되돌릴 수 없습니다.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">
+                    <i class="fas fa-trash me-1"></i>삭제하기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.border-left-primary { border-left: 0.25rem solid #4e73df !important; }
+.border-left-success { border-left: 0.25rem solid #1cc88a !important; }
+.border-left-info { border-left: 0.25rem solid #36b9cc !important; }
+.border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
+
+.timeline-marker {
+    width: 30px;
+    height: 30px;
+    background: #f8f9fa;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.timeline-item {
+    position: relative;
+}
+
+.timeline-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 30px;
+    width: 2px;
+    height: calc(100% - 10px);
+    background: #e3e6f0;
+}
+
+.text-xs {
+    font-size: 0.7rem;
+}
+
+.font-weight-bold {
+    font-weight: 700 !important;
+}
+
+.text-gray-800 {
+    color: #5a5c69 !important;
+}
+
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 0 15px;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+</style>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+let deleteWorkId = null;
+
+// 작품 삭제 함수
+function deleteWork(workId, workTitle) {
+    deleteWorkId = workId;
+    document.getElementById('deleteWorkTitle').textContent = workTitle;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+// 삭제 확인
+document.getElementById('confirmDelete').addEventListener('click', function() {
+    if (deleteWorkId) {
+        // 실제 구현에서는 서버로 DELETE 요청
+        fetch(`/admin/delete_work/${deleteWorkId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('삭제에 실패했습니다: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('삭제 중 오류가 발생했습니다.');
+        });
+        
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+    }
+});
+
+// 작품 수정 함수
+function editWork(workId) {
+    window.location.href = `/admin/edit_work/${workId}`;
+}
+
+// 데이터 백업 함수
+function backupData() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>백업 중...';
+    btn.disabled = true;
+    
+    // 실제 구현에서는 서버로 백업 요청
+    setTimeout(() => {
+        alert('데이터 백업이 완료되었습니다.');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 2000);
+}
+
+// 캐시 지우기 함수
+function clearCache() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>처리 중...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        alert('캐시가 성공적으로 지워졌습니다.');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 1000);
+}
+
+// 카테고리 차트 생성
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('categoryChart');
+    if (ctx) {
+        {% if works %}
+        // 카테고리별 데이터 준비
+        const categoryData = {};
+        {% for work in works %}
+        const category = '{{ work.category or "미분류" }}';
+        categoryData[category] = (categoryData[category] || 0) + 1;
+        {% endfor %}
+        
+        const labels = Object.keys(categoryData);
+        const data = Object.values(categoryData);
+        const colors = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+        ];
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors.slice(0, labels.length),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+        {% else %}
+        // 데이터가 없을 때
+        ctx.parentElement.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-chart-pie fa-3x mb-3"></i><p>표시할 데이터가 없습니다</p></div>';
+        {% endif %}
+    }
+    
+    // 통계 카드 애니메이션
+    const statCards = document.querySelectorAll('.card');
+    statCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+
+// 페이지 로딩 시 카드 애니메이션 초기화
+document.querySelectorAll('.card').forEach(card => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    card.style.transition = 'all 0.6s ease';
+});
+
+// 실시간 시간 업데이트
+function updateTime() {
+    const now = new Date();
+    const timeString = now.toLocaleString('ko-KR');
+    const timeElement = document.querySelector('.current-time');
+    if (timeElement) {
+        timeElement.textContent = timeString;
+    }
+}
+
+setInterval(updateTime, 1000);
+</script>
+{% endblock %}

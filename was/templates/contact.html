@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}연락처 - 아티스트 포트폴리오{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Page Header -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 mb-3">연락하기</h1>
+            <p class="lead text-muted">작품 의뢰, 전시 협업, 개인 레슨 등 언제든 연락주세요</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Contact Form -->
+        <div class="col-lg-8 mb-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-envelope me-2"></i>메시지 보내기
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form id="contactForm" method="POST" action="{{ url_for('contact') }}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">이름 *</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">이메일 *</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">연락처</label>
+                                <input type="tel" class="form-control" id="phone" name="phone">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="subject" class="form-label">문의 유형</label>
+                                <select class="form-select" id="subject" name="subject">
+                                    <option value="">선택해주세요</option>
+                                    <option value="commission">작품 의뢰</option>
+                                    <option value="exhibition">전시 협업</option>
+                                    <option value="lesson">개인 레슨</option>
+                                    <option value="purchase">작품 구매</option>
+                                    <option value="interview">인터뷰 요청</option>
+                                    <option value="other">기타 문의</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="message" class="form-label">메시지 *</label>
+                            <textarea class="form-control" id="message" name="message" rows="6" 
+                                      placeholder="문의 내용을 자세히 적어주세요..." required></textarea>
+                            <div class="form-text">최소 10자 이상 입력해주세요.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="privacy" name="privacy" required>
+                                <label class="form-check-label" for="privacy">
+                                    개인정보 수집 및 이용에 동의합니다. *
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>메시지 보내기
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="col-lg-4">
+            <!-- Contact Details -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-address-book me-2"></i>연락처 정보
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="contact-item mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="contact-icon me-3">
+                                <i class="fas fa-envelope fa-lg text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">이메일</h6>
+                                <a href="mailto:contact@example.com" class="text-muted">
+                                    contact@example.com
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-item mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="contact-icon me-3">
+                                <i class="fas fa-phone fa-lg text-success"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">전화번호</h6>
+                                <a href="tel:+82-10-0000-0000" class="text-muted">
+                                    +82-10-0000-0000
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-item mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="contact-icon me-3">
+                                <i class="fab fa-instagram fa-lg text-danger"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">인스타그램</h6>
+                                <a href="https://instagram.com/artist_portfolio" 
+                                   target="_blank" class="text-muted">
+                                    @artist_portfolio
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-item">
+                        <div class="d-flex align-items-center">
+                            <div class="contact-icon me-3">
+                                <i class="fas fa-map-marker-alt fa-lg text-warning"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">위치</h6>
+                                <span class="text-muted">서울특별시</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Response Time -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-2x text-primary mb-3"></i>
+                    <h5>응답 시간</h5>
+                    <p class="text-muted mb-0">
+                        보통 <strong>24-48시간</strong> 내에<br>
+                        답변 드립니다.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Services -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-paint-brush me-2"></i>제공 서비스
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            커스텀 작품 의뢰
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            개인/그룹 미술 레슨
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            전시 기획 및 협업
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            작품 컨설팅
+                        </li>
+                        <li>
+                            <i class="fas fa-check text-success me-2"></i>
+                            워크숍 진행
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="text-center mb-4">자주 묻는 질문</h3>
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq1">
+                        <button class="accordion-button collapsed" type="button" 
+                                data-bs-toggle="collapse" data-bs-target="#faqCollapse1">
+                            작품 의뢰는 어떻게 진행되나요?
+                        </button>
+                    </h2>
+                    <div id="faqCollapse1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            작품 의뢰는 상담 → 스케치 제안 → 계약 → 제작 → 완성의 단계로 진행됩니다. 
+                            먼저 원하시는 작품의 크기, 재료, 컨셉 등을 상담한 후 견적을 제공해드립니다.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq2">
+                        <button class="accordion-button collapsed" type="button" 
+                                data-bs-toggle="collapse" data-bs-target="#faqCollapse2">
+                            작품 제작 기간은 얼마나 걸리나요?
+                        </button>
+                    </h2>
+                    <div id="faqCollapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            작품의 크기와 복잡도에 따라 다르지만, 일반적으로 소형 작품은 1-2주, 
+                            대형 작품은 1-2개월 정도 소요됩니다. 정확한 기간은 상담 시 알려드립니다.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq3">
+                        <button class="accordion-button collapsed" type="button" 
+                                data-bs-toggle="collapse" data-bs-target="#faqCollapse3">
+                            개인 레슨은 어떻게 진행되나요?
+                        </button>
+                    </h2>
+                    <div id="faqCollapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            개인 레슨은 1:1 맞춤형으로 진행됩니다. 학생의 수준과 관심 재료에 맞춰 
+                            커리큘럼을 구성하며, 온라인 또는 오프라인으로 진행 가능합니다.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq4">
+                        <button class="accordion-button collapsed" type="button" 
+                                data-bs-toggle="collapse" data-bs-target="#faqCollapse4">
+                            작품 가격은 어떻게 책정되나요?
+                        </button>
+                    </h2>
+                    <div id="faqCollapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            작품 가격은 크기, 사용 재료, 복잡도, 제작 시간을 고려하여 책정됩니다. 
+                            정확한 견적은 상담 후 제공해드리며, 합리적인 가격으로 책정하고 있습니다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.contact-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.05);
+    border-radius: 50%;
+}
+
+.contact-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.contact-item:last-child {
+    border-bottom: none;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.25);
+}
+
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 768px) {
+    .contact-icon {
+        width: 35px;
+        height: 35px;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const contactForm = document.getElementById('contactForm');
+    const messageTextarea = document.getElementById('message');
+    
+    // 폼 제출 처리
+    contactForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // 기본 유효성 검사
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const message = messageTextarea.value.trim();
+        const privacy = document.getElementById('privacy').checked;
+        
+        if (!name || !email || !message || !privacy) {
+            alert('필수 항목을 모두 입력해주세요.');
+            return;
+        }
+        
+        if (message.length < 10) {
+            alert('메시지는 최소 10자 이상 입력해주세요.');
+            messageTextarea.focus();
+            return;
+        }
+        
+        // 이메일 형식 검사
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            alert('올바른 이메일 주소를 입력해주세요.');
+            document.getElementById('email').focus();
+            return;
+        }
+        
+        // 폼 제출 (실제 구현에서는 서버로 전송)
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>전송 중...';
+        submitBtn.disabled = true;
+        
+        // 시뮬레이션: 2초 후 성공 메시지
+        setTimeout(() => {
+            alert('메시지가 성공적으로 전송되었습니다!\n24-48시간 내에 답변드리겠습니다.');
+            contactForm.reset();
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 2000);
+    });
+    
+    // 메시지 글자 수 카운터
+    const maxLength = 1000;
+    messageTextarea.addEventListener('input', function() {
+        const currentLength = this.value.length;
+        const remaining = maxLength - currentLength;
+        
+        // 글자 수 표시 요소가 없으면 생성
+        let counter = this.nextElementSibling.querySelector('.char-counter');
+        if (!counter) {
+            counter = document.createElement('small');
+            counter.className = 'char-counter text-muted float-end';
+            this.nextElementSibling.appendChild(counter);
+        }
+        
+        counter.textContent = `${currentLength}/${maxLength}`;
+        
+        if (remaining < 50) {
+            counter.className = 'char-counter text-warning float-end';
+        } else {
+            counter.className = 'char-counter text-muted float-end';
+        }
+    });
+    
+    // 애니메이션 효과
+    const cards = document.querySelectorAll('.card');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    });
+    
+    cards.forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'all 0.6s ease';
+        observer.observe(card);
+    });
+});
+</script>
+{% endblock %}

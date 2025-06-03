@@ -1,0 +1,504 @@
+{% extends "base.html" %}
+
+{% block title %}로그인 - 아티스트 포트폴리오{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-lg-5 col-md-7 col-sm-9">
+                <!-- Login Card -->
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-primary text-white text-center py-4">
+                        <div class="login-header">
+                            <i class="fas fa-palette fa-3x mb-3"></i>
+                            <h3 class="mb-0">관리자 로그인</h3>
+                            <p class="mb-0 opacity-75">포트폴리오 관리 시스템</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body p-5">
+                        <!-- Flash Messages -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                                        <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' }} me-2"></i>
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <!-- Login Form -->
+                        <form id="loginForm" method="POST" action="{{ url_for('login') }}">
+                            <div class="mb-4">
+                                <label for="username" class="form-label">
+                                    <i class="fas fa-user me-2"></i>사용자명
+                                </label>
+                                <input type="text" 
+                                       class="form-control form-control-lg" 
+                                       id="username" 
+                                       name="username" 
+                                       placeholder="사용자명을 입력하세요"
+                                       required
+                                       autocomplete="username">
+                                <div class="invalid-feedback">
+                                    사용자명을 입력해주세요.
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="password" class="form-label">
+                                    <i class="fas fa-lock me-2"></i>비밀번호
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           class="form-control form-control-lg" 
+                                           id="password" 
+                                           name="password" 
+                                           placeholder="비밀번호를 입력하세요"
+                                           required
+                                           autocomplete="current-password">
+                                    <button class="btn btn-outline-secondary" 
+                                            type="button" 
+                                            id="togglePassword"
+                                            aria-label="비밀번호 보기/숨기기">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback">
+                                    비밀번호를 입력해주세요.
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           id="remember" 
+                                           name="remember">
+                                    <label class="form-check-label" for="remember">
+                                        로그인 상태 유지
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="d-grid mb-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-sign-in-alt me-2"></i>로그인
+                                </button>
+                            </div>
+
+                            <!-- Login Help -->
+                            <div class="text-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    관리자 계정으로만 접근 가능합니다
+                                </small>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="card-footer bg-light text-center py-3">
+                        <div class="row">
+                            <div class="col-6">
+                                <a href="{{ url_for('index') }}" class="btn btn-link btn-sm text-decoration-none">
+                                    <i class="fas fa-home me-1"></i>홈으로 돌아가기
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" class="btn btn-link btn-sm text-decoration-none" 
+                                        data-bs-toggle="modal" data-bs-target="#helpModal">
+                                    <i class="fas fa-question-circle me-1"></i>도움말
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Notice -->
+                <div class="alert alert-info mt-4" role="alert">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    <strong>보안 알림:</strong> 이 페이지는 SSL로 보호되며, 로그인 시도는 기록됩니다.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpModalLabel">
+                    <i class="fas fa-question-circle me-2"></i>로그인 도움말
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="help-section mb-4">
+                    <h6 class="text-primary">
+                        <i class="fas fa-user-shield me-2"></i>기본 관리자 계정
+                    </h6>
+                    <div class="alert alert-warning">
+                        <strong>사용자명:</strong> admin<br>
+                        <strong>비밀번호:</strong> admin123
+                    </div>
+                    <p class="small text-muted">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        보안을 위해 첫 로그인 후 비밀번호를 변경하는 것을 권장합니다.
+                    </p>
+                </div>
+
+                <div class="help-section mb-4">
+                    <h6 class="text-primary">
+                        <i class="fas fa-lock me-2"></i>로그인 문제 해결
+                    </h6>
+                    <ul class="small">
+                        <li>사용자명과 비밀번호를 정확히 입력했는지 확인하세요</li>
+                        <li>Caps Lock이 켜져있지 않은지 확인하세요</li>
+                        <li>브라우저 캐시를 지우고 다시 시도해보세요</li>
+                        <li>다른 브라우저에서 시도해보세요</li>
+                    </ul>
+                </div>
+
+                <div class="help-section">
+                    <h6 class="text-primary">
+                        <i class="fas fa-cog me-2"></i>시스템 요구사항
+                    </h6>
+                    <ul class="small">
+                        <li>최신 버전의 웹 브라우저 사용</li>
+                        <li>JavaScript 활성화 필요</li>
+                        <li>쿠키 허용 설정 필요</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>닫기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.login-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    position: relative;
+}
+
+.login-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" fill-opacity="0.05"/><circle cx="75" cy="75" r="1" fill="white" fill-opacity="0.05"/><circle cx="50" cy="10" r="1" fill="white" fill-opacity="0.03"/><circle cx="80" cy="40" r="1" fill="white" fill-opacity="0.03"/><circle cx="20" cy="80" r="1" fill="white" fill-opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    pointer-events: none;
+}
+
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--primary-color), #34495e) !important;
+    border: none;
+}
+
+.login-header i {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+.form-control:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 0.25rem rgba(231, 76, 60, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-color), #c0392b);
+    border: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+}
+
+.form-check-input:checked {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.alert {
+    border: none;
+    border-radius: 10px;
+}
+
+.help-section {
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.help-section:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 768px) {
+    .login-container {
+        padding: 20px;
+    }
+    
+    .card-body {
+        padding: 2rem !important;
+    }
+}
+
+/* 애니메이션 효과 */
+.card {
+    animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-control, .btn {
+    transition: all 0.3s ease;
+}
+
+.input-group-text {
+    border-color: #dee2e6;
+    background: #f8f9fa;
+}
+
+/* 포커스 효과 개선 */
+.form-control:focus + .input-group-text,
+.form-control:focus ~ .input-group-text {
+    border-color: var(--accent-color);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const togglePasswordBtn = document.getElementById('togglePassword');
+    let loginAttempts = 0;
+    const maxAttempts = 5;
+
+    // 비밀번호 보기/숨기기 토글
+    togglePasswordBtn.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        
+        const icon = this.querySelector('i');
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
+        
+        // 아이콘 변경 애니메이션
+        this.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+            this.style.transform = 'scale(1)';
+        }, 150);
+    });
+
+    // 폼 제출 처리
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // 입력값 검증
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value;
+        
+        if (!username || !password) {
+            showError('사용자명과 비밀번호를 모두 입력해주세요.');
+            return;
+        }
+
+        // 로그인 시도 횟수 체크
+        if (loginAttempts >= maxAttempts) {
+            showError('로그인 시도 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.');
+            disableForm(300000); // 5분 대기
+            return;
+        }
+
+        // 제출 버튼 상태 변경
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>로그인 중...';
+        submitBtn.disabled = true;
+
+        // 실제 로그인 요청
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(new FormData(this))
+        })
+        .then(response => {
+            if (response.ok) {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    return response.text();
+                }
+            } else {
+                throw new Error('로그인 실패');
+            }
+        })
+        .then(data => {
+            if (data) {
+                // 로그인 실패 시 에러 메시지 표시
+                loginAttempts++;
+                showError('잘못된 사용자명 또는 비밀번호입니다.');
+                
+                // 입력 필드 흔들기 애니메이션
+                shakeInput(usernameInput);
+                shakeInput(passwordInput);
+                
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loginAttempts++;
+            showError('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+        })
+        .finally(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        });
+    });
+
+    // 에러 메시지 표시 함수
+    function showError(message) {
+        // 기존 에러 메시지 제거
+        const existingError = document.querySelector('.login-error');
+        if (existingError) {
+            existingError.remove();
+        }
+
+        // 새 에러 메시지 생성
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger alert-dismissible fade show login-error';
+        errorDiv.innerHTML = `
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        // 폼 상단에 삽입
+        loginForm.insertBefore(errorDiv, loginForm.firstChild);
+
+        // 자동 제거 (5초 후)
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.remove();
+            }
+        }, 5000);
+    }
+
+    // 입력 필드 흔들기 애니메이션
+    function shakeInput(input) {
+        input.style.animation = 'shake 0.5s ease-in-out';
+        setTimeout(() => {
+            input.style.animation = '';
+        }, 500);
+    }
+
+    // 폼 비활성화 함수
+    function disableForm(duration) {
+        const inputs = loginForm.querySelectorAll('input, button');
+        inputs.forEach(input => input.disabled = true);
+
+        let timeLeft = duration / 1000;
+        const countdown = setInterval(() => {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                inputs.forEach(input => input.disabled = false);
+                loginAttempts = 0;
+                showError('다시 로그인을 시도할 수 있습니다.');
+            }
+        }, 1000);
+    }
+
+    // Enter 키 처리
+    usernameInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            passwordInput.focus();
+        }
+    });
+
+    passwordInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            loginForm.dispatchEvent(new Event('submit'));
+        }
+    });
+
+    // 자동 포커스
+    usernameInput.focus();
+
+    // 캡슐록 감지
+    document.addEventListener('keydown', function(e) {
+        if (e.getModifierState && e.getModifierState('CapsLock')) {
+            showCapsLockWarning();
+        }
+    });
+
+    function showCapsLockWarning() {
+        let warning = document.querySelector('.caps-lock-warning');
+        if (!warning) {
+            warning = document.createElement('div');
+            warning.className = 'alert alert-warning caps-lock-warning mt-2';
+            warning.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Caps Lock이 켜져 있습니다.';
+            passwordInput.parentNode.appendChild(warning);
+
+            setTimeout(() => {
+                if (warning.parentNode) {
+                    warning.remove();
+                }
+            }, 3000);
+        }
+    }
+});
+
+// CSS 애니메이션 추가
+const shakeStyle = document.createElement('style');
+shakeStyle.textContent = `
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+`;
+document.head.appendChild(shakeStyle);
+</script>
+{% endblock %}

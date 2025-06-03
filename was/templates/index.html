@@ -1,0 +1,1088 @@
+{% extends "base.html" %}
+
+{% block title %}IT 엔지니어 포트폴리오 - 홈{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4">
+                    <span class="typing-text">클라우드 & 데이터 엔지니어</span>
+                </h1>
+                <p class="lead mb-4">
+                    <strong>AWS, Kubernetes, Python</strong>을 활용한 클라우드 인프라 구축과 
+                    <strong>AI/ML, 데이터 분석</strong>을 통한 비즈니스 가치 창출을 전문으로 하는 
+                    풀스택 IT 엔지니어입니다.
+                </p>
+                
+                <!-- 핵심 기술 스택 -->
+                <div class="mb-4">
+                    {% if primary_techs %}
+                        {% for tech in primary_techs %}
+                        <span class="badge tech-badge me-2 mb-2" style="background-color: {{ tech.color }}">
+                            <i class="{{ tech.icon_class }} me-1"></i>{{ tech.name }}
+                        </span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="badge bg-primary me-2 mb-2"><i class="fab fa-python me-1"></i>Python</span>
+                        <span class="badge bg-warning me-2 mb-2"><i class="fab fa-aws me-1"></i>AWS</span>
+                        <span class="badge bg-info me-2 mb-2"><i class="fab fa-docker me-1"></i>Docker</span>
+                        <span class="badge bg-success me-2 mb-2"><i class="fas fa-dharmachakra me-1"></i>Kubernetes</span>
+                        <span class="badge bg-danger me-2 mb-2"><i class="fas fa-database me-1"></i>PostgreSQL</span>
+                        <span class="badge bg-secondary me-2 mb-2"><i class="fas fa-brain me-1"></i>Machine Learning</span>
+                        <span class="badge bg-dark me-2 mb-2"><i class="fas fa-chart-bar me-1"></i>Data Analysis</span>
+                    {% endif %}
+                </div>
+                
+                <!-- CTA 버튼들 -->
+                <div class="cta-buttons">
+                    <a href="{{ url_for('portfolio') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-code me-2"></i>프로젝트 보기
+                    </a>
+                    <a href="{{ url_for('about') }}" class="btn btn-outline-light btn-lg me-3">
+                        <i class="fas fa-user me-2"></i>경력 & 기술
+                    </a>
+                    <a href="#" class="btn btn-outline-light btn-lg" onclick="downloadResume()">
+                        <i class="fas fa-download me-2"></i>이력서 다운로드
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center">
+                <div class="hero-image">
+                    <div class="tech-orbit">
+                        <div class="orbit-item aws"><i class="fab fa-aws"></i></div>
+                        <div class="orbit-item docker"><i class="fab fa-docker"></i></div>
+                        <div class="orbit-item k8s"><i class="fas fa-dharmachakra"></i></div>
+                        <div class="orbit-item python"><i class="fab fa-python"></i></div>
+                        <div class="orbit-item react"><i class="fab fa-react"></i></div>
+                        <div class="orbit-item database"><i class="fas fa-database"></i></div>
+                    </div>
+                    <div class="profile-circle">
+                        <i class="fas fa-code fa-4x text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 통계 섹션 -->
+<section class="stats-section py-5 bg-light">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-project-diagram fa-3x text-primary"></i>
+                    </div>
+                    <h3 class="stat-number" data-target="15">0</h3>
+                    <p class="stat-label">완료 프로젝트</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-cloud fa-3x text-success"></i>
+                    </div>
+                    <h3 class="stat-number" data-target="5">0</h3>
+                    <p class="stat-label">년 경력</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-certificate fa-3x text-warning"></i>
+                    </div>
+                    <h3 class="stat-number" data-target="8">0</h3>
+                    <p class="stat-label">IT 자격증</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-code-branch fa-3x text-info"></i>
+                    </div>
+                    <h3 class="stat-number" data-target="25">0</h3>
+                    <p class="stat-label">기술 스택</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 주요 프로젝트 섹션 -->
+{% if featured_projects %}
+<section class="py-5">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <h2 class="section-title">주요 프로젝트</h2>
+            <p class="section-subtitle">실제 비즈니스 문제를 해결한 대표 프로젝트들</p>
+        </div>
+        
+        <div class="row">
+            {% for project in featured_projects %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="project-card h-100">
+                    <!-- 프로젝트 이미지 -->
+                    <div class="project-image">
+                        {% if project.image_path %}
+                        <img src="{{ url_for('uploaded_file', filename=project.image_path) }}" 
+                             class="card-img-top" 
+                             alt="{{ project.title }}"
+                             loading="lazy">
+                        {% else %}
+                        <div class="project-placeholder">
+                            {% if project.project_type == 'tech' %}
+                                <i class="fas fa-laptop-code fa-4x"></i>
+                            {% elif project.project_type == 'data' %}
+                                <i class="fas fa-chart-line fa-4x"></i>
+                            {% elif project.project_type == 'ai' %}
+                                <i class="fas fa-brain fa-4x"></i>
+                            {% elif project.project_type == 'infra' %}
+                                <i class="fas fa-server fa-4x"></i>
+                            {% else %}
+                                <i class="fas fa-code fa-4x"></i>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- 프로젝트 타입 배지 -->
+                        <div class="project-type-badge">
+                            {% if project.project_type == 'tech' %}
+                                <span class="badge bg-primary">웹/앱 개발</span>
+                            {% elif project.project_type == 'data' %}
+                                <span class="badge bg-success">데이터 분석</span>
+                            {% elif project.project_type == 'ai' %}
+                                <span class="badge bg-warning">AI/ML</span>
+                            {% elif project.project_type == 'infra' %}
+                                <span class="badge bg-info">인프라</span>
+                            {% elif project.project_type == 'art' %}
+                                <span class="badge bg-secondary">아트워크</span>
+                            {% else %}
+                                <span class="badge bg-dark">기타</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">{{ project.title }}</h5>
+                        
+                        <!-- 기술 스택 -->
+                        {% if project.tech_stack %}
+                        <div class="tech-stack mb-2">
+                            {% set tech_list = project.tech_stack.split(',') %}
+                            {% for tech in tech_list[:3] %}
+                            <span class="badge bg-light text-dark">{{ tech.strip() }}</span>
+                            {% endfor %}
+                            {% if tech_list|length > 3 %}
+                            <span class="badge bg-light text-muted">+{{ tech_list|length - 3 }}</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- 설명 -->
+                        <p class="card-text">
+                            {{ project.description[:120] }}{% if project.description|length > 120 %}...{% endif %}
+                        </p>
+                        
+                        <!-- 메타 정보 -->
+                        <div class="project-meta mb-3">
+                            {% if project.my_role %}
+                            <small class="text-muted">
+                                <i class="fas fa-user-tag me-1"></i>{{ project.my_role }}
+                            </small>
+                            {% endif %}
+                            {% if project.team_size %}
+                            <small class="text-muted ms-2">
+                                <i class="fas fa-users me-1"></i>{{ project.team_size }}명 팀
+                            </small>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- 액션 버튼 -->
+                        <div class="project-actions">
+                            <a href="{{ url_for('project_detail', project_id=project.id) }}" 
+                               class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>자세히 보기
+                            </a>
+                            {% if project.github_url %}
+                            <a href="{{ project.github_url }}" target="_blank" 
+                               class="btn btn-outline-dark btn-sm ms-2">
+                                <i class="fab fa-github me-1"></i>GitHub
+                            </a>
+                            {% endif %}
+                            {% if project.demo_url %}
+                            <a href="{{ project.demo_url }}" target="_blank" 
+                               class="btn btn-outline-success btn-sm ms-1">
+                                <i class="fas fa-external-link-alt me-1"></i>Demo
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('portfolio') }}" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-folder-open me-2"></i>모든 프로젝트 보기
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- 기술 스택 섹션 -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <h2 class="section-title">기술 스택</h2>
+            <p class="section-subtitle">다양한 기술을 활용한 풀스택 개발 역량</p>
+        </div>
+        
+        <div class="row">
+            <!-- 프로그래밍 언어 -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="tech-category-card">
+                    <div class="tech-category-header">
+                        <i class="fas fa-code fa-2x text-primary mb-3"></i>
+                        <h5>Languages</h5>
+                    </div>
+                    <div class="tech-list">
+                        <div class="tech-item">
+                            <i class="fab fa-python"></i>
+                            <span>Python</span>
+                            <div class="progress-bar"><div class="progress" style="width: 90%"></div></div>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fab fa-js-square"></i>
+                            <span>JavaScript</span>
+                            <div class="progress-bar"><div class="progress" style="width: 85%"></div></div>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fab fa-java"></i>
+                            <span>Java</span>
+                            <div class="progress-bar"><div class="progress" style="width: 80%"></div></div>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-code"></i>
+                            <span>Go</span>
+                            <div class="progress-bar"><div class="progress" style="width: 75%"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 클라우드 & 인프라 -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="tech-category-card">
+                    <div class="tech-category-header">
+                        <i class="fas fa-cloud fa-2x text-success mb-3"></i>
+                        <h5>Cloud & DevOps</h5>
+                    </div>
+                    <div class="tech-list">
+                        <div class="tech-item">
+                            <i class="fab fa-aws"></i>
+                            <span>AWS</span>
+                            <div class="progress-bar"><div class="progress" style="width: 85%"></div></div>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fab fa-docker"></i>
+                            <span>Docker</span>
+                            <div class="progress-bar"><div class="progress" style="width: 90%"></div></div>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-dharmachakra"></i>
+                            <span>Kubernetes</span>
+                            <div class="progress-bar"><div class="progress" style="width: 85%"></div></div>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-layer-group"></i>
+                            <span>Terraform</span>
+                            <div class="progress-bar"><div class="progress" style="width: 80%"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 데이터베이스 -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="tech-category-card">
+                    <div class="tech-category-header">
+                        <i class="fas fa-database fa-2x text-warning mb-3"></i>
+                        <h5>Database</h5>
+                    </div>
+                    <div class="tech-list">
+                        <div class="tech-item">
+                            <i class="fas fa-database"></i>
+                            <span>PostgreSQL</span>
+                            <div class="progress-bar"><div class="progress" style="width: 85%"></div></div>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-database"></i>
+                            <span>MySQL</span>
+                            <div class="progress-bar"><div class="progress" style="width: 90%"></div></div>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-leaf"></i>
+                            <span>MongoDB</span>
+                            <div class="progress-bar"><div class="progress" style="width: 80%"></div></div>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-memory"></i>
+                            <span>Redis</span>
+                            <div class="progress-bar"><div class="progress" style="width: 85%"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI & 데이터 -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="tech-category-card">
+                    <div class="tech-category-header">
+                        <i class="fas fa-brain fa-2x text-info mb-3"></i>
+                        <h5>AI & Data</h5>
+                    </div>
+                    <div class="tech-list">
+                        <div class="tech-item">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Pandas</span>
+                            <div class="progress-bar"><div class="progress" style="width: 90%"></div></div>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-brain"></i>
+                            <span>TensorFlow</span>
+                            <div class="progress-bar"><div class="progress" style="width: 80%"></div></div>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-fire"></i>
+                            <span>PyTorch</span>
+                            <div class="progress-bar"><div class="progress" style="width: 75%"></div></div>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Scikit-learn</span>
+                            <div class="progress-bar"><div class="progress" style="width: 85%"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 최근 경력 섹션 -->
+{% if recent_experiences %}
+<section class="py-5">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <h2 class="section-title">경력 하이라이트</h2>
+            <p class="section-subtitle">주요 경력사항과 성과</p>
+        </div>
+        
+        <div class="timeline">
+            {% for experience in recent_experiences %}
+            <div class="timeline-item">
+                <div class="timeline-marker">
+                    {% if experience.experience_type == 'work' %}
+                        <i class="fas fa-briefcase"></i>
+                    {% elif experience.experience_type == 'education' %}
+                        <i class="fas fa-graduation-cap"></i>
+                    {% else %}
+                        <i class="fas fa-star"></i>
+                    {% endif %}
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-date">
+                        {{ experience.start_date.strftime('%Y.%m') }}
+                        {% if experience.end_date %}
+                            - {{ experience.end_date.strftime('%Y.%m') }}
+                        {% elif experience.is_current %}
+                            - 현재
+                        {% endif %}
+                    </div>
+                    <h5>{{ experience.title }}</h5>
+                    {% if experience.company %}
+                    <h6 class="text-muted">{{ experience.company }}</h6>
+                    {% endif %}
+                    <p>{{ experience.description[:150] }}{% if experience.description|length > 150 %}...{% endif %}</p>
+                    
+                    {% if experience.skills_used %}
+                    <div class="skills-used">
+                        {% set skills = experience.skills_used.split(',') %}
+                        {% for skill in skills[:4] %}
+                        <span class="badge bg-primary">{{ skill.strip() }}</span>
+                        {% endfor %}
+                        {% if skills|length > 4 %}
+                        <span class="badge bg-secondary">+{{ skills|length - 4 }}</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('about') }}" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-user-tie me-2"></i>전체 경력 보기
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Contact CTA Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container text-center">
+        <h2 class="mb-3">프로젝트 협업 제안</h2>
+        <p class="lead mb-4">
+            혁신적인 IT 솔루션 개발, 클라우드 인프라 구축, 데이터 분석 프로젝트에 
+            함께하고 싶으시다면 언제든 연락주세요.
+        </p>
+        <div class="cta-buttons">
+            <a href="{{ url_for('contact') }}" class="btn btn-light btn-lg me-3">
+                <i class="fas fa-envelope me-2"></i>연락하기
+            </a>
+            <a href="#" class="btn btn-outline-light btn-lg me-3" onclick="downloadResume()">
+                <i class="fas fa-file-pdf me-2"></i>이력서 PDF
+            </a>
+            <a href="https://github.com" target="_blank" class="btn btn-outline-light btn-lg">
+                <i class="fab fa-github me-2"></i>GitHub
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* 헤로 섹션 스타일링 */
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 120px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+    pointer-events: none;
+}
+
+.typing-text {
+    border-right: 3px solid #fff;
+    animation: typing 4s infinite;
+}
+
+@keyframes typing {
+    0%, 100% { border-right-color: transparent; }
+    50% { border-right-color: #fff; }
+}
+
+.tech-badge {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    font-weight: 500;
+    border: 1px solid rgba(255,255,255,0.3);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.tech-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* 헤로 이미지 애니메이션 */
+.hero-image {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+}
+
+.profile-circle {
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 50px auto;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.tech-orbit {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.orbit-item {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    animation: orbit 10s linear infinite;
+}
+
+.orbit-item.aws { animation-delay: 0s; top: 20px; right: 80px; }
+.orbit-item.docker { animation-delay: -1.67s; top: 80px; right: 20px; }
+.orbit-item.k8s { animation-delay: -3.33s; bottom: 20px; right: 80px; }
+.orbit-item.python { animation-delay: -5s; bottom: 80px; left: 20px; }
+.orbit-item.react { animation-delay: -6.67s; bottom: 20px; left: 80px; }
+.orbit-item.database { animation-delay: -8.33s; top: 80px; left: 20px; }
+
+@keyframes orbit {
+    0% { transform: rotate(0deg) translateX(100px) rotate(0deg); }
+    100% { transform: rotate(360deg) translateX(100px) rotate(-360deg); }
+}
+
+/* 통계 섹션 */
+.stats-section {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.stat-card {
+    background: white;
+    padding: 30px 20px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 15px 0 5px;
+    color: #2c3e50;
+}
+
+.stat-label {
+    color: #7f8c8d;
+    font-weight: 500;
+    margin: 0;
+}
+
+/* 프로젝트 카드 */
+.project-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.project-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.project-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.project-card:hover .project-image img {
+    transform: scale(1.05);
+}
+
+.project-placeholder {
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.project-type-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+}
+
+.project-type-badge .badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.tech-stack .badge {
+    font-size: 0.75rem;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.project-meta {
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+}
+
+.project-actions {
+    margin-top: auto;
+}
+
+/* 기술 스택 섹션 */
+.tech-category-card {
+    background: white;
+    padding: 30px 20px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    height: 100%;
+    transition: transform 0.3s ease;
+}
+
+.tech-category-card:hover {
+    transform: translateY(-5px);
+}
+
+.tech-category-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.tech-category-header h5 {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.tech-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    transition: background 0.3s ease;
+}
+
+.tech-item:hover {
+    background: #e9ecef;
+}
+
+.tech-item i {
+    width: 25px;
+    font-size: 1.2rem;
+    margin-right: 10px;
+    color: #495057;
+}
+
+.tech-item span {
+    flex: 1;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.progress-bar {
+    width: 60px;
+    height: 4px;
+    background: #dee2e6;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: width 0.3s ease;
+}
+
+/* 타임라인 */
+.timeline {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 30px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, #667eea, #764ba2);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 40px;
+    padding-left: 80px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 15px;
+    top: 5px;
+    width: 30px;
+    height: 30px;
+    background: white;
+    border: 3px solid #667eea;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #667eea;
+    font-size: 0.9rem;
+    z-index: 2;
+}
+
+.timeline-content {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.timeline-content:hover {
+    transform: translateX(10px);
+}
+
+.timeline-date {
+    color: #667eea;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.timeline-content h5 {
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.timeline-content h6 {
+    color: #7f8c8d;
+    margin-bottom: 15px;
+}
+
+.skills-used .badge {
+    margin-right: 5px;
+    margin-bottom: 5px;
+    font-size: 0.75rem;
+}
+
+/* 섹션 헤더 */
+.section-header {
+    margin-bottom: 50px;
+}
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 2px;
+}
+
+.section-subtitle {
+    font-size: 1.1rem;
+    color: #7f8c8d;
+    margin: 0;
+}
+
+/* CTA 버튼 */
+.cta-buttons .btn {
+    margin: 5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.cta-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 80px 0;
+    }
+    
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .hero-image {
+        width: 250px;
+        height: 250px;
+        margin-top: 30px;
+    }
+    
+    .profile-circle {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .orbit-item {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .section-title {
+        font-size: 2rem;
+    }
+    
+    .stat-card {
+        padding: 20px 15px;
+        margin-bottom: 20px;
+    }
+    
+    .timeline::before {
+        left: 15px;
+    }
+    
+    .timeline-item {
+        padding-left: 50px;
+    }
+    
+    .timeline-marker {
+        left: 0;
+        width: 25px;
+        height: 25px;
+        font-size: 0.8rem;
+    }
+    
+    .tech-category-card {
+        padding: 20px 15px;
+        margin-bottom: 20px;
+    }
+    
+    .cta-buttons .btn {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+    }
+}
+
+/* 로딩 애니메이션 */
+.fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease;
+}
+
+.fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 커스텀 스크롤바 */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #667eea, #764ba2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, #5a6fd8, #6a4190);
+}
+</style>
+
+<script>
+// 페이지 로드 시 애니메이션
+document.addEventListener('DOMContentLoaded', function() {
+    // 통계 카운터 애니메이션
+    animateCounters();
+    
+    // 스크롤 애니메이션 관찰자
+    observeElements();
+    
+    // 기술 스택 프로그레스 바 애니메이션
+    animateProgressBars();
+});
+
+// 카운터 애니메이션
+function animateCounters() {
+    const counters = document.querySelectorAll('.stat-number');
+    
+    counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target'));
+        const duration = 2000; // 2초
+        const step = target / (duration / 16); // 60fps 기준
+        let current = 0;
+        
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            counter.textContent = Math.floor(current);
+        }, 16);
+    });
+}
+
+// 스크롤 애니메이션 관찰자
+function observeElements() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+
+    // 애니메이션할 요소들 관찰
+    document.querySelectorAll('.project-card, .tech-category-card, .timeline-item, .stat-card').forEach(el => {
+        el.classList.add('fade-in');
+        observer.observe(el);
+    });
+}
+
+// 프로그레스 바 애니메이션
+function animateProgressBars() {
+    const progressBars = document.querySelectorAll('.progress');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const progressBar = entry.target;
+                const width = progressBar.style.width;
+                progressBar.style.width = '0%';
+                
+                setTimeout(() => {
+                    progressBar.style.width = width;
+                }, 300);
+                
+                observer.unobserve(progressBar);
+            }
+        });
+    });
+    
+    progressBars.forEach(bar => observer.observe(bar));
+}
+
+// 이력서 다운로드 함수
+function downloadResume() {
+    // 실제 구현에서는 서버에서 PDF 파일을 제공
+    alert('이력서 다운로드 기능이 곧 제공될 예정입니다.');
+    
+    // 예시: 실제 구현
+    // const link = document.createElement('a');
+    // link.href = '/static/resume.pdf';
+    // link.download = 'IT_Engineer_Resume.pdf';
+    // document.body.appendChild(link);
+    // link.click();
+    // document.body.removeChild(link);
+}
+
+// 부드러운 스크롤
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+
+// 프로젝트 카드 호버 효과
+document.querySelectorAll('.project-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-10px) scale(1.02)';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0) scale(1)';
+    });
+});
+
+// 성능 최적화: 스크롤 이벤트 쓰로틀링
+let ticking = false;
+
+function updateScrollElements() {
+    // 스크롤 기반 애니메이션 로직
+    ticking = false;
+}
+
+window.addEventListener('scroll', function() {
+    if (!ticking) {
+        requestAnimationFrame(updateScrollElements);
+        ticking = true;
+    }
+});
+
+// 다크 모드 토글 (선택사항)
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+}
+
+// 로컬 스토리지에서 다크 모드 설정 불러오기
+if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+}
+</script>
+{% endblock %}

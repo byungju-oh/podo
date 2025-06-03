@@ -1,0 +1,880 @@
+{% extends "base.html" %}
+
+{% block title %}새 프로젝트 추가 - 관리자{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">새 프로젝트 추가</h1>
+                    <p class="text-muted mb-0">포트폴리오에 새로운 IT 프로젝트를 추가해보세요</p>
+                </div>
+                <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>관리자로 돌아가기
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Form -->
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>프로젝트 정보 입력
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="addProjectForm" method="POST" enctype="multipart/form-data" action="{{ url_for('add_work') }}">
+                        
+                        <!-- 기본 정보 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-info-circle me-1"></i>기본 정보
+                                </h6>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label for="title" class="form-label">프로젝트명 *</label>
+                                    <input type="text" class="form-control" id="title" name="title" 
+                                           placeholder="예: E-commerce 플랫폼 구축" required>
+                                    <div class="form-text">사용자에게 표시될 프로젝트 제목입니다.</div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="project_type" class="form-label">프로젝트 유형 *</label>
+                                    <select class="form-select" id="project_type" name="project_type" required>
+                                        <option value="">선택하세요</option>
+                                        <option value="tech">웹/앱 개발</option>
+                                        <option value="infra">인프라/DevOps</option>
+                                        <option value="data">데이터 분석</option>
+                                        <option value="ai">AI/ML</option>
+                                        <option value="art">아트워크</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="category" class="form-label">세부 카테고리</label>
+                                    <select class="form-select" id="category" name="category">
+                                        <option value="">카테고리 선택</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="my_role" class="form-label">내 역할</label>
+                                    <input type="text" class="form-control" id="my_role" name="my_role" 
+                                           placeholder="예: Full-Stack Developer, DevOps Engineer">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 프로젝트 설명 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-file-alt me-1"></i>프로젝트 설명
+                                </h6>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="description" class="form-label">간단한 설명 *</label>
+                                <textarea class="form-control" id="description" name="description" rows="3"
+                                          placeholder="프로젝트의 목적과 핵심 기능을 간단히 설명해주세요..." required></textarea>
+                                <div class="form-text">프로젝트 목록에서 표시될 간략한 설명입니다.</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="detailed_description" class="form-label">상세 설명</label>
+                                <textarea class="form-control" id="detailed_description" name="detailed_description" rows="6"
+                                          placeholder="프로젝트의 배경, 문제 해결 과정, 구현 방법 등을 자세히 작성해주세요..."></textarea>
+                                <div class="form-text">프로젝트 상세 페이지에서 표시될 상세한 설명입니다.</div>
+                            </div>
+                        </div>
+
+                        <!-- 기술 스택 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-code me-1"></i>기술 스택
+                                </h6>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="tech_stack" class="form-label">사용 기술</label>
+                                <input type="text" class="form-control" id="tech_stack" name="tech_stack" 
+                                       placeholder="Python, Django, PostgreSQL, AWS, Docker">
+                                <div class="form-text">쉼표(,)로 구분하여 입력하세요. 예: Python, React, PostgreSQL</div>
+                            </div>
+                            
+                            <div class="tech-suggestions">
+                                <label class="form-label">추천 기술 스택</label>
+                                <div class="tech-tags">
+                                    <span class="tech-tag" data-tech="Python">Python</span>
+                                    <span class="tech-tag" data-tech="JavaScript">JavaScript</span>
+                                    <span class="tech-tag" data-tech="React">React</span>
+                                    <span class="tech-tag" data-tech="Vue.js">Vue.js</span>
+                                    <span class="tech-tag" data-tech="Node.js">Node.js</span>
+                                    <span class="tech-tag" data-tech="Django">Django</span>
+                                    <span class="tech-tag" data-tech="Flask">Flask</span>
+                                    <span class="tech-tag" data-tech="PostgreSQL">PostgreSQL</span>
+                                    <span class="tech-tag" data-tech="MySQL">MySQL</span>
+                                    <span class="tech-tag" data-tech="MongoDB">MongoDB</span>
+                                    <span class="tech-tag" data-tech="Redis">Redis</span>
+                                    <span class="tech-tag" data-tech="AWS">AWS</span>
+                                    <span class="tech-tag" data-tech="Google Cloud">Google Cloud</span>
+                                    <span class="tech-tag" data-tech="Azure">Azure</span>
+                                    <span class="tech-tag" data-tech="Docker">Docker</span>
+                                    <span class="tech-tag" data-tech="Kubernetes">Kubernetes</span>
+                                    <span class="tech-tag" data-tech="Jenkins">Jenkins</span>
+                                    <span class="tech-tag" data-tech="Terraform">Terraform</span>
+                                    <span class="tech-tag" data-tech="TensorFlow">TensorFlow</span>
+                                    <span class="tech-tag" data-tech="PyTorch">PyTorch</span>
+                                    <span class="tech-tag" data-tech="Pandas">Pandas</span>
+                                    <span class="tech-tag" data-tech="Scikit-learn">Scikit-learn</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 프로젝트 기간 및 팀 정보 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-calendar me-1"></i>프로젝트 정보
+                                </h6>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="start_date" class="form-label">시작일</label>
+                                    <input type="date" class="form-control" id="start_date" name="start_date">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="end_date" class="form-label">종료일</label>
+                                    <input type="date" class="form-control" id="end_date" name="end_date">
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" id="is_ongoing" name="is_ongoing">
+                                        <label class="form-check-label" for="is_ongoing">
+                                            진행중인 프로젝트
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="team_size" class="form-label">팀 규모</label>
+                                    <select class="form-select" id="team_size" name="team_size">
+                                        <option value="">선택하세요</option>
+                                        <option value="1">개인 프로젝트</option>
+                                        <option value="2">2명</option>
+                                        <option value="3">3명</option>
+                                        <option value="4">4명</option>
+                                        <option value="5">5명</option>
+                                        <option value="6">6-10명</option>
+                                        <option value="11">11명 이상</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 링크 및 URL 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-link me-1"></i>관련 링크
+                                </h6>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="github_url" class="form-label">
+                                        <i class="fab fa-github me-1"></i>GitHub URL
+                                    </label>
+                                    <input type="url" class="form-control" id="github_url" name="github_url" 
+                                           placeholder="https://github.com/username/repository">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="demo_url" class="form-label">
+                                        <i class="fas fa-external-link-alt me-1"></i>데모/라이브 URL
+                                    </label>
+                                    <input type="url" class="form-control" id="demo_url" name="demo_url" 
+                                           placeholder="https://example.com">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="video_url" class="form-label">
+                                    <i class="fab fa-youtube me-1"></i>동영상 URL (YouTube, Vimeo 등)
+                                </label>
+                                <input type="url" class="form-control" id="video_url" name="video_url" 
+                                       placeholder="https://youtube.com/watch?v=...">
+                            </div>
+                        </div>
+
+                        <!-- 성과 및 결과 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-trophy me-1"></i>성과 및 결과
+                                </h6>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="achievements" class="form-label">주요 성과</label>
+                                <textarea class="form-control" id="achievements" name="achievements" rows="4"
+                                          placeholder="프로젝트를 통해 얻은 성과, 해결한 문제, 학습한 내용 등을 작성해주세요..."></textarea>
+                                <div class="form-text">구체적인 수치나 결과를 포함하면 더 좋습니다.</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="metrics" class="form-label">정량적 지표</label>
+                                <textarea class="form-control" id="metrics" name="metrics" rows="2"
+                                          placeholder="예: 응답시간 50% 개선, 비용 30% 절감, 사용자 만족도 4.5/5.0"></textarea>
+                                <div class="form-text">측정 가능한 성과 지표를 작성해주세요.</div>
+                            </div>
+                        </div>
+
+                        <!-- 미디어 업로드 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-image me-1"></i>미디어 파일
+                                </h6>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="image" class="form-label">프로젝트 이미지</label>
+                                <input type="file" class="form-control" id="image" name="image" 
+                                       accept="image/*" onchange="previewImage(this)">
+                                <div class="form-text">
+                                    스크린샷, 아키텍처 다이어그램, UI 목업 등 (JPG, PNG, GIF | 최대 10MB)
+                                </div>
+                                
+                                <!-- 이미지 미리보기 -->
+                                <div id="imagePreviewContainer" class="mt-3" style="display: none;">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <img id="imagePreview" src="" alt="미리보기" 
+                                                 class="img-fluid rounded" style="max-height: 300px;">
+                                            <div class="mt-2">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        onclick="removeImage()">
+                                                    <i class="fas fa-times me-1"></i>이미지 제거
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="document" class="form-label">관련 문서</label>
+                                <input type="file" class="form-control" id="document" name="document" 
+                                       accept=".pdf,.doc,.docx,.ppt,.pptx">
+                                <div class="form-text">
+                                    프로젝트 문서, 발표자료 등 (PDF, DOC, PPT | 최대 50MB)
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 공개 설정 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-cog me-1"></i>공개 설정
+                                </h6>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured">
+                                        <label class="form-check-label" for="is_featured">
+                                            <i class="fas fa-star text-warning me-1"></i>주요 프로젝트로 설정
+                                        </label>
+                                        <div class="form-text">메인 페이지에 우선적으로 표시됩니다.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="is_public" name="is_public" checked>
+                                        <label class="form-check-label" for="is_public">
+                                            <i class="fas fa-eye text-success me-1"></i>공개 프로젝트
+                                        </label>
+                                        <div class="form-text">비공개 시 관리자만 볼 수 있습니다.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="sort_order" class="form-label">정렬 순서</label>
+                                    <input type="number" class="form-control" id="sort_order" name="sort_order" 
+                                           value="0" min="0">
+                                    <div class="form-text">숫자가 작을수록 먼저 표시됩니다.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 제출 버튼 -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>취소
+                            </a>
+                            <div>
+                                <button type="button" class="btn btn-outline-primary me-2" onclick="saveAsDraft()">
+                                    <i class="fas fa-save me-1"></i>임시저장
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i>프로젝트 추가
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사이드바 -->
+        <div class="col-lg-4">
+            <!-- 작성 가이드 -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>작성 가이드
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="guide-item mb-3">
+                        <h6 class="text-primary">💡 프로젝트명 작성 팁</h6>
+                        <ul class="small text-muted mb-0">
+                            <li>구체적이고 명확한 제목 사용</li>
+                            <li>기술명보다는 해결한 문제 중심</li>
+                            <li>예: "실시간 채팅 시스템 구축"</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="guide-item mb-3">
+                        <h6 class="text-success">🚀 성과 작성 가이드</h6>
+                        <ul class="small text-muted mb-0">
+                            <li>구체적인 수치와 지표 포함</li>
+                            <li>Before & After 비교</li>
+                            <li>비즈니스 임팩트 명시</li>
+                            <li>기술적 도전과 해결 과정</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="guide-item mb-3">
+                        <h6 class="text-info">🔧 기술 스택 선택</h6>
+                        <ul class="small text-muted mb-0">
+                            <li>핵심 기술 4-6개 정도 선별</li>
+                            <li>프론트엔드, 백엔드, DB, 인프라 구분</li>
+                            <li>버전 정보 포함 권장</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="guide-item">
+                        <h6 class="text-warning">📸 이미지 가이드</h6>
+                        <ul class="small text-muted mb-0">
+                            <li>해상도: 1200px 이상 권장</li>
+                            <li>아키텍처 다이어그램 우선</li>
+                            <li>UI 스크린샷도 효과적</li>
+                            <li>명확하고 읽기 쉽게</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 프로젝트 템플릿 -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>프로젝트 템플릿
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="template-buttons">
+                        <button class="btn btn-outline-primary btn-sm mb-2 w-100" onclick="loadTemplate('web')">
+                            <i class="fas fa-globe me-1"></i>웹 애플리케이션
+                        </button>
+                        <button class="btn btn-outline-success btn-sm mb-2 w-100" onclick="loadTemplate('data')">
+                            <i class="fas fa-chart-bar me-1"></i>데이터 분석
+                        </button>
+                        <button class="btn btn-outline-info btn-sm mb-2 w-100" onclick="loadTemplate('ai')">
+                            <i class="fas fa-brain me-1"></i>AI/ML 프로젝트
+                        </button>
+                        <button class="btn btn-outline-warning btn-sm mb-2 w-100" onclick="loadTemplate('infra')">
+                            <i class="fas fa-server me-1"></i>인프라/DevOps
+                        </button>
+                    </div>
+                    <small class="text-muted">템플릿을 선택하면 기본값이 자동으로 입력됩니다.</small>
+                </div>
+            </div>
+
+            <!-- 최근 추가된 프로젝트 -->
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>최근 추가된 프로젝트
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_works %}
+                    {% for work in recent_works[:3] %}
+                    <div class="d-flex align-items-center mb-3">
+                        {% if work.image_path %}
+                        <img src="{{ url_for('uploaded_file', filename=work.image_path) }}" 
+                             class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" 
+                             style="width: 50px; height: 50px;">
+                            {% if work.project_type == 'tech' %}
+                                <i class="fas fa-laptop-code text-primary"></i>
+                            {% elif work.project_type == 'data' %}
+                                <i class="fas fa-chart-line text-success"></i>
+                            {% elif work.project_type == 'ai' %}
+                                <i class="fas fa-brain text-warning"></i>
+                            {% elif work.project_type == 'infra' %}
+                                <i class="fas fa-server text-info"></i>
+                            {% else %}
+                                <i class="fas fa-code text-muted"></i>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h6 class="mb-1">{{ work.title }}</h6>
+                            <small class="text-muted">{{ work.created_at.strftime('%m월 %d일') }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-code fa-2x mb-2"></i>
+                        <p>첫 번째 프로젝트를 추가해보세요!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- CSS 스타일과 JavaScript 코드는 이전과 동일 -->
+<style>
+/* 모든 CSS 스타일은 이전 버전과 동일 */
+.form-section {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+
+.section-header {
+    border-left: 4px solid var(--accent-color);
+    padding-left: 15px;
+    background: rgba(103, 126, 234, 0.05);
+    padding: 10px 15px;
+    border-radius: 5px;
+}
+
+.tech-suggestions {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.tech-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.tech-tag {
+    background: white;
+    border: 1px solid #dee2e6;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.tech-tag:hover {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+    transform: translateY(-1px);
+}
+
+.tech-tag.selected {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+</style>
+
+<script>
+// 모든 JavaScript 코드는 이전 버전과 동일
+let selectedTechs = [];
+let isFormChanged = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeForm();
+    initializeTechTags();
+    initializeFileUpload();
+    initializeFormValidation();
+    setupFormChangeTracking();
+});
+
+// 나머지 JavaScript 함수들은 이전 버전과 동일...
+function initializeForm() {
+    document.getElementById('project_type').addEventListener('change', updateCategories);
+    // ... 기타 초기화 코드
+}
+
+function updateCategories() {
+    const projectType = document.getElementById('project_type').value;
+    const categorySelect = document.getElementById('category');
+    
+    categorySelect.innerHTML = '<option value="">카테고리 선택</option>';
+    
+    const categories = {
+        'tech': ['Frontend Development', 'Backend Development', 'Full-Stack Application', 'Mobile App'],
+        'infra': ['Cloud Migration', 'Container Orchestration', 'CI/CD Pipeline', 'Infrastructure as Code'],
+        'data': ['Data Pipeline', 'Business Intelligence', 'Data Visualization', 'ETL Process'],
+        'ai': ['Machine Learning Model', 'Deep Learning', 'Natural Language Processing', 'Computer Vision'],
+        'art': ['풍경화', '인물화', '정물화', '추상화', '일러스트', '디지털아트']
+    };
+    
+    if (categories[projectType]) {
+        categories[projectType].forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            categorySelect.appendChild(option);
+        });
+    }
+}
+
+// 기타 필요한 JavaScript 함수들...
+
+function initializeTechTags() {
+    const techTags = document.querySelectorAll('.tech-tag');
+    const techStackInput = document.getElementById('tech_stack');
+    
+    techTags.forEach(tag => {
+        tag.addEventListener('click', function() {
+            const tech = this.getAttribute('data-tech');
+            
+            if (this.classList.contains('selected')) {
+                this.classList.remove('selected');
+                selectedTechs = selectedTechs.filter(t => t !== tech);
+            } else {
+                this.classList.add('selected');
+                selectedTechs.push(tech);
+            }
+            
+            techStackInput.value = selectedTechs.join(', ');
+            isFormChanged = true;
+        });
+    });
+}
+
+function initializeFileUpload() {
+    const imageInput = document.getElementById('image');
+    const form = document.getElementById('addProjectForm');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        form.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    form.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0 && files[0].type.startsWith('image/')) {
+            imageInput.files = files;
+            previewImage(imageInput);
+        }
+    }
+}
+
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            document.getElementById('imagePreview').src = e.target.result;
+            document.getElementById('imagePreviewContainer').style.display = 'block';
+        };
+        
+        reader.readAsDataURL(input.files[0]);
+        
+        if (input.files[0].size > 10 * 1024 * 1024) {
+            alert('파일 크기가 10MB를 초과합니다.');
+            input.value = '';
+            removeImage();
+            return;
+        }
+        
+        isFormChanged = true;
+    }
+}
+
+function removeImage() {
+    document.getElementById('image').value = '';
+    document.getElementById('imagePreviewContainer').style.display = 'none';
+    document.getElementById('imagePreview').src = '';
+    isFormChanged = true;
+}
+
+function initializeFormValidation() {
+    const form = document.getElementById('addProjectForm');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (validateForm()) {
+            submitForm();
+        }
+    });
+}
+
+function validateForm() {
+    const title = document.getElementById('title').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const projectType = document.getElementById('project_type').value;
+    
+    if (!title || title.length < 5) {
+        alert('프로젝트명은 최소 5자 이상이어야 합니다.');
+        return false;
+    }
+    
+    if (!description || description.length < 20) {
+        alert('설명은 최소 20자 이상이어야 합니다.');
+        return false;
+    }
+    
+    if (!projectType) {
+        alert('프로젝트 유형을 선택해주세요.');
+        return false;
+    }
+    
+    return true;
+}
+
+function submitForm() {
+    const form = document.getElementById('addProjectForm');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>프로젝트 추가 중...';
+    submitBtn.disabled = true;
+    
+    const formData = new FormData(form);
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        }
+        throw new Error('Network response was not ok');
+    })
+    .then(data => {
+        if (data.success) {
+            alert('프로젝트가 성공적으로 추가되었습니다!');
+            setTimeout(() => {
+                window.location.href = '{{ url_for("admin") }}';
+            }, 1500);
+        } else {
+            alert('오류가 발생했습니다: ' + (data.message || '알 수 없는 오류'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('프로젝트 추가 중 오류가 발생했습니다.');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+function saveAsDraft() {
+    const formData = new FormData(document.getElementById('addProjectForm'));
+    const draftData = {};
+    
+    for (let [key, value] of formData.entries()) {
+        if (key !== 'image' && key !== 'document') {
+            draftData[key] = value;
+        }
+    }
+    
+    localStorage.setItem('projectDraft', JSON.stringify(draftData));
+    alert('임시저장되었습니다.');
+}
+
+function loadTemplate(type) {
+    if (isFormChanged && !confirm('현재 입력한 내용이 삭제됩니다. 계속하시겠습니까?')) {
+        return;
+    }
+    
+    const templates = {
+        'web': {
+            project_type: 'tech',
+            category: 'Full-Stack Application',
+            tech_stack: 'Python, Django, React, PostgreSQL, Docker, AWS',
+            description: '사용자 친화적인 웹 애플리케이션을 개발하여 비즈니스 요구사항을 해결했습니다.',
+            detailed_description: '프로젝트 배경:\n- 기존 시스템의 한계점 분석\n- 사용자 요구사항 수집 및 분석\n\n기술적 구현:\n- RESTful API 설계 및 개발\n- 반응형 웹 인터페이스 구현\n- 데이터베이스 최적화',
+            my_role: 'Full-Stack Developer',
+            team_size: '4',
+            achievements: '• 기존 대비 응답속도 40% 향상\n• 사용자 만족도 4.7/5.0 달성\n• 월간 활성 사용자 300% 증가',
+            metrics: '응답시간: 2.3초 → 1.4초, 서버 비용: 30% 절감, 코드 커버리지: 85%'
+        },
+        'data': {
+            project_type: 'data',
+            category: 'Business Intelligence',
+            tech_stack: 'Python, Pandas, NumPy, Matplotlib, Jupyter, SQL, Tableau',
+            description: '데이터 분석을 통해 비즈니스 인사이트를 도출하고 의사결정을 지원했습니다.',
+            detailed_description: '데이터 수집:\n- 다양한 소스에서 데이터 수집 및 통합\n- 데이터 품질 검증 및 전처리\n\n분석 과정:\n- 탐색적 데이터 분석(EDA)\n- 통계적 분석 및 가설 검증\n- 대시보드 구축',
+            my_role: 'Data Analyst',
+            team_size: '3',
+            achievements: '• 매출 예측 정확도 92% 달성\n• 고객 이탈률 25% 감소\n• 마케팅 ROI 40% 향상',
+            metrics: '데이터 처리량: 1TB/일, 대시보드 조회수: 500회/일, 의사결정 시간: 50% 단축'
+        },
+        'ai': {
+            project_type: 'ai',
+            category: 'Machine Learning Model',
+            tech_stack: 'Python, TensorFlow, Scikit-learn, Pandas, Docker, MLflow, AWS SageMaker',
+            description: '머신러닝 모델을 개발하여 비즈니스 문제를 자동화하고 예측 정확도를 향상시켰습니다.',
+            detailed_description: '문제 정의:\n- 비즈니스 문제를 ML 문제로 변환\n- 성공 지표 및 평가 방법 정의\n\n모델 개발:\n- 특성 엔지니어링 및 데이터 전처리\n- 다양한 알고리즘 실험\n- 하이퍼파라미터 최적화',
+            my_role: 'ML Engineer',
+            team_size: '2',
+            achievements: '• 예측 정확도 94% 달성\n• 수동 작업 80% 자동화\n• 처리 시간 90% 단축',
+            metrics: 'F1-Score: 0.94, 추론 속도: 100ms, 모델 크기: 50MB'
+        },
+        'infra': {
+            project_type: 'infra',
+            category: 'Container Orchestration',
+            tech_stack: 'Kubernetes, Docker, Terraform, Jenkins, Prometheus, Grafana, AWS',
+            description: '컨테이너 오케스트레이션을 통해 확장 가능하고 안정적인 인프라를 구축했습니다.',
+            detailed_description: '현재 상황:\n- 기존 인프라의 확장성 및 관리 이슈\n- 배포 프로세스의 복잡성\n\n솔루션 구현:\n- Kubernetes 클러스터 설계\n- CI/CD 파이프라인 자동화\n- 모니터링 시스템 구축',
+            my_role: 'DevOps Engineer',
+            team_size: '3',
+            achievements: '• 배포 시간 90% 단축\n• 시스템 가용성 99.9% 달성\n• 인프라 비용 30% 절감',
+            metrics: '배포 시간: 2시간 → 12분, 장애 복구 시간: 15분 → 2분, 서버 수: 20대 → 5대'
+        }
+    };
+    
+    const template = templates[type];
+    if (template) {
+        Object.keys(template).forEach(key => {
+            const element = document.getElementById(key);
+            if (element) {
+                element.value = template[key];
+                
+                if (key === 'project_type') {
+                    element.dispatchEvent(new Event('change'));
+                }
+            }
+        });
+        
+        // 기술 스택 태그 업데이트
+        const techs = template.tech_stack.split(',').map(t => t.trim());
+        document.querySelectorAll('.tech-tag').forEach(tag => {
+            const tech = tag.getAttribute('data-tech');
+            if (techs.includes(tech)) {
+                tag.classList.add('selected');
+            } else {
+                tag.classList.remove('selected');
+            }
+        });
+        selectedTechs = techs;
+        
+        alert(`${type.toUpperCase()} 프로젝트 템플릿이 적용되었습니다.`);
+        isFormChanged = true;
+    }
+}
+
+function setupFormChangeTracking() {
+    const form = document.getElementById('addProjectForm');
+    
+    form.addEventListener('input', () => { isFormChanged = true; });
+    form.addEventListener('change', () => { isFormChanged = true; });
+    
+    window.addEventListener('beforeunload', function(e) {
+        if (isFormChanged) {
+            e.preventDefault();
+            e.returnValue = '';
+            return '';
+        }
+    });
+    
+    form.addEventListener('submit', function() {
+        isFormChanged = false;
+    });
+}
+
+// 페이지 로드 시 실행
+document.addEventListener('DOMContentLoaded', function() {
+    // 임시저장된 데이터 확인
+    const draftData = localStorage.getItem('projectDraft');
+    if (draftData) {
+        if (confirm('임시저장된 데이터가 있습니다. 불러오시겠습니까?')) {
+            try {
+                const data = JSON.parse(draftData);
+                Object.keys(data).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        if (element.type === 'checkbox') {
+                            element.checked = data[key] === 'on';
+                        } else {
+                            element.value = data[key];
+                        }
+                    }
+                });
+                
+                // 기술 스택 태그 복원
+                if (data.tech_stack) {
+                    const techs = data.tech_stack.split(',').map(t => t.trim());
+                    document.querySelectorAll('.tech-tag').forEach(tag => {
+                        const tech = tag.getAttribute('data-tech');
+                        if (techs.includes(tech)) {
+                            tag.classList.add('selected');
+                        }
+                    });
+                    selectedTechs = techs;
+                }
+                
+                alert('임시저장된 데이터를 불러왔습니다.');
+            } catch (e) {
+                console.error('임시저장 데이터 복원 중 오류:', e);
+            }
+            localStorage.removeItem('projectDraft');
+        }
+    }
+    
+    // 자동저장 시작 (5분마다)
+    setInterval(() => {
+        if (isFormChanged) {
+            saveAsDraft();
+            console.log('자동 임시저장 완료');
+        }
+    }, 300000);
+});
+</script>
+{% endblock %}
+</script>

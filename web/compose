@@ -1,0 +1,24 @@
+# web/Dockerfile
+FROM nginx:alpine
+
+# Install curl for health checks
+RUN apk add --no-cache curl
+
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY def.conf /etc/nginx/conf.d/default.conf
+
+# Copy static files
+COPY static/ /var/www/html/static/
+COPY templates/ /var/www/html/templates/
+
+# Create log directory
+RUN mkdir -p /var/log/nginx
+
+# Create uploads directory (will be mounted as volume)
+RUN mkdir -p /var/www/html/uploads
+
+# Expose ports
+EXPOSE 80 443
+
+CMD ["nginx", "-g", "daemon off;"]

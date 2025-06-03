@@ -1,0 +1,24 @@
+# namespaces.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: web
+  labels:
+    name: web
+    tier: frontend
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: was
+  labels:
+    name: was
+    tier: backend
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: db
+  labels:
+    name: db
+    tier: database

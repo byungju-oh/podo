@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # MySQL 데이터베이스
+  mysql:
+    image: mysql:8.0
+    container_name: portfolio-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: portfolio
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/conf.d:/etc/mysql/conf.d
+    networks:
+      - portfolio-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p1234"]
+      timeout: 20s
+      retries: 10
+
+  # Flask WAS
+  flask-app:
+    build: 
+      context: ./was
+      dockerfile: compose
+    container_name: portfolio-flask
+    environment:
+      DATABASE_URL: mysql+pymysql://root:1234@mysql:3306/portfolio
+      SECRET_KEY: your-secret-key-change-this
+      FLASK_ENV: production
+      PYTHONUNBUFFERED: 1
+    ports:
+      - "5000:5000"
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - portfolio-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx 웹서버
+  nginx:
+    build:
+      context: ./web
+      dockerfile: compose
+    container_name: portfolio-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - uploads_data:/var/www/html/uploads:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - flask-app
+    networks:
+      - portfolio-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/nginx-health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mysql_data:
+    driver: local
+  uploads_data:
+    driver: local
+
+networks:
+  portfolio-network:
+    driver: bridge

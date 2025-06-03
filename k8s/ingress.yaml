@@ -1,0 +1,44 @@
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: portfolio-simple
+  namespace: web
+  annotations:
+    # 자동 HTTPS 리다이렉트 (NGINX가 알아서 처리)
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Let's Encrypt SSL 인증서 자동 발급
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # 기본 설정들
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - byungju.me
+    - www.byungju.me
+    secretName: byungju-me-tls
+  rules:
+  - host: byungju.me
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-service
+            port:
+              number: 80
+  - host: www.byungju.me
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-service
+            port:
+              number: 80

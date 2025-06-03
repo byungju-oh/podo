@@ -1,0 +1,19 @@
+[mysqld]
+default-authentication-plugin=mysql_native_password
+character-set-server=utf8mb4
+collation-server=utf8mb4_unicode_ci
+
+# Performance settings
+max_connections=200
+innodb_buffer_pool_size=512M
+innodb_log_file_size=128M
+innodb_flush_log_at_trx_commit=2
+
+# Logging
+general_log=0
+slow_query_log=1
+slow_query_log_file=/var/lib/mysql/slow.log
+long_query_time=2
+
+[client]
+default-character-set=utf8mb4

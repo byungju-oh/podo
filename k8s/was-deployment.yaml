@@ -1,0 +1,228 @@
+# was-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-deployment
+  namespace: was
+  labels:
+    app: flask
+    tier: backend
+spec:
+  replicas: 1  # 필요시 2-3으로 확장 가능
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0  # 무중단 배포
+  selector:
+    matchLabels:
+      app: flask
+  template:
+    metadata:
+      labels:
+        app: flask
+        tier: backend
+    spec:
+      # Pod 종료 시 graceful shutdown 시간 (올바른 위치)
+      terminationGracePeriodSeconds: 60
+      
+      # 초기화 컨테이너로 DB 대기
+      initContainers:
+      - name: wait-for-db
+        image: busybox:1.35
+        command: ['sh', '-c']
+        args:
+        - |
+          echo "Waiting for MySQL to be ready..."
+          until nc -z mysql-service.db.svc.cluster.local 3306; do
+            echo "MySQL not ready, waiting..."
+            sleep 2
+          done
+          echo "MySQL is ready!"
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+      
+      containers:
+      - name: flask
+        image: portfolio-was:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5000
+          name: http
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: database-url
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: secret-key
+        - name: FLASK_ENV
+          value: "production"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: INSTANCE_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        # 시작 준비 상태 체크 (데이터베이스 초기화 완료 확인)
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 5000
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 6
+        # 생존 상태 체크 (일반적인 헬스체크)
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        # 시작 시간 체크 (느린 초기화 허용)
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 30  # 5분까지 허용
+        volumeMounts:
+        - name: upload-storage
+          mountPath: /app/uploads
+        # 보안 컨텍스트
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+      
+      volumes:
+      - name: upload-storage
+        persistentVolumeClaim:
+          claimName: upload-pvc
+      
+      # Pod anti-affinity로 다른 노드에 분산 배치 (선택사항)
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - flask
+              topologyKey: kubernetes.io/hostname
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-service
+  namespace: was
+  labels:
+    app: flask
+spec:
+  type: ClusterIP
+  sessionAffinity: None  # 로드밸런싱 기본값
+  ports:
+  - port: 5000
+    targetPort: 5000
+    protocol: TCP
+    name: http
+  selector:
+    app: flask
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: was
+type: Opaque
+data:
+  database-url: bXlzcWwrcHlteXNxbDovL3Jvb3Q6MTIzNEBteXNxbC1zZXJ2aWNlLmRiLnN2Yy5jbHVzdGVyLmxvY2FsOjMzMDYvcG9ydGZvbGlv  # mysql+pymysql://root:1234@mysql-service.db.svc.cluster.local:3306/portfolio
+  secret-key: eW91ci1zZWNyZXQta2V5LWNoYW5nZS10aGlz  # your-secret-key-change-this
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: upload-pvc
+  namespace: was
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-path
+
+---
+# HorizontalPodAutoscaler (선택사항 - 자동 스케일링)
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: flask-hpa
+  namespace: was
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: flask-deployment
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15

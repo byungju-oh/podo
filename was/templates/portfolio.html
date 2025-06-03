@@ -1,0 +1,1014 @@
+{% extends "base.html" %}
+
+{% block title %}프로젝트 포트폴리오 - IT 엔지니어{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Page Header -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 mb-3">프로젝트 포트폴리오</h1>
+            <p class="lead text-muted">실제 비즈니스 문제를 해결한 기술 프로젝트들</p>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="filter-section">
+                <!-- 프로젝트 타입 필터 -->
+                <div class="filter-group mb-3">
+                    <h6 class="filter-label">
+                        <i class="fas fa-layer-group me-2"></i>프로젝트 유형
+                    </h6>
+                    <div class="filter-buttons">
+                        <a href="{{ url_for('portfolio') }}" 
+                           class="btn btn-filter {{ 'btn-primary' if current_type == 'all' else 'btn-outline-primary' }}">
+                            <i class="fas fa-th me-1"></i>전체
+                            <span class="badge bg-secondary ms-1">{{ projects|length }}</span>
+                        </a>
+                        <a href="{{ url_for('portfolio', type='tech') }}" 
+                           class="btn btn-filter {{ 'btn-primary' if current_type == 'tech' else 'btn-outline-primary' }}">
+                            <i class="fas fa-laptop-code me-1"></i>웹/앱 개발
+                            <span class="badge bg-secondary ms-1">{{ project_types.get('tech', 0) }}</span>
+                        </a>
+                        <a href="{{ url_for('portfolio', type='infra') }}" 
+                           class="btn btn-filter {{ 'btn-primary' if current_type == 'infra' else 'btn-outline-primary' }}">
+                            <i class="fas fa-server me-1"></i>인프라/DevOps
+                            <span class="badge bg-secondary ms-1">{{ project_types.get('infra', 0) }}</span>
+                        </a>
+                        <a href="{{ url_for('portfolio', type='data') }}" 
+                           class="btn btn-filter {{ 'btn-primary' if current_type == 'data' else 'btn-outline-primary' }}">
+                            <i class="fas fa-chart-line me-1"></i>데이터 분석
+                            <span class="badge bg-secondary ms-1">{{ project_types.get('data', 0) }}</span>
+                        </a>
+                        <a href="{{ url_for('portfolio', type='ai') }}" 
+                           class="btn btn-filter {{ 'btn-primary' if current_type == 'ai' else 'btn-outline-primary' }}">
+                            <i class="fas fa-brain me-1"></i>AI/ML
+                            <span class="badge bg-secondary ms-1">{{ project_types.get('ai', 0) }}</span>
+                        </a>
+                        <a href="{{ url_for('portfolio', type='art') }}" 
+                           class="btn btn-filter {{ 'btn-primary' if current_type == 'art' else 'btn-outline-primary' }}">
+                            <i class="fas fa-palette me-1"></i>아트워크
+                            <span class="badge bg-secondary ms-1">{{ project_types.get('art', 0) }}</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 기술 스택 필터 (선택사항) -->
+                <div class="filter-group">
+                    <h6 class="filter-label">
+                        <i class="fas fa-tags me-2"></i>주요 기술
+                    </h6>
+                    <div class="tech-filter-tags">
+                        <span class="tech-tag" data-tech="Python">
+                            <i class="fab fa-python"></i> Python
+                        </span>
+                        <span class="tech-tag" data-tech="JavaScript">
+                            <i class="fab fa-js-square"></i> JavaScript
+                        </span>
+                        <span class="tech-tag" data-tech="AWS">
+                            <i class="fab fa-aws"></i> AWS
+                        </span>
+                        <span class="tech-tag" data-tech="Docker">
+                            <i class="fab fa-docker"></i> Docker
+                        </span>
+                        <span class="tech-tag" data-tech="Kubernetes">
+                            <i class="fas fa-dharmachakra"></i> Kubernetes
+                        </span>
+                        <span class="tech-tag" data-tech="React">
+                            <i class="fab fa-react"></i> React
+                        </span>
+                        <span class="tech-tag" data-tech="PostgreSQL">
+                            <i class="fas fa-database"></i> PostgreSQL
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Portfolio Grid -->
+    {% if projects %}
+    <div class="row" id="portfolio-grid">
+        {% for project in projects %}
+        <div class="col-lg-4 col-md-6 mb-4 portfolio-item" 
+             data-type="{{ project.project_type or 'other' }}" 
+             data-tech="{{ project.tech_stack or '' }}">
+            <div class="project-card h-100">
+                <!-- Project Image -->
+                <div class="project-image">
+                    {% if project.image_path %}
+                    <img src="{{ url_for('uploaded_file', filename=project.image_path) }}" 
+                         class="card-img-top" 
+                         alt="{{ project.title }}"
+                         loading="lazy">
+                    {% else %}
+                    <div class="project-placeholder">
+                        {% if project.project_type == 'tech' %}
+                            <i class="fas fa-laptop-code fa-4x"></i>
+                        {% elif project.project_type == 'data' %}
+                            <i class="fas fa-chart-line fa-4x"></i>
+                        {% elif project.project_type == 'ai' %}
+                            <i class="fas fa-brain fa-4x"></i>
+                        {% elif project.project_type == 'infra' %}
+                            <i class="fas fa-server fa-4x"></i>
+                        {% elif project.project_type == 'art' %}
+                            <i class="fas fa-palette fa-4x"></i>
+                        {% else %}
+                            <i class="fas fa-code fa-4x"></i>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Project Type Badge -->
+                    <div class="project-type-badge">
+                        {% if project.project_type == 'tech' %}
+                            <span class="badge bg-primary">웹/앱 개발</span>
+                        {% elif project.project_type == 'data' %}
+                            <span class="badge bg-success">데이터 분석</span>
+                        {% elif project.project_type == 'ai' %}
+                            <span class="badge bg-warning text-dark">AI/ML</span>
+                        {% elif project.project_type == 'infra' %}
+                            <span class="badge bg-info">인프라</span>
+                        {% elif project.project_type == 'art' %}
+                            <span class="badge bg-secondary">아트워크</span>
+                        {% else %}
+                            <span class="badge bg-dark">기타</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Overlay -->
+                    <div class="project-overlay">
+                        <div class="project-overlay-content">
+                            <a href="{{ url_for('project_detail', project_id=project.id) }}" 
+                               class="btn btn-light btn-sm me-2">
+                                <i class="fas fa-eye"></i> 상세보기
+                            </a>
+                            {% if project.github_url %}
+                            <a href="{{ project.github_url }}" target="_blank" 
+                               class="btn btn-dark btn-sm me-2">
+                                <i class="fab fa-github"></i> GitHub
+                            </a>
+                            {% endif %}
+                            {% if project.demo_url %}
+                            <a href="{{ project.demo_url }}" target="_blank" 
+                               class="btn btn-success btn-sm">
+                                <i class="fas fa-external-link-alt"></i> Demo
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card Body -->
+                <div class="card-body">
+                    <h5 class="card-title mb-2">{{ project.title }}</h5>
+                    
+                    <!-- Tech Stack -->
+                    {% if project.tech_stack %}
+                    <div class="tech-stack mb-3">
+                        {% set tech_list = project.tech_stack.split(',') %}
+                        {% for tech in tech_list[:4] %}
+                        <span class="badge tech-badge-small">{{ tech.strip() }}</span>
+                        {% endfor %}
+                        {% if tech_list|length > 4 %}
+                        <span class="badge bg-light text-muted">+{{ tech_list|length - 4 }}</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Description -->
+                    <p class="card-text description">
+                        {{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}
+                    </p>
+                    
+                    <!-- Project Meta -->
+                    <div class="project-meta mb-3">
+                        {% if project.my_role %}
+                        <div class="meta-item">
+                            <small class="text-muted">
+                                <i class="fas fa-user-tag me-1"></i>{{ project.my_role }}
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        {% if project.team_size %}
+                        <div class="meta-item">
+                            <small class="text-muted">
+                                <i class="fas fa-users me-1"></i>{{ project.team_size }}명 팀
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        {% if project.start_date %}
+                        <div class="meta-item">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ project.start_date.strftime('%Y.%m') }}
+                                {% if project.end_date %}
+                                - {{ project.end_date.strftime('%Y.%m') }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Achievements Preview -->
+                    {% if project.achievements %}
+                    <div class="achievements-preview mb-3">
+                        <h6 class="text-primary mb-2">
+                            <i class="fas fa-trophy me-1"></i>주요 성과
+                        </h6>
+                        <p class="small text-muted mb-0">
+                            {{ project.achievements[:80] }}{% if project.achievements|length > 80 %}...{% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Stats -->
+                    <div class="project-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-eye text-muted"></i>
+                            <small class="text-muted">{{ project.view_count or 0 }}</small>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-heart text-danger"></i>
+                            <small class="text-muted">{{ project.like_count or 0 }}</small>
+                        </div>
+                        {% if project.github_url %}
+                        <div class="stat-item">
+                            <i class="fab fa-github text-dark"></i>
+                            <small class="text-muted">GitHub</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination or Load More -->
+    <div class="row mt-5">
+        <div class="col-12 text-center">
+            <button class="btn btn-outline-primary btn-lg" id="loadMore" style="display: none;">
+                <i class="fas fa-plus me-2"></i>더 많은 프로젝트 보기
+            </button>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="row">
+        <div class="col-12 text-center py-5">
+            <div class="empty-state">
+                <i class="fas fa-folder-open fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted">프로젝트가 없습니다</h4>
+                <p class="text-muted mb-4">
+                    {% if current_type != 'all' %}
+                    선택한 카테고리에 프로젝트가 없습니다.
+                    {% else %}
+                    아직 등록된 프로젝트가 없습니다.
+                    {% endif %}
+                </p>
+                <a href="{{ url_for('portfolio') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-2"></i>전체 보기
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick View Modal -->
+<div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickViewTitle">프로젝트 미리보기</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="quickViewContent">
+                <!-- 동적으로 로드될 내용 -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                <a href="#" class="btn btn-primary" id="quickViewDetailBtn">상세보기</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* 필터 섹션 */
+.filter-section {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.filter-label {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.btn-filter {
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.btn-filter:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.btn-filter .badge {
+    font-size: 0.75rem;
+}
+
+/* 기술 필터 태그 */
+.tech-filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.tech-tag {
+    background: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 20px;
+    padding: 8px 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #495057;
+}
+
+.tech-tag:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+    transform: translateY(-2px);
+}
+
+.tech-tag.active {
+    background: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+
+.tech-tag i {
+    margin-right: 5px;
+}
+
+/* 프로젝트 카드 개선 */
+.project-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.project-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+.project-image {
+    position: relative;
+    height: 220px;
+    overflow: hidden;
+}
+
+.project-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.project-card:hover .project-image img {
+    transform: scale(1.1);
+}
+
+.project-placeholder {
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.project-type-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 2;
+}
+
+.project-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.project-card:hover .project-overlay {
+    opacity: 1;
+}
+
+.project-overlay-content {
+    text-align: center;
+}
+
+/* 기술 스택 배지 */
+.tech-stack {
+    min-height: 30px;
+}
+
+.tech-badge-small {
+    background: #e9ecef;
+    color: #495057;
+    font-size: 0.75rem;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+/* 프로젝트 메타 정보 */
+.project-meta {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+.meta-item {
+    margin-bottom: 5px;
+}
+
+.meta-item:last-child {
+    margin-bottom: 0;
+}
+
+/* 성과 미리보기 */
+.achievements-preview {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.achievements-preview h6 {
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+/* 프로젝트 통계 */
+.project-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    margin-top: auto;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.stat-item i {
+    font-size: 0.9rem;
+}
+
+/* 빈 상태 */
+.empty-state {
+    padding: 60px 20px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .filter-section {
+        padding: 20px;
+    }
+    
+    .filter-buttons {
+        justify-content: center;
+    }
+    
+    .btn-filter {
+        font-size: 0.9rem;
+        padding: 8px 15px;
+    }
+    
+    .tech-filter-tags {
+        justify-content: center;
+    }
+    
+    .tech-tag {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
+    
+    .project-image {
+        height: 180px;
+    }
+    
+    .project-overlay {
+        opacity: 1;
+        background: rgba(0,0,0,0.6);
+    }
+    
+    .project-overlay-content .btn {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+    }
+    
+    .project-stats {
+        font-size: 0.9rem;
+    }
+    
+    .achievements-preview {
+        padding: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .filter-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn-filter {
+        justify-content: center;
+        margin-bottom: 5px;
+    }
+    
+    .project-overlay-content {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+
+/* 로딩 애니메이션 */
+.portfolio-item {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease;
+}
+
+.portfolio-item.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 필터 애니메이션 */
+.portfolio-item.filtering {
+    transform: scale(0.8);
+    opacity: 0;
+}
+
+.portfolio-item.filtered-out {
+    display: none;
+}
+
+/* 스크롤 애니메이션 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+/* 호버 효과 개선 */
+.project-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(103, 126, 234, 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.project-card:hover::before {
+    opacity: 1;
+}
+
+/* 검색 기능 (향후 추가용) */
+.search-container {
+    position: relative;
+    max-width: 400px;
+    margin: 0 auto 30px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 20px 12px 45px;
+    border: 2px solid #dee2e6;
+    border-radius: 25px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+.search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 초기화
+    initializePortfolio();
+    
+    // 기술 필터 이벤트
+    initializeTechFilters();
+    
+    // 스크롤 애니메이션
+    initializeScrollAnimations();
+    
+    // 무한 스크롤 (선택사항)
+    // initializeInfiniteScroll();
+});
+
+function initializePortfolio() {
+    // 모든 프로젝트 아이템에 애니메이션 클래스 추가
+    const portfolioItems = document.querySelectorAll('.portfolio-item');
+    portfolioItems.forEach((item, index) => {
+        setTimeout(() => {
+            item.classList.add('visible');
+        }, index * 100);
+    });
+    
+    // 프로젝트 카드 호버 효과
+    document.querySelectorAll('.project-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+}
+
+function initializeTechFilters() {
+    const techTags = document.querySelectorAll('.tech-tag');
+    const portfolioItems = document.querySelectorAll('.portfolio-item');
+    
+    techTags.forEach(tag => {
+        tag.addEventListener('click', function() {
+            const tech = this.getAttribute('data-tech');
+            
+            // 태그 활성/비활성 토글
+            this.classList.toggle('active');
+            
+            // 활성화된 모든 태그 가져오기
+            const activeTags = Array.from(document.querySelectorAll('.tech-tag.active'))
+                                  .map(t => t.getAttribute('data-tech'));
+            
+            // 필터링 적용
+            filterByTech(activeTags);
+        });
+    });
+}
+
+function filterByTech(activeTags) {
+    const portfolioItems = document.querySelectorAll('.portfolio-item');
+    
+    portfolioItems.forEach(item => {
+        const itemTech = item.getAttribute('data-tech');
+        
+        if (activeTags.length === 0) {
+            // 모든 태그가 비활성화된 경우 모든 아이템 표시
+            showItem(item);
+        } else {
+            // 활성화된 태그 중 하나라도 포함되면 표시
+            const shouldShow = activeTags.some(tag => 
+                itemTech.toLowerCase().includes(tag.toLowerCase())
+            );
+            
+            if (shouldShow) {
+                showItem(item);
+            } else {
+                hideItem(item);
+            }
+        }
+    });
+    
+    // 결과 카운트 업데이트
+    updateResultCount();
+}
+
+function showItem(item) {
+    item.classList.remove('filtered-out', 'filtering');
+    item.style.display = 'block';
+    
+    setTimeout(() => {
+        item.classList.add('visible');
+    }, 50);
+}
+
+function hideItem(item) {
+    item.classList.add('filtering');
+    item.classList.remove('visible');
+    
+    setTimeout(() => {
+        item.classList.add('filtered-out');
+        item.style.display = 'none';
+    }, 300);
+}
+
+function updateResultCount() {
+    const visibleItems = document.querySelectorAll('.portfolio-item:not(.filtered-out)');
+    const countElement = document.getElementById('result-count');
+    
+    if (countElement) {
+        countElement.textContent = visibleItems.length;
+    }
+}
+
+function initializeScrollAnimations() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in-up');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+
+    // 새로 로드되는 아이템들 관찰
+    document.querySelectorAll('.portfolio-item:not(.visible)').forEach(item => {
+        observer.observe(item);
+    });
+}
+
+// 퀵뷰 모달 기능
+function showQuickView(projectId) {
+    const modal = new bootstrap.Modal(document.getElementById('quickViewModal'));
+    const title = document.getElementById('quickViewTitle');
+    const content = document.getElementById('quickViewContent');
+    const detailBtn = document.getElementById('quickViewDetailBtn');
+    
+    // 로딩 상태
+    title.textContent = '로딩 중...';
+    content.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+    
+    // 프로젝트 데이터 가져오기 (AJAX)
+    fetch(`/api/project/${projectId}/quick-view`)
+        .then(response => response.json())
+        .then(data => {
+            title.textContent = data.title;
+            content.innerHTML = generateQuickViewContent(data);
+            detailBtn.href = `/project/${projectId}`;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            content.innerHTML = '<div class="alert alert-danger">데이터를 불러오는데 실패했습니다.</div>';
+        });
+    
+    modal.show();
+}
+
+function generateQuickViewContent(project) {
+    return `
+        <div class="row">
+            <div class="col-md-6">
+                ${project.image_path ? 
+                    `<img src="/uploads/${project.image_path}" class="img-fluid rounded" alt="${project.title}">` :
+                    '<div class="bg-light p-5 text-center rounded"><i class="fas fa-image fa-3x text-muted"></i></div>'
+                }
+            </div>
+            <div class="col-md-6">
+                <h5>프로젝트 개요</h5>
+                <p>${project.description}</p>
+                
+                ${project.tech_stack ? `
+                <h6>기술 스택</h6>
+                <div class="mb-3">
+                    ${project.tech_stack.split(',').map(tech => 
+                        `<span class="badge bg-primary me-1">${tech.trim()}</span>`
+                    ).join('')}
+                </div>
+                ` : ''}
+                
+                ${project.achievements ? `
+                <h6>주요 성과</h6>
+                <p>${project.achievements}</p>
+                ` : ''}
+                
+                <div class="d-flex gap-2 mt-3">
+                    ${project.github_url ? 
+                        `<a href="${project.github_url}" target="_blank" class="btn btn-outline-dark btn-sm">
+                            <i class="fab fa-github me-1"></i>GitHub
+                        </a>` : ''
+                    }
+                    ${project.demo_url ? 
+                        `<a href="${project.demo_url}" target="_blank" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-external-link-alt me-1"></i>Demo
+                        </a>` : ''
+                    }
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 검색 기능 (향후 추가)
+function initializeSearch() {
+    const searchInput = document.getElementById('search-input');
+    if (!searchInput) return;
+    
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.toLowerCase().trim();
+        
+        searchTimeout = setTimeout(() => {
+            filterBySearch(query);
+        }, 300);
+    });
+}
+
+function filterBySearch(query) {
+    const portfolioItems = document.querySelectorAll('.portfolio-item');
+    
+    portfolioItems.forEach(item => {
+        const title = item.querySelector('.card-title').textContent.toLowerCase();
+        const description = item.querySelector('.description').textContent.toLowerCase();
+        const techStack = item.getAttribute('data-tech').toLowerCase();
+        
+        const isMatch = title.includes(query) || 
+                       description.includes(query) || 
+                       techStack.includes(query);
+        
+        if (query === '' || isMatch) {
+            showItem(item);
+        } else {
+            hideItem(item);
+        }
+    });
+    
+    updateResultCount();
+}
+
+// 무한 스크롤 (선택사항)
+function initializeInfiniteScroll() {
+    let page = 1;
+    let loading = false;
+    const loadMoreBtn = document.getElementById('loadMore');
+    
+    if (!loadMoreBtn) return;
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !loading) {
+                loadMoreProjects();
+            }
+        });
+    });
+    
+    observer.observe(loadMoreBtn);
+    
+    function loadMoreProjects() {
+        if (loading) return;
+        
+        loading = true;
+        page++;
+        
+        fetch(`/api/projects?page=${page}&type=${getCurrentType()}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.projects && data.projects.length > 0) {
+                    appendProjects(data.projects);
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading more projects:', error);
+            })
+            .finally(() => {
+                loading = false;
+            });
+    }
+}
+
+function getCurrentType() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('type') || 'all';
+}
+
+function appendProjects(projects) {
+    const grid = document.getElementById('portfolio-grid');
+    
+    projects.forEach((project, index) => {
+        const projectElement = createProjectElement(project);
+        grid.appendChild(projectElement);
+        
+        // 애니메이션과 함께 표시
+        setTimeout(() => {
+            projectElement.classList.add('visible');
+        }, index * 100);
+    });
+}
+
+function createProjectElement(project) {
+    // 프로젝트 엘리먼트 생성 로직
+    // 템플릿에서 사용된 구조와 동일하게 생성
+    const div = document.createElement('div');
+    div.className = 'col-lg-4 col-md-6 mb-4 portfolio-item';
+    div.setAttribute('data-type', project.project_type || 'other');
+    div.setAttribute('data-tech', project.tech_stack || '');
+    
+    // 내용 생성...
+    // (실제 구현에서는 템플릿 엔진 사용 권장)
+    
+    return div;
+}
+
+// 성능 최적화
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// 리사이즈 이벤트 최적화
+window.addEventListener('resize', debounce(() => {
+    // 리사이즈 시 필요한 작업
+    updateLayoutOnResize();
+}, 250));
+
+function updateLayoutOnResize() {
+    // 레이아웃 업데이트 로직
+    const portfolioItems = document.querySelectorAll('.portfolio-item');
+    portfolioItems.forEach(item => {
+        // 필요시 위치 재계산
+    });
+}
+</script>
+{% endblock %}
