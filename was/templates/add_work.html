@@ -19,6 +19,23 @@
         </div>
     </div>
 
+    <!-- 에러 메시지 표시 -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                            <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' }} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <div class="row">
         <!-- Main Form -->
         <div class="col-lg-8">
@@ -29,7 +46,8 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form id="addProjectForm" method="POST" enctype="multipart/form-data" action="{{ url_for('add_work') }}">
+                    <form method="POST" enctype="multipart/form-data" id="addProjectForm" novalidate>
+                        {{ form.hidden_tag() }}
                         
                         <!-- 기본 정보 섹션 -->
                         <div class="form-section mb-4">
@@ -41,35 +59,44 @@
                             
                             <div class="row">
                                 <div class="col-md-8 mb-3">
-                                    <label for="title" class="form-label">프로젝트명 *</label>
-                                    <input type="text" class="form-control" id="title" name="title" 
-                                           placeholder="예: E-commerce 플랫폼 구축" required>
+                                    {{ form.title.label(class="form-label") }}
+                                    {{ form.title(class="form-control", placeholder="예: E-commerce 플랫폼 구축") }}
+                                    {% if form.title.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.title.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
                                     <div class="form-text">사용자에게 표시될 프로젝트 제목입니다.</div>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="project_type" class="form-label">프로젝트 유형 *</label>
-                                    <select class="form-select" id="project_type" name="project_type" required>
-                                        <option value="">선택하세요</option>
-                                        <option value="tech">웹/앱 개발</option>
-                                        <option value="infra">인프라/DevOps</option>
-                                        <option value="data">데이터 분석</option>
-                                        <option value="ai">AI/ML</option>
-                                        <option value="art">아트워크</option>
-                                    </select>
+                                    {{ form.project_type.label(class="form-label") }}
+                                    {{ form.project_type(class="form-select") }}
+                                    {% if form.project_type.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.project_type.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                             
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="category" class="form-label">세부 카테고리</label>
-                                    <select class="form-select" id="category" name="category">
-                                        <option value="">카테고리 선택</option>
-                                    </select>
+                                    {{ form.category.label(class="form-label") }}
+                                    {{ form.category(class="form-control", placeholder="예: Frontend Development") }}
+                                    {% if form.category.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.category.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="my_role" class="form-label">내 역할</label>
-                                    <input type="text" class="form-control" id="my_role" name="my_role" 
-                                           placeholder="예: Full-Stack Developer, DevOps Engineer">
+                                    {{ form.my_role.label(class="form-label") }}
+                                    {{ form.my_role(class="form-control", placeholder="예: Full-Stack Developer") }}
+                                    {% if form.my_role.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.my_role.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -83,16 +110,24 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label for="description" class="form-label">간단한 설명 *</label>
-                                <textarea class="form-control" id="description" name="description" rows="3"
-                                          placeholder="프로젝트의 목적과 핵심 기능을 간단히 설명해주세요..." required></textarea>
+                                {{ form.description.label(class="form-label") }}
+                                {{ form.description(class="form-control", rows="3", placeholder="프로젝트의 목적과 핵심 기능을 간단히 설명해주세요...") }}
+                                {% if form.description.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.description.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
                                 <div class="form-text">프로젝트 목록에서 표시될 간략한 설명입니다.</div>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="detailed_description" class="form-label">상세 설명</label>
-                                <textarea class="form-control" id="detailed_description" name="detailed_description" rows="6"
-                                          placeholder="프로젝트의 배경, 문제 해결 과정, 구현 방법 등을 자세히 작성해주세요..."></textarea>
+                                {{ form.detailed_description.label(class="form-label") }}
+                                {{ form.detailed_description(class="form-control", rows="6", placeholder="프로젝트의 배경, 문제 해결 과정, 구현 방법 등을 자세히 작성해주세요...") }}
+                                {% if form.detailed_description.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.detailed_description.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
                                 <div class="form-text">프로젝트 상세 페이지에서 표시될 상세한 설명입니다.</div>
                             </div>
                         </div>
@@ -106,9 +141,13 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label for="tech_stack" class="form-label">사용 기술</label>
-                                <input type="text" class="form-control" id="tech_stack" name="tech_stack" 
-                                       placeholder="Python, Django, PostgreSQL, AWS, Docker">
+                                {{ form.tech_stack.label(class="form-label") }}
+                                {{ form.tech_stack(class="form-control", placeholder="Python, Django, PostgreSQL, AWS, Docker") }}
+                                {% if form.tech_stack.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.tech_stack.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
                                 <div class="form-text">쉼표(,)로 구분하여 입력하세요. 예: Python, React, PostgreSQL</div>
                             </div>
                             
@@ -151,12 +190,22 @@
                             
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label for="start_date" class="form-label">시작일</label>
-                                    <input type="date" class="form-control" id="start_date" name="start_date">
+                                    {{ form.start_date.label(class="form-label") }}
+                                    {{ form.start_date(class="form-control") }}
+                                    {% if form.start_date.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.start_date.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="end_date" class="form-label">종료일</label>
-                                    <input type="date" class="form-control" id="end_date" name="end_date">
+                                    {{ form.end_date.label(class="form-label") }}
+                                    {{ form.end_date(class="form-control") }}
+                                    {% if form.end_date.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.end_date.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
                                     <div class="form-check mt-2">
                                         <input class="form-check-input" type="checkbox" id="is_ongoing" name="is_ongoing">
                                         <label class="form-check-label" for="is_ongoing">
@@ -165,17 +214,13 @@
                                     </div>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="team_size" class="form-label">팀 규모</label>
-                                    <select class="form-select" id="team_size" name="team_size">
-                                        <option value="">선택하세요</option>
-                                        <option value="1">개인 프로젝트</option>
-                                        <option value="2">2명</option>
-                                        <option value="3">3명</option>
-                                        <option value="4">4명</option>
-                                        <option value="5">5명</option>
-                                        <option value="6">6-10명</option>
-                                        <option value="11">11명 이상</option>
-                                    </select>
+                                    {{ form.team_size.label(class="form-label") }}
+                                    {{ form.team_size(class="form-control", placeholder="예: 4") }}
+                                    {% if form.team_size.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.team_size.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -190,27 +235,33 @@
                             
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="github_url" class="form-label">
-                                        <i class="fab fa-github me-1"></i>GitHub URL
-                                    </label>
-                                    <input type="url" class="form-control" id="github_url" name="github_url" 
-                                           placeholder="https://github.com/username/repository">
+                                    {{ form.github_url.label(class="form-label") }}
+                                    {{ form.github_url(class="form-control", placeholder="https://github.com/username/repository") }}
+                                    {% if form.github_url.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.github_url.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="demo_url" class="form-label">
-                                        <i class="fas fa-external-link-alt me-1"></i>데모/라이브 URL
-                                    </label>
-                                    <input type="url" class="form-control" id="demo_url" name="demo_url" 
-                                           placeholder="https://example.com">
+                                    {{ form.demo_url.label(class="form-label") }}
+                                    {{ form.demo_url(class="form-control", placeholder="https://example.com") }}
+                                    {% if form.demo_url.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.demo_url.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="video_url" class="form-label">
-                                    <i class="fab fa-youtube me-1"></i>동영상 URL (YouTube, Vimeo 등)
-                                </label>
-                                <input type="url" class="form-control" id="video_url" name="video_url" 
-                                       placeholder="https://youtube.com/watch?v=...">
+                                {{ form.video_url.label(class="form-label") }}
+                                {{ form.video_url(class="form-control", placeholder="https://youtube.com/watch?v=...") }}
+                                {% if form.video_url.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.video_url.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -223,16 +274,24 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label for="achievements" class="form-label">주요 성과</label>
-                                <textarea class="form-control" id="achievements" name="achievements" rows="4"
-                                          placeholder="프로젝트를 통해 얻은 성과, 해결한 문제, 학습한 내용 등을 작성해주세요..."></textarea>
+                                {{ form.achievements.label(class="form-label") }}
+                                {{ form.achievements(class="form-control", rows="4", placeholder="프로젝트를 통해 얻은 성과, 해결한 문제, 학습한 내용 등을 작성해주세요...") }}
+                                {% if form.achievements.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.achievements.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
                                 <div class="form-text">구체적인 수치나 결과를 포함하면 더 좋습니다.</div>
                             </div>
                             
                             <div class="mb-3">
-                                <label for="metrics" class="form-label">정량적 지표</label>
-                                <textarea class="form-control" id="metrics" name="metrics" rows="2"
-                                          placeholder="예: 응답시간 50% 개선, 비용 30% 절감, 사용자 만족도 4.5/5.0"></textarea>
+                                {{ form.metrics.label(class="form-label") }}
+                                {{ form.metrics(class="form-control", rows="2", placeholder="예: 응답시간 50% 개선, 비용 30% 절감, 사용자 만족도 4.5/5.0") }}
+                                {% if form.metrics.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.metrics.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
                                 <div class="form-text">측정 가능한 성과 지표를 작성해주세요.</div>
                             </div>
                         </div>
@@ -246,9 +305,13 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label for="image" class="form-label">프로젝트 이미지</label>
-                                <input type="file" class="form-control" id="image" name="image" 
-                                       accept="image/*" onchange="previewImage(this)">
+                                {{ form.image.label(class="form-label") }}
+                                {{ form.image(class="form-control", accept="image/*", onchange="previewImage(this)") }}
+                                {% if form.image.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.image.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
                                 <div class="form-text">
                                     스크린샷, 아키텍처 다이어그램, UI 목업 등 (JPG, PNG, GIF | 최대 10MB)
                                 </div>
@@ -269,15 +332,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div class="mb-3">
-                                <label for="document" class="form-label">관련 문서</label>
-                                <input type="file" class="form-control" id="document" name="document" 
-                                       accept=".pdf,.doc,.docx,.ppt,.pptx">
-                                <div class="form-text">
-                                    프로젝트 문서, 발표자료 등 (PDF, DOC, PPT | 최대 50MB)
-                                </div>
-                            </div>
                         </div>
 
                         <!-- 공개 설정 섹션 -->
@@ -291,26 +345,26 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured">
-                                        <label class="form-check-label" for="is_featured">
-                                            <i class="fas fa-star text-warning me-1"></i>주요 프로젝트로 설정
-                                        </label>
+                                        {{ form.is_featured(class="form-check-input") }}
+                                        {{ form.is_featured.label(class="form-check-label") }}
                                         <div class="form-text">메인 페이지에 우선적으로 표시됩니다.</div>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="is_public" name="is_public" checked>
-                                        <label class="form-check-label" for="is_public">
-                                            <i class="fas fa-eye text-success me-1"></i>공개 프로젝트
-                                        </label>
+                                        {{ form.is_public(class="form-check-input", checked=true) }}
+                                        {{ form.is_public.label(class="form-check-label") }}
                                         <div class="form-text">비공개 시 관리자만 볼 수 있습니다.</div>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="sort_order" class="form-label">정렬 순서</label>
-                                    <input type="number" class="form-control" id="sort_order" name="sort_order" 
-                                           value="0" min="0">
+                                    {{ form.sort_order.label(class="form-label") }}
+                                    {{ form.sort_order(class="form-control", value="0", min="0") }}
+                                    {% if form.sort_order.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.sort_order.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
                                     <div class="form-text">숫자가 작을수록 먼저 표시됩니다.</div>
                                 </div>
                             </div>
@@ -420,7 +474,7 @@
                 </div>
                 <div class="card-body">
                     {% if recent_works %}
-                    {% for work in recent_works[:3] %}
+                    {% for work in recent_works %}
                     <div class="d-flex align-items-center mb-3">
                         {% if work.image_path %}
                         <img src="{{ url_for('uploaded_file', filename=work.image_path) }}" 
@@ -461,9 +515,8 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- CSS 스타일과 JavaScript 코드는 이전과 동일 -->
 <style>
-/* 모든 CSS 스타일은 이전 버전과 동일 */
+/* Form Styling */
 .form-section {
     border-bottom: 1px solid #eee;
     padding-bottom: 20px;
@@ -514,10 +567,89 @@
     color: white;
     border-color: #007bff;
 }
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: #dc3545;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.card {
+    border: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.guide-item {
+    border-left: 3px solid #e9ecef;
+    padding-left: 10px;
+    margin-bottom: 15px;
+}
+
+.template-buttons .btn {
+    transition: all 0.3s ease;
+}
+
+.template-buttons .btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Loading states */
+.btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .form-section {
+        padding: 15px 0;
+    }
+    
+    .section-header {
+        padding: 8px 12px;
+    }
+    
+    .tech-tags {
+        justify-content: center;
+    }
+    
+    .template-buttons .btn {
+        font-size: 0.9rem;
+    }
+}
 </style>
 
 <script>
-// 모든 JavaScript 코드는 이전 버전과 동일
 let selectedTechs = [];
 let isFormChanged = false;
 
@@ -527,21 +659,37 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeFileUpload();
     initializeFormValidation();
     setupFormChangeTracking();
+    initializeTooltips();
 });
 
-// 나머지 JavaScript 함수들은 이전 버전과 동일...
 function initializeForm() {
-    document.getElementById('project_type').addEventListener('change', updateCategories);
-    // ... 기타 초기화 코드
+    // 프로젝트 타입 변경시 카테고리 업데이트
+    const projectTypeSelect = document.getElementById('project_type');
+    if (projectTypeSelect) {
+        projectTypeSelect.addEventListener('change', updateCategories);
+    }
+    
+    // 진행중 프로젝트 체크박스
+    const isOngoingCheckbox = document.getElementById('is_ongoing');
+    const endDateInput = document.getElementById('end_date');
+    
+    if (isOngoingCheckbox && endDateInput) {
+        isOngoingCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                endDateInput.value = '';
+                endDateInput.disabled = true;
+            } else {
+                endDateInput.disabled = false;
+            }
+        });
+    }
 }
 
 function updateCategories() {
     const projectType = document.getElementById('project_type').value;
-    const categorySelect = document.getElementById('category');
+    const categoryInput = document.getElementById('category');
     
-    categorySelect.innerHTML = '<option value="">카테고리 선택</option>';
-    
-    const categories = {
+    const suggestions = {
         'tech': ['Frontend Development', 'Backend Development', 'Full-Stack Application', 'Mobile App'],
         'infra': ['Cloud Migration', 'Container Orchestration', 'CI/CD Pipeline', 'Infrastructure as Code'],
         'data': ['Data Pipeline', 'Business Intelligence', 'Data Visualization', 'ETL Process'],
@@ -549,23 +697,29 @@ function updateCategories() {
         'art': ['풍경화', '인물화', '정물화', '추상화', '일러스트', '디지털아트']
     };
     
-    if (categories[projectType]) {
-        categories[projectType].forEach(category => {
-            const option = document.createElement('option');
-            option.value = category;
-            option.textContent = category;
-            categorySelect.appendChild(option);
-        });
+    if (suggestions[projectType] && categoryInput) {
+        // 플레이스홀더 업데이트
+        categoryInput.placeholder = `예: ${suggestions[projectType][0]}`;
     }
 }
-
-// 기타 필요한 JavaScript 함수들...
 
 function initializeTechTags() {
     const techTags = document.querySelectorAll('.tech-tag');
     const techStackInput = document.getElementById('tech_stack');
     
+    if (!techStackInput) return;
+    
+    // 기존 값이 있으면 선택된 태그 표시
+    const existingTechs = techStackInput.value.split(',').map(t => t.trim()).filter(t => t);
+    selectedTechs = existingTechs;
+    
     techTags.forEach(tag => {
+        const tech = tag.getAttribute('data-tech');
+        
+        if (selectedTechs.includes(tech)) {
+            tag.classList.add('selected');
+        }
+        
         tag.addEventListener('click', function() {
             const tech = this.getAttribute('data-tech');
             
@@ -581,10 +735,30 @@ function initializeTechTags() {
             isFormChanged = true;
         });
     });
+    
+    // 직접 입력시에도 태그 동기화
+    techStackInput.addEventListener('input', function() {
+        const inputTechs = this.value.split(',').map(t => t.trim()).filter(t => t);
+        
+        techTags.forEach(tag => {
+            const tech = tag.getAttribute('data-tech');
+            if (inputTechs.includes(tech)) {
+                tag.classList.add('selected');
+            } else {
+                tag.classList.remove('selected');
+            }
+        });
+        
+        selectedTechs = inputTechs;
+        isFormChanged = true;
+    });
 }
 
 function initializeFileUpload() {
     const imageInput = document.getElementById('image');
+    if (!imageInput) return;
+    
+    // 드래그 앤 드롭 지원
     const form = document.getElementById('addProjectForm');
     
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -611,6 +785,22 @@ function initializeFileUpload() {
 
 function previewImage(input) {
     if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // 파일 크기 검사 (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            alert('파일 크기가 10MB를 초과합니다.');
+            input.value = '';
+            return;
+        }
+        
+        // 파일 타입 검사
+        if (!file.type.startsWith('image/')) {
+            alert('이미지 파일만 업로드 가능합니다.');
+            input.value = '';
+            return;
+        }
+        
         const reader = new FileReader();
         
         reader.onload = function(e) {
@@ -618,15 +808,7 @@ function previewImage(input) {
             document.getElementById('imagePreviewContainer').style.display = 'block';
         };
         
-        reader.readAsDataURL(input.files[0]);
-        
-        if (input.files[0].size > 10 * 1024 * 1024) {
-            alert('파일 크기가 10MB를 초과합니다.');
-            input.value = '';
-            removeImage();
-            return;
-        }
-        
+        reader.readAsDataURL(file);
         isFormChanged = true;
     }
 }
@@ -640,37 +822,114 @@ function removeImage() {
 
 function initializeFormValidation() {
     const form = document.getElementById('addProjectForm');
+    if (!form) return;
     
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        if (validateForm()) {
-            submitForm();
+        // 클라이언트 사이드 유효성 검사
+        if (!validateForm()) {
+            return;
         }
+        
+        submitForm();
+    });
+    
+    // 실시간 유효성 검사
+    const requiredFields = form.querySelectorAll('[required]');
+    requiredFields.forEach(field => {
+        field.addEventListener('blur', function() {
+            validateField(this);
+        });
+        
+        field.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                validateField(this);
+            }
+        });
     });
 }
 
+function validateField(field) {
+    const value = field.value.trim();
+    let isValid = true;
+    let errorMessage = '';
+    
+    // 필수 필드 검사
+    if (field.hasAttribute('required') && !value) {
+        isValid = false;
+        errorMessage = '이 필드는 필수입니다.';
+    }
+    
+    // 특정 필드별 유효성 검사
+    switch (field.id) {
+        case 'title':
+            if (value && value.length < 5) {
+                isValid = false;
+                errorMessage = '제목은 최소 5자 이상이어야 합니다.';
+            }
+            break;
+        case 'description':
+            if (value && value.length < 20) {
+                isValid = false;
+                errorMessage = '설명은 최소 20자 이상이어야 합니다.';
+            }
+            break;
+        case 'github_url':
+        case 'demo_url':
+        case 'video_url':
+            if (value && !isValidURL(value)) {
+                isValid = false;
+                errorMessage = '올바른 URL 형식을 입력해주세요.';
+            }
+            break;
+    }
+    
+    // UI 업데이트
+    if (isValid) {
+        field.classList.remove('is-invalid');
+        field.classList.add('is-valid');
+        const feedback = field.parentNode.querySelector('.invalid-feedback');
+        if (feedback) feedback.style.display = 'none';
+    } else {
+        field.classList.remove('is-valid');
+        field.classList.add('is-invalid');
+        let feedback = field.parentNode.querySelector('.invalid-feedback');
+        if (!feedback) {
+            feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback';
+            field.parentNode.appendChild(feedback);
+        }
+        feedback.textContent = errorMessage;
+        feedback.style.display = 'block';
+    }
+    
+    return isValid;
+}
+
 function validateForm() {
-    const title = document.getElementById('title').value.trim();
-    const description = document.getElementById('description').value.trim();
-    const projectType = document.getElementById('project_type').value;
+    const form = document.getElementById('addProjectForm');
+    const requiredFields = form.querySelectorAll('[required]');
+    let isFormValid = true;
     
-    if (!title || title.length < 5) {
-        alert('프로젝트명은 최소 5자 이상이어야 합니다.');
-        return false;
+    requiredFields.forEach(field => {
+        if (!validateField(field)) {
+            isFormValid = false;
+        }
+    });
+    
+    // 전체 폼 메시지
+    if (!isFormValid) {
+        showNotification('입력한 정보를 다시 확인해주세요.', 'error');
+        // 첫 번째 오류 필드로 스크롤
+        const firstInvalidField = form.querySelector('.is-invalid');
+        if (firstInvalidField) {
+            firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstInvalidField.focus();
+        }
     }
     
-    if (!description || description.length < 20) {
-        alert('설명은 최소 20자 이상이어야 합니다.');
-        return false;
-    }
-    
-    if (!projectType) {
-        alert('프로젝트 유형을 선택해주세요.');
-        return false;
-    }
-    
-    return true;
+    return isFormValid;
 }
 
 function submitForm() {
@@ -678,53 +937,76 @@ function submitForm() {
     const submitBtn = form.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     
+    // 버튼 상태 변경
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>프로젝트 추가 중...';
     submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
     
     const formData = new FormData(form);
     
-    fetch(form.action, {
+    fetch(form.action || window.location.pathname, {
         method: 'POST',
-        body: formData
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
     })
     .then(response => {
         if (response.ok) {
-            return response.json();
+            return response.text().then(text => {
+                try {
+                    return JSON.parse(text);
+                } catch {
+                    // JSON이 아닌 경우 리다이렉트 처리
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+                    throw new Error('Unexpected response format');
+                }
+            });
         }
-        throw new Error('Network response was not ok');
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     })
     .then(data => {
-        if (data.success) {
-            alert('프로젝트가 성공적으로 추가되었습니다!');
+        if (data && data.success) {
+            showNotification('프로젝트가 성공적으로 추가되었습니다!', 'success');
             setTimeout(() => {
-                window.location.href = '{{ url_for("admin") }}';
+                window.location.href = '/admin';
             }, 1500);
-        } else {
-            alert('오류가 발생했습니다: ' + (data.message || '알 수 없는 오류'));
+        } else if (data && data.message) {
+            showNotification(data.message, data.success ? 'success' : 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('프로젝트 추가 중 오류가 발생했습니다.');
+        showNotification('프로젝트 추가 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
     })
     .finally(() => {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
     });
 }
 
 function saveAsDraft() {
-    const formData = new FormData(document.getElementById('addProjectForm'));
+    const form = document.getElementById('addProjectForm');
+    const formData = new FormData(form);
     const draftData = {};
     
     for (let [key, value] of formData.entries()) {
-        if (key !== 'image' && key !== 'document') {
+        if (key !== 'image' && key !== 'csrf_token') {
             draftData[key] = value;
         }
     }
     
-    localStorage.setItem('projectDraft', JSON.stringify(draftData));
-    alert('임시저장되었습니다.');
+    try {
+        localStorage.setItem('projectDraft', JSON.stringify(draftData));
+        showNotification('임시저장되었습니다.', 'success');
+    } catch (error) {
+        console.error('임시저장 실패:', error);
+        showNotification('임시저장에 실패했습니다.', 'error');
+    }
 }
 
 function loadTemplate(type) {
@@ -789,6 +1071,9 @@ function loadTemplate(type) {
                 if (key === 'project_type') {
                     element.dispatchEvent(new Event('change'));
                 }
+                
+                // 유효성 검사 클래스 제거
+                element.classList.remove('is-invalid', 'is-valid');
             }
         });
         
@@ -804,13 +1089,14 @@ function loadTemplate(type) {
         });
         selectedTechs = techs;
         
-        alert(`${type.toUpperCase()} 프로젝트 템플릿이 적용되었습니다.`);
+        showNotification(`${type.toUpperCase()} 프로젝트 템플릿이 적용되었습니다.`, 'success');
         isFormChanged = true;
     }
 }
 
 function setupFormChangeTracking() {
     const form = document.getElementById('addProjectForm');
+    if (!form) return;
     
     form.addEventListener('input', () => { isFormChanged = true; });
     form.addEventListener('change', () => { isFormChanged = true; });
@@ -828,6 +1114,72 @@ function setupFormChangeTracking() {
     });
 }
 
+function initializeTooltips() {
+    // Bootstrap 툴팁 초기화
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+}
+
+// 유틸리티 함수들
+function isValidURL(string) {
+    try {
+        new URL(string);
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
+function showNotification(message, type = 'info') {
+    // 기존 알림이 있다면 제거
+    const existingNotification = document.querySelector('.custom-notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : 'success'} custom-notification alert-dismissible fade show`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        max-width: 500px;
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: all 0.3s ease;
+    `;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // 애니메이션
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateY(0)';
+    }, 100);
+    
+    // 자동 제거
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 300);
+        }
+    }, 5000);
+}
+
 // 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', function() {
     // 임시저장된 데이터 확인
@@ -840,9 +1192,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     const element = document.getElementById(key);
                     if (element) {
                         if (element.type === 'checkbox') {
-                            element.checked = data[key] === 'on';
+                            element.checked = data[key] === 'on' || data[key] === true;
                         } else {
                             element.value = data[key];
+                        }
+                        
+                        // 프로젝트 타입 변경 이벤트 발생
+                        if (key === 'project_type') {
+                            element.dispatchEvent(new Event('change'));
                         }
                     }
                 });
@@ -859,9 +1216,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     selectedTechs = techs;
                 }
                 
-                alert('임시저장된 데이터를 불러왔습니다.');
+                showNotification('임시저장된 데이터를 불러왔습니다.', 'success');
             } catch (e) {
                 console.error('임시저장 데이터 복원 중 오류:', e);
+                showNotification('임시저장 데이터를 불러오는데 실패했습니다.', 'error');
             }
             localStorage.removeItem('projectDraft');
         }
@@ -875,6 +1233,58 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 300000);
 });
+
+// 키보드 단축키
+document.addEventListener('keydown', function(e) {
+    // Ctrl+S 또는 Cmd+S로 임시저장
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveAsDraft();
+    }
+    
+    // ESC로 폼 초기화 확인
+    if (e.key === 'Escape') {
+        if (isFormChanged && confirm('작성 중인 내용이 있습니다. 페이지를 나가시겠습니까?')) {
+            window.location.href = '/admin';
+        }
+    }
+});
+
+// 폼 리셋 함수
+function resetForm() {
+    if (confirm('모든 입력 내용이 삭제됩니다. 계속하시겠습니까?')) {
+        document.getElementById('addProjectForm').reset();
+        
+        // 기술 태그 선택 해제
+        document.querySelectorAll('.tech-tag.selected').forEach(tag => {
+            tag.classList.remove('selected');
+        });
+        selectedTechs = [];
+        
+        // 이미지 미리보기 제거
+        removeImage();
+        
+        // 유효성 검사 클래스 제거
+        document.querySelectorAll('.is-valid, .is-invalid').forEach(el => {
+            el.classList.remove('is-valid', 'is-invalid');
+        });
+        
+        isFormChanged = false;
+        showNotification('폼이 초기화되었습니다.', 'info');
+    }
+}
+
+// 전역 에러 처리
+window.addEventListener('error', function(e) {
+    console.error('JavaScript 에러:', e.error);
+    showNotification('페이지에서 오류가 발생했습니다. 새로고침 후 다시 시도해주세요.', 'error');
+});
+
+// 전역 미처리 Promise 거부 처리
+window.addEventListener('unhandledrejection', function(e) {
+    console.error('미처리 Promise 거부:', e.reason);
+    e.preventDefault();
+    showNotification('요청 처리 중 오류가 발생했습니다.', 'error');
+});
 </script>
 {% endblock %}
-</script>
