@@ -554,24 +554,55 @@ def portfolio():
 
 @app.route('/project/<int:project_id>')
 def project_detail(project_id):
-    project = Project.query.get_or_404(project_id)
-    
-    if not project.is_public and (not current_user.is_authenticated or not current_user.is_admin):
-        flash('접근 권한이 없습니다.', 'error')
+    """프로젝트 상세 페이지"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        # 공개 여부 확인
+        if not project.is_public and (not current_user.is_authenticated or not current_user.is_admin):
+            logger.warning(f"비공개 프로젝트 접근 시도: {project_id} by {request.remote_addr}")
+            flash('접근 권한이 없습니다.', 'error')
+            return redirect(url_for('portfolio'))
+        
+        # 조회수 증가
+        try:
+            project.view_count = (project.view_count or 0) + 1
+            db.session.commit()
+        except Exception as e:
+            logger.error(f"조회수 업데이트 실패: {e}")
+            db.session.rollback()
+        
+        # 관련 프로젝트 조회
+        related_projects = []
+        try:
+            if project.category:
+                related_projects = Project.query.filter(
+                    Project.id != project_id,
+                    Project.category == project.category,
+                    Project.is_public == True
+                ).order_by(Project.created_at.desc()).limit(3).all()
+            
+            # 카테고리가 같은 프로젝트가 없으면 같은 타입의 프로젝트 찾기
+            if not related_projects and project.project_type:
+                related_projects = Project.query.filter(
+                    Project.id != project_id,
+                    Project.project_type == project.project_type,
+                    Project.is_public == True
+                ).order_by(Project.created_at.desc()).limit(3).all()
+        except Exception as e:
+            logger.error(f"관련 프로젝트 조회 실패: {e}")
+            related_projects = []
+        
+        logger.info(f"프로젝트 상세 페이지 접근: {project.title} (ID: {project_id})")
+        
+        return render_template('project_detail.html', 
+                             project=project,
+                             related_projects=related_projects)
+        
+    except Exception as e:
+        logger.error(f"프로젝트 상세 페이지 오류: {e}", exc_info=True)
+        flash('프로젝트를 불러오는 중 오류가 발생했습니다.', 'error')
         return redirect(url_for('portfolio'))
-    
-    project.view_count += 1
-    db.session.commit()
-    
-    related_projects = Project.query.filter(
-        Project.id != project_id,
-        Project.category == project.category,
-        Project.is_public == True
-    ).order_by(Project.created_at.desc()).limit(3).all()
-    
-    return render_template('project_detail.html', 
-                         project=project,
-                         related_projects=related_projects)
 
 @app.route('/about')
 def about():
@@ -1184,6 +1215,19 @@ def inject_global_vars():
         current_year=datetime.now().year,
         app_version='1.0.0'
     )
+
+# 템플릿 필터 추가
+@app.template_filter('nl2br')
+def nl2br_filter(text):
+    """개행 문자를 HTML <br> 태그로 변환"""
+    if text is None:
+        return ''
+    # HTML 이스케이프 처리 후 개행을 <br>로 변환
+    from markupsafe import Markup, escape
+    result = escape(text).replace('\n', Markup('<br>\n'))
+    return Markup(result)
+
+
 
 # 애플리케이션 시작시 초기화
 if __name__ == '__main__':
