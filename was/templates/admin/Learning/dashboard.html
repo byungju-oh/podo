@@ -1,0 +1,775 @@
+<!-- was/templates/admin/learning/dashboard.html (새 파일 생성) -->
+
+{% extends "base.html" %}
+
+{% block title %}학습 블로그 관리 - 관리자{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">학습 블로그 관리</h1>
+                    <p class="text-muted mb-0">학습 포스트 및 카테고리 관리</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('learning_blog') }}" class="btn btn-outline-info me-2" target="_blank">
+                        <i class="fas fa-eye me-1"></i>블로그 보기
+                    </a>
+                    <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>관리자 홈
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                총 포스트
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ total_posts }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                발행된 포스트
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ published_posts }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                카테고리
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ total_categories }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-folder fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                총 조회수
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ total_views }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-eye fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Recent Posts -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>최근 포스트
+                    </h5>
+                    <a href="{{ url_for('admin_learning_post_new') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>새 포스트 작성
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_posts %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>제목</th>
+                                    <th>카테고리</th>
+                                    <th>상태</th>
+                                    <th>조회수</th>
+                                    <th>작성일</th>
+                                    <th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for post in recent_posts %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if post.thumbnail_path %}
+                                            <img src="{{ url_for('uploaded_file', filename=post.thumbnail_path) }}" 
+                                                 class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" 
+                                                 style="width: 40px; height: 40px;">
+                                                <i class="fas fa-file-alt text-muted"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-bold">{{ post.title }}</div>
+                                                <small class="text-muted">ID: {{ post.id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if post.category %}
+                                        <span class="badge" style="background-color: {{ post.category.color }}">
+                                            {{ post.category.name }}
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if post.is_published %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-eye"></i> 발행됨
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-file"></i> 초안
+                                        </span>
+                                        {% endif %}
+                                        {% if post.is_featured %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-star"></i> 추천
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ post.view_count or 0 }}</td>
+                                    <td>{{ post.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            {% if post.is_published %}
+                                            <a href="{{ url_for('learning_post_detail', slug=post.slug) }}" 
+                                               class="btn btn-outline-info" target="_blank">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% endif %}
+                                            <a href="{{ url_for('admin_learning_post_edit', post_id=post.id) }}" 
+                                               class="btn btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-outline-danger" 
+                                                    onclick="deletePost({{ post.id }}, '{{ post.title }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">작성된 포스트가 없습니다</h5>
+                        <p class="text-muted">첫 번째 학습 포스트를 작성해보세요!</p>
+                        <a href="{{ url_for('admin_learning_post_new') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>포스트 작성하기
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if recent_posts %}
+                <div class="card-footer text-center">
+                    <a href="{{ url_for('admin_learning_posts') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-list me-1"></i>모든 포스트 관리
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions & Stats -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>빠른 작업
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('admin_learning_post_new') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>새 포스트 작성
+                        </a>
+                        <a href="{{ url_for('admin_learning_categories') }}" class="btn btn-success">
+                            <i class="fas fa-folder me-2"></i>카테고리 관리
+                        </a>
+                        <a href="{{ url_for('admin_learning_posts') }}" class="btn btn-info">
+                            <i class="fas fa-list me-2"></i>포스트 목록
+                        </a>
+                        <a href="{{ url_for('learning_blog') }}" class="btn btn-outline-primary" target="_blank">
+                            <i class="fas fa-eye me-2"></i>블로그 보기
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Statistics -->
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>카테고리별 통계
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if category_stats %}
+                    {% for category_name, count in category_stats %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold">{{ category_name }}</span>
+                        <span class="badge bg-primary">{{ count }}개</span>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-chart-pie fa-2x mb-2"></i>
+                        <p>통계 데이터가 없습니다</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>포스트 삭제
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>정말로 이 포스트를 삭제하시겠습니까?</p>
+                <div class="alert alert-warning">
+                    <strong id="deletePostTitle"></strong> 포스트가 영구적으로 삭제됩니다.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">
+                    <i class="fas fa-trash me-1"></i>삭제하기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.border-left-primary { border-left: 0.25rem solid #4e73df !important; }
+.border-left-success { border-left: 0.25rem solid #1cc88a !important; }
+.border-left-info { border-left: 0.25rem solid #36b9cc !important; }
+.border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
+
+.text-xs { font-size: 0.7rem; }
+.font-weight-bold { font-weight: 700 !important; }
+.text-gray-800 { color: #5a5c69 !important; }
+.text-gray-300 { color: #dddfeb !important; }
+</style>
+
+<script>
+let deletePostId = null;
+
+function deletePost(postId, postTitle) {
+    deletePostId = postId;
+    document.getElementById('deletePostTitle').textContent = postTitle;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+document.getElementById('confirmDelete').addEventListener('click', function() {
+    if (deletePostId) {
+        fetch(`/admin/learning/post/${deletePostId}/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('삭제에 실패했습니다: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('삭제 중 오류가 발생했습니다.');
+        });
+        
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+    }
+});
+</script>
+{% endblock %}
+
+
+<!-- was/templates/admin/learning/post_form.html (새 파일 생성) -->
+
+{% extends "base.html" %}
+
+{% block title %}
+{% if post %}포스트 수정{% else %}새 포스트 작성{% endif %} - 학습 블로그 관리
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">
+                        {% if post %}포스트 수정{% else %}새 포스트 작성{% endif %}
+                    </h1>
+                    <p class="text-muted mb-0">학습 내용을 정리하고 공유해보세요</p>
+                </div>
+                <a href="{{ url_for('admin_learning_posts') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>목록으로 돌아가기
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="postForm">
+        <!-- CSRF 토큰 -->
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-edit me-2"></i>포스트 내용
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- 제목 -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">제목 *</label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   value="{{ post.title if post else '' }}" 
+                                   placeholder="학습한 내용의 제목을 입력하세요" required>
+                        </div>
+
+                        <!-- 요약 -->
+                        <div class="mb-3">
+                            <label for="summary" class="form-label">요약</label>
+                            <textarea class="form-control" id="summary" name="summary" rows="3"
+                                      placeholder="포스트의 간단한 요약을 작성하세요">{{ post.summary if post else '' }}</textarea>
+                            <div class="form-text">목록에서 표시될 간략한 설명입니다.</div>
+                        </div>
+
+                        <!-- 내용 -->
+                        <div class="mb-3">
+                            <label for="content" class="form-label">내용 *</label>
+                            <div class="editor-toolbar mb-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('**', '**')">
+                                    <i class="fas fa-bold"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('*', '*')">
+                                    <i class="fas fa-italic"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('`', '`')">
+                                    <i class="fas fa-code"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('```\n', '\n```')">
+                                    <i class="fas fa-file-code"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('# ', '')">
+                                    H1
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('## ', '')">
+                                    H2
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('- ', '')">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('[', '](url)')">
+                                    <i class="fas fa-link"></i>
+                                </button>
+                            </div>
+                            <textarea class="form-control" id="content" name="content" rows="20" 
+                                      placeholder="마크다운 형식으로 학습 내용을 작성하세요..." required>{{ post.content if post else '' }}</textarea>
+                            <div class="form-text">
+                                마크다운 문법을 사용할 수 있습니다. 
+                                <a href="https://guides.github.com/features/mastering-markdown/" target="_blank">마크다운 가이드</a>
+                            </div>
+                        </div>
+
+                        <!-- 미리보기 탭 -->
+                        <div class="preview-section" style="display: none;">
+                            <h6>미리보기</h6>
+                            <div class="card">
+                                <div class="card-body" id="preview-content">
+                                    <!-- 미리보기 내용이 여기에 표시됩니다 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- 발행 설정 -->
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cog me-2"></i>발행 설정
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_published" name="is_published"
+                                       {{ 'checked' if post and post.is_published }}>
+                                <label class="form-check-label" for="is_published">
+                                    <i class="fas fa-eye me-1"></i>지금 발행하기
+                                </label>
+                            </div>
+                            <div class="form-text">체크하면 즉시 공개됩니다.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured"
+                                       {{ 'checked' if post and post.is_featured }}>
+                                <label class="form-check-label" for="is_featured">
+                                    <i class="fas fa-star me-1"></i>추천 포스트
+                                </label>
+                            </div>
+                            <div class="form-text">메인 페이지에 우선 표시됩니다.</div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                {% if post %}수정 완료{% else %}포스트 저장{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 카테고리 및 메타데이터 -->
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-folder me-2"></i>카테고리 및 정보
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="category_id" class="form-label">카테고리 *</label>
+                            <select class="form-select" id="category_id" name="category_id" required>
+                                <option value="">카테고리 선택</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" 
+                                        {{ 'selected' if post and post.category_id == category.id }}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="difficulty" class="form-label">난이도</label>
+                            <select class="form-select" id="difficulty" name="difficulty">
+                                <option value="beginner" {{ 'selected' if post and post.difficulty == 'beginner' }}>초급</option>
+                                <option value="intermediate" {{ 'selected' if post and post.difficulty == 'intermediate' }}>중급</option>
+                                <option value="advanced" {{ 'selected' if post and post.difficulty == 'advanced' }}>고급</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">태그</label>
+                            <input type="text" class="form-control" id="tags" name="tags" 
+                                   value="{{ post.tags if post else '' }}"
+                                   placeholder="Python, Django, 웹개발">
+                            <div class="form-text">쉼표로 구분하여 입력하세요.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="learning_date" class="form-label">학습 날짜</label>
+                            <input type="date" class="form-control" id="learning_date" name="learning_date"
+                                   value="{{ post.learning_date.strftime('%Y-%m-%d') if post and post.learning_date }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 참고 자료 -->
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-link me-2"></i>참고 자료
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="source_url" class="form-label">학습 자료 URL</label>
+                            <input type="url" class="form-control" id="source_url" name="source_url" 
+                                   value="{{ post.source_url if post else '' }}"
+                                   placeholder="https://example.com">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="reference_books" class="form-label">참고 도서</label>
+                            <textarea class="form-control" id="reference_books" name="reference_books" rows="3"
+                                      placeholder="책 제목, 저자명 등">{{ post.reference_books if post else '' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="practice_code_url" class="form-label">실습 코드 URL</label>
+                            <input type="url" class="form-control" id="practice_code_url" name="practice_code_url" 
+                                   value="{{ post.practice_code_url if post else '' }}"
+                                   placeholder="GitHub 저장소 등">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 썸네일 이미지 -->
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-image me-2"></i>썸네일 이미지
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if post and post.thumbnail_path %}
+                        <div class="current-thumbnail mb-3">
+                            <img src="{{ url_for('uploaded_file', filename=post.thumbnail_path) }}" 
+                                 class="img-fluid rounded" alt="현재 썸네일">
+                            <div class="text-center mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeThumbnail()">
+                                    <i class="fas fa-trash me-1"></i>이미지 제거
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="thumbnail" class="form-label">
+                                {% if post and post.thumbnail_path %}새 썸네일{% else %}썸네일 이미지{% endif %}
+                            </label>
+                            <input type="file" class="form-control" id="thumbnail" name="thumbnail" accept="image/*">
+                            <div class="form-text">JPG, PNG, GIF (최대 10MB)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.editor-toolbar {
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 10px;
+}
+
+.editor-toolbar .btn {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+#content {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.preview-section .card {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.current-thumbnail img {
+    max-height: 200px;
+    object-fit: cover;
+}
+
+@media (max-width: 768px) {
+    .editor-toolbar .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .col-lg-4 .card {
+        margin-bottom: 20px;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const contentTextarea = document.getElementById('content');
+    const titleInput = document.getElementById('title');
+    
+    // 자동 높이 조정
+    autoResize(contentTextarea);
+    contentTextarea.addEventListener('input', function() {
+        autoResize(this);
+    });
+    
+    // 제목에서 자동으로 슬러그 미리보기 (선택사항)
+    titleInput.addEventListener('input', function() {
+        // 슬러그 미리보기 로직
+    });
+    
+    // 폼 제출 처리
+    document.getElementById('postForm').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>저장 중...';
+        submitBtn.disabled = true;
+        
+        // 10초 후 버튼 상태 복원 (타임아웃 방지)
+        setTimeout(() => {
+            if (submitBtn.disabled) {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }, 10000);
+    });
+});
+
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+function insertMarkdown(before, after) {
+    const textarea = document.getElementById('content');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    
+    const newText = before + selectedText + after;
+    
+    textarea.value = textarea.value.substring(0, start) + newText + textarea.value.substring(end);
+    
+    // 커서 위치 조정
+    const newCursorPos = start + before.length + selectedText.length;
+    textarea.setSelectionRange(newCursorPos, newCursorPos);
+    textarea.focus();
+    
+    autoResize(textarea);
+}
+
+function showPreview() {
+    const content = document.getElementById('content').value;
+    const previewContent = document.getElementById('preview-content');
+    const previewSection = document.querySelector('.preview-section');
+    
+    if (content.trim()) {
+        // 간단한 마크다운 미리보기 (실제로는 서버에서 처리하는 것이 좋음)
+        let html = content
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code>$1</code>')
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/\n/g, '<br>');
+        
+        previewContent.innerHTML = html;
+        previewSection.style.display = 'block';
+    } else {
+        previewSection.style.display = 'none';
+    }
+}
+
+function removeThumbnail() {
+    if (confirm('현재 썸네일 이미지를 제거하시겠습니까?')) {
+        const form = document.getElementById('postForm');
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'remove_thumbnail';
+        hiddenInput.value = 'true';
+        form.appendChild(hiddenInput);
+        
+        document.querySelector('.current-thumbnail').style.display = 'none';
+        alert('포스트 저장 시 썸네일이 제거됩니다.');
+    }
+}
+
+// 키보드 단축키
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+            case 'b':
+                e.preventDefault();
+                insertMarkdown('**', '**');
+                break;
+            case 'i':
+                e.preventDefault();
+                insertMarkdown('*', '*');
+                break;
+            case 's':
+                e.preventDefault();
+                document.getElementById('postForm').submit();
+                break;
+        }
+    }
+});
+</script>
+{% endblock %}

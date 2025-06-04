@@ -115,28 +115,44 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">홈</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('portfolio') }}">포트폴리오</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('about') }}">소개</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('contact') }}">연락처</a>
-                    </li>
-                    {% if current_user.is_authenticated and current_user.is_admin %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin') }}">관리</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('logout') }}">로그아웃</a>
-                    </li>
-                    {% endif %}
-                </ul>
+    <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('index') }}">홈</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('portfolio') }}">포트폴리오</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('learning_blog') }}">학습블로그</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('about') }}">소개</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('contact') }}">연락처</a>
+        </li>
+        {% if current_user.is_authenticated and current_user.is_admin %}
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" 
+               data-bs-toggle="dropdown" aria-expanded="false">
+                관리
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                <li><a class="dropdown-item" href="{{ url_for('admin') }}">
+                    <i class="fas fa-tachometer-alt me-2"></i>대시보드
+                </a></li>
+                <li><a class="dropdown-item" href="{{ url_for('admin_learning') }}">
+                    <i class="fas fa-graduation-cap me-2"></i>학습 블로그
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-2"></i>로그아웃
+                </a></li>
+            </ul>
+        </li>
+        {% endif %}
+    </ul>
+</div>
             </div>
         </div>
     </nav>

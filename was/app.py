@@ -13,6 +13,11 @@ import logging
 import json
 import traceback
 
+import re
+from markupsafe import Markup
+import markdown
+from datetime import datetime, date
+
 # Flask-WTF 추가 import
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
@@ -238,6 +243,102 @@ class ProjectForm(FlaskForm):
         """팀 규모 유효성 검사"""
         if field.data is not None and (field.data < 1 or field.data > 100):
             raise ValidationError('팀 규모는 1-100명 사이여야 합니다.')
+        
+
+
+class LearningCategory(db.Model):
+    """학습 카테고리 모델"""
+    __tablename__ = 'learning_categories'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True, index=True)
+    description = db.Column(db.Text)
+    color = db.Column(db.String(7), default='#007bff')  # 카테고리 색상
+    icon_class = db.Column(db.String(100), default='fas fa-book')  # 아이콘 클래스
+    parent_id = db.Column(db.Integer, db.ForeignKey('learning_categories.id'))  # 상위 카테고리
+    
+    sort_order = db.Column(db.Integer, default=0, index=True)
+    is_active = db.Column(db.Boolean, default=True, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    # 관계 정의
+    children = db.relationship('LearningCategory', backref=db.backref('parent', remote_side=[id]))
+    posts = db.relationship('LearningPost', backref='category', lazy='dynamic')
+
+class LearningPost(db.Model):
+    """학습 포스트 모델"""
+    __tablename__ = 'learning_posts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False, index=True)
+    slug = db.Column(db.String(200), unique=True, index=True)  # URL용 슬러그
+    content = db.Column(db.Text, nullable=False)  # 마크다운 컨텐츠
+    summary = db.Column(db.Text)  # 요약
+    
+    category_id = db.Column(db.Integer, db.ForeignKey('learning_categories.id'), index=True)
+    
+    # 메타 정보
+    reading_time = db.Column(db.Integer, default=0)  # 예상 읽기 시간(분)
+    difficulty = db.Column(db.String(20), index=True)  # 초급, 중급, 고급
+    
+    # 이미지 및 미디어
+    thumbnail_path = db.Column(db.String(500))  # 썸네일 이미지
+    images = db.relationship('LearningImage', backref='post', lazy='dynamic', cascade='all, delete-orphan')
+    
+    # 태그 및 키워드
+    tags = db.Column(db.Text)  # 쉼표로 구분된 태그
+    keywords = db.Column(db.Text)  # 검색 키워드
+    
+    # 학습 정보
+    learning_date = db.Column(db.Date, index=True)  # 학습한 날짜
+    source_url = db.Column(db.String(500))  # 학습 자료 출처
+    reference_books = db.Column(db.Text)  # 참고 도서
+    practice_code_url = db.Column(db.String(500))  # 실습 코드 URL
+    
+    # 공개 설정
+    is_published = db.Column(db.Boolean, default=True, index=True)
+    is_featured = db.Column(db.Boolean, default=False, index=True)
+    password = db.Column(db.String(255))  # 비밀번호 보호
+    
+    # 통계
+    view_count = db.Column(db.Integer, default=0)
+    like_count = db.Column(db.Integer, default=0)
+    
+    # 날짜 정보
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    published_at = db.Column(db.DateTime, index=True)
+    
+    # 인덱스
+    __table_args__ = (
+        db.Index('idx_learning_posts_category_date', 'category_id', 'created_at'),
+        db.Index('idx_learning_posts_published', 'is_published', 'published_at'),
+    )
+
+class LearningImage(db.Model):
+    """학습 포스트 이미지 모델"""
+    __tablename__ = 'learning_images'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('learning_posts.id'), nullable=False)
+    filename = db.Column(db.String(500), nullable=False)
+    original_name = db.Column(db.String(500))
+    file_size = db.Column(db.Integer)
+    mime_type = db.Column(db.String(100))
+    alt_text = db.Column(db.String(200))
+    caption = db.Column(db.Text)
+    sort_order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class LearningTag(db.Model):
+    """학습 태그 모델"""
+    __tablename__ = 'learning_tags'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    color = db.Column(db.String(7), default='#6c757d')
+    usage_count = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # 기존 함수들 (그대로 유지)
 @login_manager.user_loader
@@ -429,8 +530,98 @@ def init_default_data():
     except Exception as e:
         logger.error(f"Failed to initialize default data: {e}")
         db.session.rollback()
-
+###############################################################################################
+#새로들어감
+def init_learning_default_data():
+    """학습 블로그 기본 데이터 초기화"""
+    try:
+        # 기본 학습 카테고리 생성
+        default_categories = [
+            {
+                'name': 'Programming',
+                'description': '프로그래밍 언어 및 개발 기법',
+                'color': '#007bff',
+                'icon_class': 'fas fa-code',
+                'sort_order': 1
+            },
+            {
+                'name': 'Web Development',
+                'description': '웹 개발 관련 학습',
+                'color': '#28a745',
+                'icon_class': 'fas fa-globe',
+                'sort_order': 2
+            },
+            {
+                'name': 'Database',
+                'description': '데이터베이스 설계 및 최적화',
+                'color': '#ffc107',
+                'icon_class': 'fas fa-database',
+                'sort_order': 3
+            },
+            {
+                'name': 'DevOps',
+                'description': '인프라 및 배포 자동화',
+                'color': '#dc3545',
+                'icon_class': 'fas fa-cogs',
+                'sort_order': 4
+            },
+            {
+                'name': 'Data Science',
+                'description': '데이터 분석 및 머신러닝',
+                'color': '#6f42c1',
+                'icon_class': 'fas fa-chart-bar',
+                'sort_order': 5
+            },
+            {
+                'name': 'Algorithm',
+                'description': '알고리즘 및 자료구조',
+                'color': '#fd7e14',
+                'icon_class': 'fas fa-project-diagram',
+                'sort_order': 6
+            }
+        ]
+        
+        for cat_data in default_categories:
+            existing = LearningCategory.query.filter_by(name=cat_data['name']).first()
+            if not existing:
+                category = LearningCategory(**cat_data)
+                db.session.add(category)
+        
+        # 기본 태그 생성
+        default_tags = [
+            'Python', 'JavaScript', 'React', 'Django', 'Flask',
+            'PostgreSQL', 'MySQL', 'Docker', 'Kubernetes', 'AWS',
+            'Git', 'Linux', 'API', 'Testing', 'Performance'
+        ]
+        
+        for tag_name in default_tags:
+            existing = LearningTag.query.filter_by(name=tag_name).first()
+            if not existing:
+                tag = LearningTag(name=tag_name)
+                db.session.add(tag)
+        
+        db.session.commit()
+        logger.info("학습 블로그 기본 데이터 초기화 완료")
+        
+    except Exception as e:
+        logger.error(f"학습 블로그 기본 데이터 초기화 실패: {e}")
+        db.session.rollback()
+#######################################################################
 # 유틸리티 함수들 추가
+
+def generate_slug(title):
+    """제목으로부터 URL 슬러그 생성"""
+    # 한글 및 영문자, 숫자만 남기고 제거
+    slug = re.sub(r'[^\w\s-]', '', title.lower())
+    slug = re.sub(r'[-\s]+', '-', slug)
+    return slug.strip('-')
+
+def calculate_reading_time(content):
+    """컨텐츠 읽기 시간 계산 (분)"""
+    words = len(content.split())
+    return max(1, round(words / 200))  # 분당 200단어 기준
+
+
 def handle_image_upload(file):
     """이미지 파일 업로드 처리"""
     try:
@@ -637,18 +828,54 @@ def admin():
         flash('관리자 권한이 필요합니다.', 'error')
         return redirect(url_for('index'))
     
-    projects = Project.query.order_by(Project.created_at.desc()).all()
-    tech_stacks = TechStack.query.order_by(TechStack.proficiency.desc()).all()
-    certifications = Certification.query.order_by(Certification.issue_date.desc()).all()
-    experiences = Experience.query.order_by(Experience.created_at.desc()).all()
-    
-    return render_template('admin.html', 
-                         works=projects,  # 기존 템플릿 호환성을 위해 works로도 전달
-                         projects=projects,
-                         tech_stacks=tech_stacks,
-                         certifications=certifications,
-                         experiences=experiences)
-
+    try:
+        # 기존 포트폴리오 데이터
+        projects = Project.query.order_by(Project.created_at.desc()).all()
+        tech_stacks = TechStack.query.order_by(TechStack.proficiency.desc()).all()
+        certifications = Certification.query.order_by(Certification.issue_date.desc()).all()
+        experiences = Experience.query.order_by(Experience.created_at.desc()).all()
+        
+        # 학습 블로그 데이터 추가
+        learning_stats = {}
+        recent_learning_posts = []
+        
+        try:
+            # 학습 블로그 통계
+            learning_stats = {
+                'total_posts': LearningPost.query.count(),
+                'published_posts': LearningPost.query.filter_by(is_published=True).count(),
+                'total_categories': LearningCategory.query.filter_by(is_active=True).count(),
+                'total_views': db.session.query(db.func.sum(LearningPost.view_count)).scalar() or 0
+            }
+            
+            # 최근 학습 포스트
+            recent_learning_posts = LearningPost.query.order_by(LearningPost.created_at.desc()).limit(5).all()
+            
+        except Exception as e:
+            # 학습 블로그 테이블이 아직 없는 경우 기본값
+            logger.warning(f"학습 블로그 데이터 조회 실패 (테이블이 없을 수 있음): {e}")
+            learning_stats = {
+                'total_posts': 0,
+                'published_posts': 0,
+                'total_categories': 0,
+                'total_views': 0
+            }
+            recent_learning_posts = []
+        
+        return render_template('admin.html', 
+                             works=projects,  # 기존 템플릿 호환성
+                             projects=projects,
+                             tech_stacks=tech_stacks,
+                             certifications=certifications,
+                             experiences=experiences,
+                             # 학습 블로그 데이터 추가
+                             learning_stats=learning_stats,
+                             recent_learning_posts=recent_learning_posts)
+                             
+    except Exception as e:
+        logger.error(f"관리자 페이지 오류: {e}")
+        flash('관리자 페이지를 불러오는 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('index'))
 # 개선된 add_work 함수 (기존 함수 완전 교체)
 @app.route('/admin/add_work', methods=['GET', 'POST'])
 @login_required
@@ -1175,6 +1402,405 @@ def handle_csrf_error(e):
     
     flash('보안 토큰이 유효하지 않습니다. 페이지를 새로고침해주세요.', 'error')
     return redirect(request.url or url_for('add_work'))
+
+######################ㅂ블로그
+@app.template_filter('markdown')
+def markdown_filter(text):
+    """마크다운을 HTML로 변환"""
+    if not text:
+        return ''
+    try:
+        md = markdown.Markdown(extensions=['codehilite', 'fenced_code', 'tables', 'toc'])
+        html = md.convert(text)
+        return Markup(html)
+    except Exception as e:
+        logger.error(f"마크다운 변환 오류: {e}")
+        return Markup(text.replace('\n', '<br>'))
+
+# 공개 학습 블로그 라우트들
+@app.route('/learning')
+def learning_blog():
+    """학습 블로그 메인 페이지"""
+    try:
+        # 카테고리별 포스트 수 조회
+        categories = db.session.query(
+            LearningCategory,
+            db.func.count(LearningPost.id).label('post_count')
+        ).outerjoin(LearningPost, 
+            (LearningCategory.id == LearningPost.category_id) & 
+            (LearningPost.is_published == True)
+        ).filter(LearningCategory.is_active == True)\
+         .group_by(LearningCategory.id)\
+         .order_by(LearningCategory.sort_order).all()
+        
+        # 최근 포스트
+        recent_posts = LearningPost.query.filter_by(is_published=True)\
+                                        .order_by(LearningPost.published_at.desc())\
+                                        .limit(6).all()
+        
+        # 추천 포스트 (조회수 높은 순)
+        featured_posts = LearningPost.query.filter_by(is_published=True, is_featured=True)\
+                                          .order_by(LearningPost.view_count.desc())\
+                                          .limit(3).all()
+        
+        # 인기 태그
+        popular_tags = LearningTag.query.order_by(LearningTag.usage_count.desc()).limit(20).all()
+        
+        return render_template('learning/index.html',
+                             categories=categories,
+                             recent_posts=recent_posts,
+                             featured_posts=featured_posts,
+                             popular_tags=popular_tags)
+    except Exception as e:
+        logger.error(f"학습 블로그 메인 페이지 오류: {e}")
+        flash('페이지를 불러오는 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/learning/category/<int:category_id>')
+def learning_category(category_id):
+    """카테고리별 학습 포스트 목록"""
+    try:
+        category = LearningCategory.query.get_or_404(category_id)
+        
+        page = request.args.get('page', 1, type=int)
+        per_page = 12
+        
+        posts = LearningPost.query.filter_by(
+            category_id=category_id, 
+            is_published=True
+        ).order_by(LearningPost.published_at.desc())\
+         .paginate(page=page, per_page=per_page, error_out=False)
+        
+        return render_template('learning/category.html',
+                             category=category,
+                             posts=posts)
+    except Exception as e:
+        logger.error(f"카테고리 페이지 오류: {e}")
+        flash('카테고리를 불러오는 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('learning_blog'))
+
+@app.route('/learning/post/<slug>')
+def learning_post_detail(slug):
+    """학습 포스트 상세 페이지"""
+    try:
+        post = LearningPost.query.filter_by(slug=slug, is_published=True).first_or_404()
+        
+        # 조회수 증가
+        post.view_count = (post.view_count or 0) + 1
+        db.session.commit()
+        
+        # 관련 포스트 (같은 카테고리)
+        related_posts = LearningPost.query.filter(
+            LearningPost.id != post.id,
+            LearningPost.category_id == post.category_id,
+            LearningPost.is_published == True
+        ).order_by(LearningPost.published_at.desc()).limit(3).all()
+        
+        # 이전/다음 포스트
+        prev_post = LearningPost.query.filter(
+            LearningPost.published_at < post.published_at,
+            LearningPost.is_published == True
+        ).order_by(LearningPost.published_at.desc()).first()
+        
+        next_post = LearningPost.query.filter(
+            LearningPost.published_at > post.published_at,
+            LearningPost.is_published == True
+        ).order_by(LearningPost.published_at.asc()).first()
+        
+        return render_template('learning/post_detail.html',
+                             post=post,
+                             related_posts=related_posts,
+                             prev_post=prev_post,
+                             next_post=next_post)
+    except Exception as e:
+        logger.error(f"포스트 상세 페이지 오류: {e}")
+        flash('포스트를 불러오는 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('learning_blog'))
+
+# 관리자 학습 블로그 라우트들
+@app.route('/admin/learning')
+@login_required
+def admin_learning():
+    """관리자 학습 블로그 대시보드"""
+    if not current_user.is_admin:
+        flash('관리자 권한이 필요합니다.', 'error')
+        return redirect(url_for('index'))
+    
+    try:
+        # 통계 정보
+        total_posts = LearningPost.query.count()
+        published_posts = LearningPost.query.filter_by(is_published=True).count()
+        total_categories = LearningCategory.query.filter_by(is_active=True).count()
+        total_views = db.session.query(db.func.sum(LearningPost.view_count)).scalar() or 0
+        
+        # 최근 포스트
+        recent_posts = LearningPost.query.order_by(LearningPost.created_at.desc()).limit(10).all()
+        
+        # 카테고리별 포스트 수
+        category_stats = db.session.query(
+            LearningCategory.name,
+            db.func.count(LearningPost.id).label('count')
+        ).outerjoin(LearningPost)\
+         .group_by(LearningCategory.id)\
+         .order_by(db.text('count DESC')).all()
+        
+        return render_template('admin/learning/dashboard.html',
+                             total_posts=total_posts,
+                             published_posts=published_posts,
+                             total_categories=total_categories,
+                             total_views=total_views,
+                             recent_posts=recent_posts,
+                             category_stats=category_stats)
+    except Exception as e:
+        logger.error(f"관리자 학습 대시보드 오류: {e}")
+        flash('대시보드를 불러오는 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('admin'))
+
+@app.route('/admin/learning/posts')
+@login_required
+def admin_learning_posts():
+    """관리자 학습 포스트 목록"""
+    if not current_user.is_admin:
+        flash('관리자 권한이 필요합니다.', 'error')
+        return redirect(url_for('index'))
+    
+    try:
+        page = request.args.get('page', 1, type=int)
+        category_id = request.args.get('category', type=int)
+        status = request.args.get('status')
+        
+        query = LearningPost.query
+        
+        if category_id:
+            query = query.filter_by(category_id=category_id)
+        
+        if status == 'published':
+            query = query.filter_by(is_published=True)
+        elif status == 'draft':
+            query = query.filter_by(is_published=False)
+        
+        posts = query.order_by(LearningPost.created_at.desc())\
+                    .paginate(page=page, per_page=20, error_out=False)
+        
+        categories = LearningCategory.query.filter_by(is_active=True)\
+                                          .order_by(LearningCategory.sort_order).all()
+        
+        return render_template('admin/learning/posts.html',
+                             posts=posts,
+                             categories=categories,
+                             current_category=category_id,
+                             current_status=status)
+    except Exception as e:
+        logger.error(f"관리자 포스트 목록 오류: {e}")
+        flash('포스트 목록을 불러오는 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('admin_learning'))
+
+@app.route('/admin/learning/post/new', methods=['GET', 'POST'])
+@login_required
+def admin_learning_post_new():
+    """새 학습 포스트 작성"""
+    if not current_user.is_admin:
+        flash('관리자 권한이 필요합니다.', 'error')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        try:
+            # 폼 데이터 처리
+            title = request.form.get('title', '').strip()
+            content = request.form.get('content', '').strip()
+            summary = request.form.get('summary', '').strip()
+            category_id = request.form.get('category_id', type=int)
+            tags = request.form.get('tags', '').strip()
+            difficulty = request.form.get('difficulty', 'beginner')
+            learning_date_str = request.form.get('learning_date')
+            source_url = request.form.get('source_url', '').strip()
+            is_published = 'is_published' in request.form
+            is_featured = 'is_featured' in request.form
+            
+            if not title or not content:
+                flash('제목과 내용을 입력해주세요.', 'error')
+                return redirect(request.url)
+            
+            # 슬러그 생성
+            slug = generate_slug(title)
+            
+            # 슬러그 중복 확인
+            existing = LearningPost.query.filter_by(slug=slug).first()
+            if existing:
+                slug = f"{slug}-{int(datetime.now().timestamp())}"
+            
+            # 학습 날짜 처리
+            learning_date = None
+            if learning_date_str:
+                try:
+                    learning_date = datetime.strptime(learning_date_str, '%Y-%m-%d').date()
+                except ValueError:
+                    pass
+            
+            # 포스트 생성
+            post = LearningPost(
+                title=title,
+                slug=slug,
+                content=content,
+                summary=summary,
+                category_id=category_id,
+                tags=tags,
+                difficulty=difficulty,
+                learning_date=learning_date,
+                source_url=source_url if source_url else None,
+                reading_time=calculate_reading_time(content),
+                is_published=is_published,
+                is_featured=is_featured,
+                published_at=datetime.utcnow() if is_published else None
+            )
+            
+            # 썸네일 이미지 처리
+            if 'thumbnail' in request.files:
+                file = request.files['thumbnail']
+                if file and file.filename:
+                    thumbnail_path = handle_image_upload(file)
+                    if thumbnail_path:
+                        post.thumbnail_path = thumbnail_path
+            
+            db.session.add(post)
+            db.session.commit()
+            
+            logger.info(f"새 학습 포스트 생성: {post.title} (ID: {post.id})")
+            flash('학습 포스트가 성공적으로 작성되었습니다!', 'success')
+            return redirect(url_for('admin_learning_posts'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"학습 포스트 작성 오류: {e}")
+            flash('포스트 작성 중 오류가 발생했습니다.', 'error')
+    
+    # GET 요청 처리
+    categories = LearningCategory.query.filter_by(is_active=True)\
+                                      .order_by(LearningCategory.sort_order).all()
+    return render_template('admin/learning/post_form.html', categories=categories, post=None)
+
+@app.route('/admin/learning/post/<int:post_id>/edit', methods=['GET', 'POST'])
+@login_required
+def admin_learning_post_edit(post_id):
+    """학습 포스트 수정"""
+    if not current_user.is_admin:
+        flash('관리자 권한이 필요합니다.', 'error')
+        return redirect(url_for('index'))
+    
+    try:
+        post = LearningPost.query.get_or_404(post_id)
+        
+        if request.method == 'POST':
+            # 수정 로직 (새 포스트 작성과 유사)
+            post.title = request.form.get('title', '').strip()
+            post.content = request.form.get('content', '').strip()
+            post.summary = request.form.get('summary', '').strip()
+            post.category_id = request.form.get('category_id', type=int)
+            post.tags = request.form.get('tags', '').strip()
+            post.difficulty = request.form.get('difficulty', 'beginner')
+            post.source_url = request.form.get('source_url', '').strip() or None
+            post.is_published = 'is_published' in request.form
+            post.is_featured = 'is_featured' in request.form
+            post.reading_time = calculate_reading_time(post.content)
+            post.updated_at = datetime.utcnow()
+            
+            # 발행 상태 변경시 발행일 업데이트
+            if post.is_published and not post.published_at:
+                post.published_at = datetime.utcnow()
+            
+            # 학습 날짜 처리
+            learning_date_str = request.form.get('learning_date')
+            if learning_date_str:
+                try:
+                    post.learning_date = datetime.strptime(learning_date_str, '%Y-%m-%d').date()
+                except ValueError:
+                    pass
+            
+            # 새 썸네일 업로드 처리
+            if 'thumbnail' in request.files:
+                file = request.files['thumbnail']
+                if file and file.filename:
+                    new_thumbnail = handle_image_upload(file)
+                    if new_thumbnail:
+                        # 기존 썸네일 삭제
+                        if post.thumbnail_path:
+                            try:
+                                old_path = os.path.join(app.config['UPLOAD_FOLDER'], post.thumbnail_path)
+                                if os.path.exists(old_path):
+                                    os.remove(old_path)
+                            except Exception as e:
+                                logger.error(f"기존 썸네일 삭제 실패: {e}")
+                        post.thumbnail_path = new_thumbnail
+            
+            db.session.commit()
+            
+            logger.info(f"학습 포스트 수정: {post.title} (ID: {post_id})")
+            flash('학습 포스트가 수정되었습니다!', 'success')
+            return redirect(url_for('admin_learning_posts'))
+        
+        # GET 요청 처리
+        categories = LearningCategory.query.filter_by(is_active=True)\
+                                          .order_by(LearningCategory.sort_order).all()
+        return render_template('admin/learning/post_form.html', categories=categories, post=post)
+        
+    except Exception as e:
+        logger.error(f"학습 포스트 수정 오류: {e}")
+        flash('포스트 수정 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('admin_learning_posts'))
+
+@app.route('/admin/learning/post/<int:post_id>/delete', methods=['DELETE'])
+@login_required
+def admin_learning_post_delete(post_id):
+    """학습 포스트 삭제"""
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': '권한이 없습니다.'}), 403
+    
+    try:
+        post = LearningPost.query.get_or_404(post_id)
+        
+        # 관련 이미지 파일들 삭제
+        if post.thumbnail_path:
+            try:
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], post.thumbnail_path)
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                logger.error(f"썸네일 삭제 실패: {e}")
+        
+        # 포스트 삭제
+        db.session.delete(post)
+        db.session.commit()
+        
+        logger.info(f"학습 포스트 삭제: {post.title} (ID: {post_id})")
+        return jsonify({'success': True, 'message': '포스트가 삭제되었습니다.'})
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"학습 포스트 삭제 오류: {e}")
+        return jsonify({'success': False, 'message': '삭제 중 오류가 발생했습니다.'}), 500
+
+@app.route('/admin/learning/categories')
+@login_required
+def admin_learning_categories():
+    """학습 카테고리 관리"""
+    if not current_user.is_admin:
+        flash('관리자 권한이 필요합니다.', 'error')
+        return redirect(url_for('index'))
+    
+    try:
+        categories = LearningCategory.query.order_by(LearningCategory.sort_order).all()
+        return render_template('admin/learning/categories.html', categories=categories)
+    except Exception as e:
+        logger.error(f"카테고리 관리 페이지 오류: {e}")
+        flash('카테고리 목록을 불러오는 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('admin_learning'))
+    
+    ##################################################################################
+
+
+
+
+
 
 # 디버그용 라우트 (개발 환경에서만)
 @app.route('/debug/form-test', methods=['GET', 'POST'])

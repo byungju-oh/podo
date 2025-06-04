@@ -111,6 +111,106 @@
         </div>
     </div>
 
+<!-- Statistics Cards 다음 줄에 추가 -->
+    </div>
+
+    <!-- Learning Blog Management Section (새로 추가) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-graduation-cap me-2"></i>학습 블로그 관리
+                    </h5>
+                    <a href="{{ url_for('learning_blog') }}" class="btn btn-outline-info btn-sm" target="_blank">
+                        <i class="fas fa-eye me-1"></i>블로그 보기
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- 학습 블로그 통계 -->
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-sm-6 mb-3">
+                                    <div class="card bg-light h-100">
+                                        <div class="card-body text-center">
+                                            <div class="text-primary">
+                                                <i class="fas fa-file-alt fa-2x mb-2"></i>
+                                                <h4 class="mb-1">{{ learning_stats.total_posts if learning_stats else 0 }}</h4>
+                                                <small class="text-muted">총 포스트</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <div class="card bg-light h-100">
+                                        <div class="card-body text-center">
+                                            <div class="text-success">
+                                                <i class="fas fa-eye fa-2x mb-2"></i>
+                                                <h4 class="mb-1">{{ learning_stats.published_posts if learning_stats else 0 }}</h4>
+                                                <small class="text-muted">발행된 포스트</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 최근 학습 포스트 -->
+                            {% if recent_learning_posts %}
+                            <div class="recent-posts">
+                                <h6 class="mb-3">최근 학습 포스트</h6>
+                                {% for post in recent_learning_posts[:3] %}
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="me-3">
+                                        {% if post.category %}
+                                        <span class="badge" style="background-color: {{ post.category.color }}">
+                                            {{ post.category.name }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold">{{ post.title }}</div>
+                                        <small class="text-muted">
+                                            {{ post.created_at.strftime('%m월 %d일') }}
+                                            {% if post.is_published %}
+                                            <span class="badge bg-success">발행됨</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">초안</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- 빠른 작업 버튼들 -->
+                        <div class="col-md-4">
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('admin_learning_post_new') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>새 포스트 작성
+                                </a>
+                                <a href="{{ url_for('admin_learning_posts') }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-list me-2"></i>포스트 관리
+                                </a>
+                                <a href="{{ url_for('admin_learning_categories') }}" class="btn btn-outline-success">
+                                    <i class="fas fa-folder me-2"></i>카테고리 관리
+                                </a>
+                                <a href="{{ url_for('admin_learning') }}" class="btn btn-outline-info">
+                                    <i class="fas fa-chart-bar me-2"></i>상세 통계
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
     <!-- Main Content Area -->
     <div class="row">
         <!-- Portfolio Management -->
@@ -224,6 +324,32 @@
                     </h5>
                 </div>
                 <div class="card-body">
+
+
+
+
+
+                    <div class="d-grid gap-2">
+    <a href="{{ url_for('add_work') }}" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus me-2"></i>새 작품 추가
+    </a>
+    <!-- 새로 추가할 학습 블로그 버튼 -->
+    <a href="{{ url_for('admin_learning') }}" class="btn btn-success btn-sm">
+        <i class="fas fa-graduation-cap me-2"></i>학습 블로그 관리
+    </a>
+    <button class="btn btn-success btn-sm" onclick="backupData()">
+        <i class="fas fa-download me-2"></i>데이터 백업
+    </button>
+    <a href="{{ url_for('index') }}" class="btn btn-info btn-sm" target="_blank">
+        <i class="fas fa-eye me-2"></i>사이트 미리보기
+    </a>
+    <button class="btn btn-warning btn-sm" onclick="clearCache()">
+        <i class="fas fa-sync me-2"></i>캐시 지우기
+    </button>
+</div>
+
+
+
                     <div class="d-grid gap-2">
                         <a href="{{ url_for('add_work') }}" class="btn btn-primary btn-sm">
                             <i class="fas fa-plus me-2"></i>새 작품 추가
