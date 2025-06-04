@@ -366,14 +366,14 @@ def init_default_data():
             {'name': 'Python', 'category': 'language', 'icon_class': 'fab fa-python', 'color': '#3776ab', 'proficiency': 90, 'is_primary': True},
             {'name': 'JavaScript', 'category': 'language', 'icon_class': 'fab fa-js-square', 'color': '#f7df1e', 'proficiency': 85, 'is_primary': True},
             {'name': 'Java', 'category': 'language', 'icon_class': 'fab fa-java', 'color': '#ed8b00', 'proficiency': 80},
-            {'name': 'Go', 'category': 'language', 'icon_class': 'fas fa-code', 'color': '#00add8', 'proficiency': 75},
+            
             {'name': 'Django', 'category': 'framework', 'icon_class': 'fas fa-server', 'color': '#092e20', 'proficiency': 85},
             {'name': 'Flask', 'category': 'framework', 'icon_class': 'fas fa-flask', 'color': '#000000', 'proficiency': 90},
             {'name': 'React', 'category': 'framework', 'icon_class': 'fab fa-react', 'color': '#61dafb', 'proficiency': 80, 'is_primary': True},
-            {'name': 'Vue.js', 'category': 'framework', 'icon_class': 'fab fa-vuejs', 'color': '#4fc08d', 'proficiency': 75},
+            
             {'name': 'PostgreSQL', 'category': 'database', 'icon_class': 'fas fa-database', 'color': '#336791', 'proficiency': 85},
             {'name': 'MySQL', 'category': 'database', 'icon_class': 'fas fa-database', 'color': '#4479a1', 'proficiency': 90},
-            {'name': 'MongoDB', 'category': 'database', 'icon_class': 'fas fa-leaf', 'color': '#47a248', 'proficiency': 80},
+            #{'name': 'MongoDB', 'category': 'database', 'icon_class': 'fas fa-leaf', 'color': '#47a248', 'proficiency': 80},
             {'name': 'Redis', 'category': 'database', 'icon_class': 'fas fa-memory', 'color': '#dc382d', 'proficiency': 85},
             {'name': 'AWS', 'category': 'cloud', 'icon_class': 'fab fa-aws', 'color': '#ff9900', 'proficiency': 85, 'is_primary': True},
             {'name': 'Google Cloud', 'category': 'cloud', 'icon_class': 'fab fa-google', 'color': '#4285f4', 'proficiency': 80},
@@ -396,16 +396,16 @@ def init_default_data():
         
         default_certifications = [
             {
-                'name': 'AWS Certified Solutions Architect',
-                'issuer': 'Amazon Web Services',
-                'issue_date': date(2023, 6, 15),
+                'name': '빅데이터분석기사',
+                'issuer': '한국데이터산업진흥원',
+                'issue_date': date(2021, 12, 31),
                 'category': 'cloud',
                 'is_featured': True
             },
             {
                 'name': 'Certified Kubernetes Administrator (CKA)',
-                'issuer': 'Cloud Native Computing Foundation',
-                'issue_date': date(2023, 8, 20),
+                'issuer': 'Linux Foundation',
+                'issue_date': date(2024, 8, 20),
                 'category': 'devops',
                 'is_featured': True
             },
