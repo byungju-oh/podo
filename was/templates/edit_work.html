@@ -1,0 +1,449 @@
+<!-- was/templates/edit_work.html (새 파일 생성) -->
+
+{% extends "base.html" %}
+
+{% block title %}프로젝트 수정 - 관리자{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">프로젝트 수정</h1>
+                    <p class="text-muted mb-0">{{ project.title }} 프로젝트 정보를 수정합니다</p>
+                </div>
+                <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>관리자로 돌아가기
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Form -->
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>프로젝트 정보 수정
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="editProjectForm" method="POST" enctype="multipart/form-data" action="{{ url_for('edit_work', work_id=project.id) }}">
+                        <!-- CSRF 토큰 -->
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <!-- 기본 정보 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-info-circle me-1"></i>기본 정보
+                                </h6>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label for="title" class="form-label">프로젝트명 *</label>
+                                    <input type="text" class="form-control" id="title" name="title" 
+                                           value="{{ project.title }}" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="project_type" class="form-label">프로젝트 유형 *</label>
+                                    <select class="form-select" id="project_type" name="project_type" required>
+                                        <option value="">선택하세요</option>
+                                        <option value="tech" {{ 'selected' if project.project_type == 'tech' }}>웹/앱 개발</option>
+                                        <option value="infra" {{ 'selected' if project.project_type == 'infra' }}>인프라/DevOps</option>
+                                        <option value="data" {{ 'selected' if project.project_type == 'data' }}>데이터 분석</option>
+                                        <option value="ai" {{ 'selected' if project.project_type == 'ai' }}>AI/ML</option>
+                                        <option value="art" {{ 'selected' if project.project_type == 'art' }}>아트워크</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="category" class="form-label">세부 카테고리</label>
+                                    <input type="text" class="form-control" id="category" name="category" 
+                                           value="{{ project.category or '' }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="my_role" class="form-label">내 역할</label>
+                                    <input type="text" class="form-control" id="my_role" name="my_role" 
+                                           value="{{ project.my_role or '' }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 프로젝트 설명 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-file-alt me-1"></i>프로젝트 설명
+                                </h6>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="description" class="form-label">간단한 설명 *</label>
+                                <textarea class="form-control" id="description" name="description" rows="3" required>{{ project.description }}</textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="detailed_description" class="form-label">상세 설명</label>
+                                <textarea class="form-control" id="detailed_description" name="detailed_description" rows="6">{{ project.detailed_description or '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- 기술 스택 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-code me-1"></i>기술 스택
+                                </h6>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="tech_stack" class="form-label">사용 기술</label>
+                                <input type="text" class="form-control" id="tech_stack" name="tech_stack" 
+                                       value="{{ project.tech_stack or '' }}"
+                                       placeholder="Python, Django, PostgreSQL, AWS, Docker">
+                                <div class="form-text">쉼표(,)로 구분하여 입력하세요.</div>
+                            </div>
+                        </div>
+
+                        <!-- 프로젝트 기간 및 팀 정보 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-calendar me-1"></i>프로젝트 정보
+                                </h6>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="start_date" class="form-label">시작일</label>
+                                    <input type="date" class="form-control" id="start_date" name="start_date"
+                                           value="{{ project.start_date.strftime('%Y-%m-%d') if project.start_date }}">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="end_date" class="form-label">종료일</label>
+                                    <input type="date" class="form-control" id="end_date" name="end_date"
+                                           value="{{ project.end_date.strftime('%Y-%m-%d') if project.end_date }}">
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" id="is_ongoing" name="is_ongoing"
+                                               {{ 'checked' if not project.end_date }}>
+                                        <label class="form-check-label" for="is_ongoing">
+                                            진행중인 프로젝트
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="team_size" class="form-label">팀 규모</label>
+                                    <input type="number" class="form-control" id="team_size" name="team_size" 
+                                           value="{{ project.team_size or '' }}" min="1" max="100">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 링크 및 URL 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-link me-1"></i>관련 링크
+                                </h6>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="github_url" class="form-label">GitHub URL</label>
+                                    <input type="url" class="form-control" id="github_url" name="github_url" 
+                                           value="{{ project.github_url or '' }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="demo_url" class="form-label">데모/라이브 URL</label>
+                                    <input type="url" class="form-control" id="demo_url" name="demo_url" 
+                                           value="{{ project.demo_url or '' }}">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="video_url" class="form-label">동영상 URL</label>
+                                <input type="url" class="form-control" id="video_url" name="video_url" 
+                                       value="{{ project.video_url or '' }}">
+                            </div>
+                        </div>
+
+                        <!-- 성과 및 결과 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-trophy me-1"></i>성과 및 결과
+                                </h6>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="achievements" class="form-label">주요 성과</label>
+                                <textarea class="form-control" id="achievements" name="achievements" rows="4">{{ project.achievements or '' }}</textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="metrics" class="form-label">정량적 지표</label>
+                                <textarea class="form-control" id="metrics" name="metrics" rows="2">{{ project.metrics or '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- 미디어 업로드 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-image me-1"></i>미디어 파일
+                                </h6>
+                            </div>
+                            
+                            {% if project.image_path %}
+                            <div class="current-image mb-3">
+                                <label class="form-label">현재 이미지</label>
+                                <div class="card">
+                                    <img src="{{ url_for('uploaded_file', filename=project.image_path) }}" 
+                                         class="card-img-top" alt="현재 이미지" style="max-height: 200px; object-fit: cover;">
+                                    <div class="card-body text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeCurrentImage()">
+                                            <i class="fas fa-trash me-1"></i>현재 이미지 삭제
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mb-3">
+                                <label for="image" class="form-label">새 이미지 업로드</label>
+                                <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                                <div class="form-text">새 이미지를 선택하면 기존 이미지가 교체됩니다.</div>
+                            </div>
+                        </div>
+
+                        <!-- 공개 설정 섹션 -->
+                        <div class="form-section mb-4">
+                            <div class="section-header mb-3">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-cog me-1"></i>공개 설정
+                                </h6>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured"
+                                               {{ 'checked' if project.is_featured }}>
+                                        <label class="form-check-label" for="is_featured">
+                                            <i class="fas fa-star text-warning me-1"></i>주요 프로젝트로 설정
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="is_public" name="is_public"
+                                               {{ 'checked' if project.is_public }}>
+                                        <label class="form-check-label" for="is_public">
+                                            <i class="fas fa-eye text-success me-1"></i>공개 프로젝트
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="sort_order" class="form-label">정렬 순서</label>
+                                    <input type="number" class="form-control" id="sort_order" name="sort_order" 
+                                           value="{{ project.sort_order or 0 }}" min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 제출 버튼 -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>취소
+                            </a>
+                            <div>
+                                <a href="{{ url_for('project_detail', project_id=project.id) }}" 
+                                   class="btn btn-outline-info me-2" target="_blank">
+                                    <i class="fas fa-eye me-1"></i>미리보기
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>수정 완료
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사이드바 -->
+        <div class="col-lg-4">
+            <!-- 프로젝트 정보 -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>프로젝트 정보
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="info-item mb-3">
+                        <strong>프로젝트 ID:</strong> {{ project.id }}
+                    </div>
+                    <div class="info-item mb-3">
+                        <strong>등록일:</strong> {{ project.created_at.strftime('%Y년 %m월 %d일') }}
+                    </div>
+                    <div class="info-item mb-3">
+                        <strong>조회수:</strong> {{ project.view_count or 0 }}회
+                    </div>
+                    <div class="info-item">
+                        <strong>상태:</strong> 
+                        {% if project.is_public %}
+                            <span class="badge bg-success">공개</span>
+                        {% else %}
+                            <span class="badge bg-secondary">비공개</span>
+                        {% endif %}
+                        {% if project.is_featured %}
+                            <span class="badge bg-warning">주요프로젝트</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 수정 가이드 -->
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>수정 가이드
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="guide-item mb-3">
+                        <h6 class="text-primary">📝 내용 작성 팁</h6>
+                        <ul class="small text-muted mb-0">
+                            <li>구체적인 성과 수치 포함</li>
+                            <li>사용한 기술의 버전 명시</li>
+                            <li>문제 해결 과정 설명</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="guide-item mb-3">
+                        <h6 class="text-success">🖼️ 이미지 업로드</h6>
+                        <ul class="small text-muted mb-0">
+                            <li>권장 해상도: 1200px 이상</li>
+                            <li>지원 형식: JPG, PNG, GIF</li>
+                            <li>최대 크기: 10MB</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="guide-item">
+                        <h6 class="text-info">🔗 링크 관리</h6>
+                        <ul class="small text-muted mb-0">
+                            <li>GitHub: 소스코드 공개시만</li>
+                            <li>Demo: 실제 동작하는 링크만</li>
+                            <li>정기적인 링크 상태 확인</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.form-section {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+
+.section-header {
+    border-left: 4px solid var(--accent-color);
+    padding-left: 15px;
+    background: rgba(103, 126, 234, 0.05);
+    padding: 10px 15px;
+    border-radius: 5px;
+}
+
+.current-image .card {
+    max-width: 300px;
+}
+
+.info-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.guide-item {
+    padding-bottom: 15px;
+}
+
+.guide-item:last-child {
+    padding-bottom: 0;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editProjectForm');
+    
+    // 진행중 체크박스 처리
+    const isOngoingCheckbox = document.getElementById('is_ongoing');
+    const endDateInput = document.getElementById('end_date');
+    
+    isOngoingCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            endDateInput.value = '';
+            endDateInput.disabled = true;
+        } else {
+            endDateInput.disabled = false;
+        }
+    });
+    
+    // 초기 상태 설정
+    if (isOngoingCheckbox.checked) {
+        endDateInput.disabled = true;
+    }
+    
+    // 폼 제출 처리
+    form.addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>수정 중...';
+        submitBtn.disabled = true;
+        
+        // 폼이 제출되지 않으면 버튼 상태 복원
+        setTimeout(() => {
+            if (submitBtn.disabled) {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }, 10000);
+    });
+});
+
+function removeCurrentImage() {
+    if (confirm('현재 이미지를 삭제하시겠습니까?')) {
+        // 이미지 삭제를 위한 hidden input 추가
+        const form = document.getElementById('editProjectForm');
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'remove_image';
+        hiddenInput.value = 'true';
+        form.appendChild(hiddenInput);
+        
+        // 현재 이미지 영역 숨기기
+        document.querySelector('.current-image').style.display = 'none';
+        
+        alert('수정 완료 버튼을 클릭하면 이미지가 삭제됩니다.');
+    }
+}
+</script>
+{% endblock %}

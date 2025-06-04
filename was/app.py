@@ -909,92 +909,136 @@ def delete_work(work_id):
 @app.route('/admin/edit_work/<int:work_id>', methods=['GET', 'POST'])
 @login_required
 def edit_work(work_id):
+    """프로젝트 수정"""
     if not current_user.is_admin:
+        flash('관리자 권한이 필요합니다.', 'error')
         return redirect(url_for('index'))
     
-    project = Project.query.get_or_404(work_id)
-    
-    if request.method == 'POST':
-        try:
-            # 폼 데이터 업데이트
-            project.title = request.form.get('title', '').strip()
-            project.description = request.form.get('description', '').strip()
-            project.detailed_description = request.form.get('detailed_description', '').strip()
-            project.project_type = request.form.get('project_type', '').strip()
-            project.category = request.form.get('category', '').strip()
-            project.my_role = request.form.get('my_role', '').strip()
-            project.tech_stack = request.form.get('tech_stack', '').strip()
-            project.github_url = request.form.get('github_url', '').strip() or None
-            project.demo_url = request.form.get('demo_url', '').strip() or None
-            project.video_url = request.form.get('video_url', '').strip() or None
-            project.achievements = request.form.get('achievements', '').strip() or None
-            project.metrics = request.form.get('metrics', '').strip() or None
-            project.is_featured = 'is_featured' in request.form
-            project.is_public = 'is_public' in request.form
-            project.sort_order = int(request.form.get('sort_order', 0))
+    try:
+        project = Project.query.get_or_404(work_id)
+        
+        if request.method == 'POST':
+            logger.info(f"프로젝트 수정 요청 - ID: {work_id}, 사용자: {current_user.username}")
             
-            # 날짜 처리
-            start_date_str = request.form.get('start_date')
-            end_date_str = request.form.get('end_date')
-            
-            if start_date_str:
-                project.start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-            if end_date_str and 'is_ongoing' not in request.form:
-                project.end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-            elif 'is_ongoing' in request.form:
-                project.end_date = None
-            
-            # 팀 크기 처리
-            team_size_str = request.form.get('team_size')
-            if team_size_str and team_size_str.isdigit():
-                project.team_size = int(team_size_str)
-            
-            # 새 이미지 업로드 처리
-            if 'image' in request.files:
-                file = request.files['image']
-                if file and file.filename:
-                    # 기존 이미지 삭제
-                    if project.image_path:
-                        try:
-                            old_file_path = os.path.join(app.config['UPLOAD_FOLDER'], project.image_path)
-                            if os.path.exists(old_file_path):
-                                os.remove(old_file_path)
-                        except Exception as e:
-                            logger.error(f"Failed to delete old image: {e}")
-                    
-                    # 새 이미지 저장
-                    filename = secure_filename(file.filename)
-                    name, ext = os.path.splitext(filename)
-                    filename = f"{name}_{int(datetime.now().timestamp())}{ext}"
-                    
-                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-                    file.save(file_path)
-                    
-                    # 이미지 최적화
+            try:
+                # 기본 정보 업데이트
+                project.title = request.form.get('title', '').strip()
+                project.description = request.form.get('description', '').strip()
+                project.detailed_description = request.form.get('detailed_description', '').strip() or None
+                project.project_type = request.form.get('project_type', '').strip()
+                project.category = request.form.get('category', '').strip() or None
+                project.my_role = request.form.get('my_role', '').strip() or None
+                project.tech_stack = request.form.get('tech_stack', '').strip() or None
+                
+                # URL 정보 업데이트
+                project.github_url = request.form.get('github_url', '').strip() or None
+                project.demo_url = request.form.get('demo_url', '').strip() or None
+                project.video_url = request.form.get('video_url', '').strip() or None
+                
+                # 성과 정보 업데이트
+                project.achievements = request.form.get('achievements', '').strip() or None
+                project.metrics = request.form.get('metrics', '').strip() or None
+                
+                # 공개 설정 업데이트
+                project.is_featured = 'is_featured' in request.form
+                project.is_public = 'is_public' in request.form
+                project.sort_order = int(request.form.get('sort_order', 0))
+                
+                # 날짜 처리
+                start_date_str = request.form.get('start_date')
+                end_date_str = request.form.get('end_date')
+                is_ongoing = 'is_ongoing' in request.form
+                
+                if start_date_str:
                     try:
-                        with Image.open(file_path) as img:
-                            if img.width > 1200:
-                                ratio = 1200 / img.width
-                                new_height = int(img.height * ratio)
-                                img = img.resize((1200, new_height), Image.Resampling.LANCZOS)
-                                img.save(file_path, optimize=True, quality=85)
+                        project.start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        project.start_date = None
+                
+                if is_ongoing:
+                    project.end_date = None
+                elif end_date_str:
+                    try:
+                        project.end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        project.end_date = None
+                
+                # 팀 크기 처리
+                team_size_str = request.form.get('team_size')
+                if team_size_str and team_size_str.isdigit():
+                    project.team_size = int(team_size_str)
+                else:
+                    project.team_size = None
+                
+                # 기존 이미지 삭제 처리
+                if request.form.get('remove_image') == 'true' and project.image_path:
+                    try:
+                        old_file_path = os.path.join(app.config['UPLOAD_FOLDER'], project.image_path)
+                        if os.path.exists(old_file_path):
+                            os.remove(old_file_path)
+                            logger.info(f"기존 이미지 삭제: {project.image_path}")
                     except Exception as e:
-                        logger.error(f"Image processing error: {e}")
-                    
-                    project.image_path = filename
-            
-            db.session.commit()
-            flash('프로젝트가 수정되었습니다.', 'success')
-            return redirect(url_for('admin'))
-            
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Error updating project: {e}")
-            flash(f'프로젝트 수정 중 오류가 발생했습니다: {str(e)}', 'error')
-    
-    return render_template('edit_work.html', project=project)
-
+                        logger.error(f"기존 이미지 삭제 실패: {e}")
+                    project.image_path = None
+                
+                # 새 이미지 업로드 처리
+                if 'image' in request.files:
+                    file = request.files['image']
+                    if file and file.filename:
+                        # 기존 이미지 삭제 (새 이미지로 교체하는 경우)
+                        if project.image_path:
+                            try:
+                                old_file_path = os.path.join(app.config['UPLOAD_FOLDER'], project.image_path)
+                                if os.path.exists(old_file_path):
+                                    os.remove(old_file_path)
+                                    logger.info(f"기존 이미지 교체: {project.image_path}")
+                            except Exception as e:
+                                logger.error(f"기존 이미지 삭제 실패: {e}")
+                        
+                        # 새 이미지 업로드
+                        new_image_path = handle_image_upload(file)
+                        if new_image_path:
+                            project.image_path = new_image_path
+                            logger.info(f"새 이미지 업로드: {new_image_path}")
+                        else:
+                            flash('이미지 업로드에 실패했습니다.', 'warning')
+                
+                # 데이터베이스 업데이트
+                db.session.commit()
+                
+                logger.info(f"프로젝트 수정 완료: {project.title} (ID: {work_id})")
+                flash('프로젝트가 성공적으로 수정되었습니다!', 'success')
+                
+                # AJAX 요청인 경우 JSON 응답
+                if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return jsonify({
+                        'success': True,
+                        'message': '프로젝트가 성공적으로 수정되었습니다.',
+                        'redirect_url': url_for('admin')
+                    })
+                
+                return redirect(url_for('admin'))
+                
+            except Exception as e:
+                db.session.rollback()
+                error_msg = f"프로젝트 수정 중 오류가 발생했습니다: {str(e)}"
+                logger.error(f"프로젝트 수정 오류: {str(e)}", exc_info=True)
+                
+                if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return jsonify({
+                        'success': False,
+                        'message': error_msg
+                    }), 500
+                
+                flash(error_msg, 'error')
+        
+        # GET 요청 처리
+        return render_template('edit_work.html', project=project)
+        
+    except Exception as e:
+        logger.error(f"프로젝트 수정 페이지 오류: {str(e)}", exc_info=True)
+        flash('프로젝트를 불러오는 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('admin'))
 # API 엔드포인트들
 @app.route('/api/project/<int:project_id>/quick-view')
 def api_project_quick_view(project_id):
