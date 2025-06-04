@@ -474,7 +474,6 @@ def init_default_data():
             
             {'name': 'PostgreSQL', 'category': 'database', 'icon_class': 'fas fa-database', 'color': '#336791', 'proficiency': 85},
             {'name': 'MySQL', 'category': 'database', 'icon_class': 'fas fa-database', 'color': '#4479a1', 'proficiency': 90},
-            #{'name': 'MongoDB', 'category': 'database', 'icon_class': 'fas fa-leaf', 'color': '#47a248', 'proficiency': 80},
             {'name': 'Redis', 'category': 'database', 'icon_class': 'fas fa-memory', 'color': '#dc382d', 'proficiency': 85},
             {'name': 'AWS', 'category': 'cloud', 'icon_class': 'fab fa-aws', 'color': '#ff9900', 'proficiency': 85, 'is_primary': True},
             {'name': 'Google Cloud', 'category': 'cloud', 'icon_class': 'fab fa-google', 'color': '#4285f4', 'proficiency': 80},
@@ -525,13 +524,15 @@ def init_default_data():
                 cert = Certification(**cert_data)
                 db.session.add(cert)
         
+        # 학습 블로그 기본 데이터 초기화 호출
+        init_learning_default_data()
+        
         db.session.commit()
         logger.info("Default data initialized")
     except Exception as e:
         logger.error(f"Failed to initialize default data: {e}")
         db.session.rollback()
-###############################################################################################
-#새로들어감
+
 def init_learning_default_data():
     """학습 블로그 기본 데이터 초기화"""
     try:
@@ -600,12 +601,12 @@ def init_learning_default_data():
                 tag = LearningTag(name=tag_name)
                 db.session.add(tag)
         
-        db.session.commit()
+        # 여기서 commit하지 않음 - 상위 함수에서 처리
         logger.info("학습 블로그 기본 데이터 초기화 완료")
         
     except Exception as e:
         logger.error(f"학습 블로그 기본 데이터 초기화 실패: {e}")
-        db.session.rollback()
+        # 여기서 rollback하지 않음 - 상위 함수에서 처리
 #######################################################################
 # 유틸리티 함수들 추가
 
