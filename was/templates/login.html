@@ -33,6 +33,7 @@
 
                         <!-- Login Form -->
                         <form id="loginForm" method="POST" action="{{ url_for('login') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="mb-4">
                                 <label for="username" class="form-label">
                                     <i class="fas fa-user me-2"></i>사용자명
@@ -353,43 +354,82 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>로그인 중...';
         submitBtn.disabled = true;
 
+         // CSRF 토큰 가져오기
+        const csrfToken = this.querySelector('input[name="csrf_token"]').value;
+
+        // FormData 생성 (CSRF 토큰 포함)
+        const formData = new FormData(this);
+        
+        // 또는 수동으로 데이터 구성
+        // const formData = new FormData();
+        // formData.append('username', username);
+        // formData.append('password', password);
+        // formData.append('remember', document.getElementById('remember').checked ? 'on' : '');
+        // formData.append('csrf_token', csrfToken);
+
         // 실제 로그인 요청
         fetch(this.action, {
             method: 'POST',
+            body: formData,
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
             },
-            body: new URLSearchParams(new FormData(this))
+            credentials: 'same-origin'
         })
         .then(response => {
+            // 응답 상태 확인
             if (response.ok) {
-                if (response.redirected) {
-                    window.location.href = response.url;
-                } else {
-                    return response.text();
-                }
+                return response.json();
+            } else if (response.status === 400) {
+                return response.json().then(data => {
+                    throw new Error(data.message || 'CSRF 토큰 오류');
+                });
+            } else if (response.status === 401) {
+                return response.json().then(data => {
+                    throw new Error(data.message || '인증 실패');
+                });
             } else {
-                throw new Error('로그인 실패');
+                throw new Error('로그인 요청 실패');
             }
         })
         .then(data => {
-            if (data) {
-                // 로그인 실패 시 에러 메시지 표시
-                loginAttempts++;
-                showError('잘못된 사용자명 또는 비밀번호입니다.');
+            if (data.success) {
+                showSuccess('로그인되었습니다. 관리자 페이지로 이동합니다...');
                 
-                // 입력 필드 흔들기 애니메이션
-                shakeInput(usernameInput);
-                shakeInput(passwordInput);
-                
-                passwordInput.value = '';
-                passwordInput.focus();
+                setTimeout(() => {
+                    if (data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        window.location.href = '/admin';
+                    }
+                }, 1500);
+            } else {
+                throw new Error(data.message || '로그인 실패');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Login error:', error);
             loginAttempts++;
-            showError('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+            
+            let errorMessage = error.message;
+            
+            // CSRF 토큰 에러인 경우 페이지 새로고침 제안
+            if (errorMessage.includes('CSRF') || errorMessage.includes('토큰')) {
+                errorMessage = 'CSRF 토큰 오류가 발생했습니다. 페이지를 새로고침해주세요.';
+                
+                // 새로고침 버튼과 함께 에러 표시
+                showError(errorMessage, true);
+                return;
+            }
+            
+            showError(errorMessage);
+            
+            // 입력 필드 흔들기 애니메이션
+            shakeInput(usernameInput);
+            shakeInput(passwordInput);
+            
+            passwordInput.value = '';
+            passwordInput.focus();
         })
         .finally(() => {
             submitBtn.innerHTML = originalText;
@@ -397,8 +437,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 에러 메시지 표시 함수
-    function showError(message) {
+    // 에러 메시지 표시 함수 (새로고침 옵션 추가)
+    function showError(message, showRefreshButton = false) {
         // 기존 에러 메시지 제거
         const existingError = document.querySelector('.login-error');
         if (existingError) {
@@ -408,21 +448,53 @@ document.addEventListener('DOMContentLoaded', function() {
         // 새 에러 메시지 생성
         const errorDiv = document.createElement('div');
         errorDiv.className = 'alert alert-danger alert-dismissible fade show login-error';
-        errorDiv.innerHTML = `
+        
+        let errorContent = `
             <i class="fas fa-exclamation-triangle me-2"></i>
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
+        
+        if (showRefreshButton) {
+            errorContent += `
+                <div class="mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.location.reload()">
+                        <i class="fas fa-refresh me-1"></i>페이지 새로고침
+                    </button>
+                </div>
+            `;
+        }
+        
+        errorDiv.innerHTML = errorContent;
 
         // 폼 상단에 삽입
         loginForm.insertBefore(errorDiv, loginForm.firstChild);
 
-        // 자동 제거 (5초 후)
+        // 자동 제거 (새로고침 버튼이 있는 경우 더 오래 표시)
+        const timeout = showRefreshButton ? 10000 : 5000;
         setTimeout(() => {
             if (errorDiv.parentNode) {
                 errorDiv.remove();
             }
-        }, 5000);
+        }, timeout);
+    }
+
+    // 성공 메시지 표시 함수
+    function showSuccess(message) {
+        // 기존 메시지 제거
+        const existingMessage = document.querySelector('.login-success, .login-error');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+
+        const successDiv = document.createElement('div');
+        successDiv.className = 'alert alert-success alert-dismissible fade show login-success';
+        successDiv.innerHTML = `
+            <i class="fas fa-check-circle me-2"></i>
+            ${message}
+        `;
+
+        loginForm.insertBefore(successDiv, loginForm.firstChild);
     }
 
     // 입력 필드 흔들기 애니메이션

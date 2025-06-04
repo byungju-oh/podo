@@ -790,15 +790,55 @@ def readiness():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-        
-        if user and check_password_hash(user.password_hash, password):
-            login_user(user)
-            return redirect(url_for('admin'))
-        else:
-            flash('잘못된 사용자명 또는 비밀번호입니다.', 'error')
+        try:
+            # CSRF 토큰 검증은 CSRFProtect가 자동으로 처리
+            username = request.form.get('username', '').strip()
+            password = request.form.get('password', '').strip()
+            remember = request.form.get('remember') == 'on'
+            
+            if not username or not password:
+                flash('사용자명과 비밀번호를 입력해주세요.', 'error')
+                return render_template('login.html')
+            
+            user = User.query.filter_by(username=username).first()
+            
+            if user and check_password_hash(user.password_hash, password):
+                login_user(user, remember=remember)
+                logger.info(f"로그인 성공: {username}")
+                
+                # AJAX 요청인 경우 JSON 응답
+                if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return jsonify({
+                        'success': True,
+                        'message': '로그인되었습니다.',
+                        'redirect_url': url_for('admin')
+                    })
+                
+                # 일반 폼 제출인 경우
+                next_page = request.args.get('next')
+                if next_page and next_page.startswith('/'):
+                    return redirect(next_page)
+                return redirect(url_for('admin'))
+            else:
+                logger.warning(f"로그인 실패: {username}")
+                flash('잘못된 사용자명 또는 비밀번호입니다.', 'error')
+                
+                # AJAX 요청인 경우 JSON 응답
+                if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return jsonify({
+                        'success': False,
+                        'message': '잘못된 사용자명 또는 비밀번호입니다.'
+                    }), 401
+                
+        except Exception as e:
+            logger.error(f"로그인 처리 중 오류: {e}")
+            flash('로그인 처리 중 오류가 발생했습니다.', 'error')
+            
+            if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({
+                    'success': False,
+                    'message': '로그인 처리 중 오류가 발생했습니다.'
+                }), 500
     
     return render_template('login.html')
 
