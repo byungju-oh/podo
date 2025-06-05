@@ -1,0 +1,554 @@
+<!-- was/templates/learning/post_detail.html -->
+
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - 학습 블로그{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">홈</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('learning_blog') }}">학습 블로그</a></li>
+            {% if post.category %}
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('learning_category', category_id=post.category.id) }}">
+                    {{ post.category.name }}
+                </a>
+            </li>
+            {% endif %}
+            <li class="breadcrumb-item active" aria-current="page">{{ post.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Post Header -->
+            <div class="post-header mb-4">
+                {% if post.category %}
+                <div class="mb-3">
+                    <span class="badge" style="background-color: {{ post.category.color }}">
+                        <i class="{{ post.category.icon_class }} me-1"></i>{{ post.category.name }}
+                    </span>
+                    {% if post.difficulty %}
+                    <span class="badge bg-secondary ms-2">{{ post.difficulty }}</span>
+                    {% endif %}
+                    {% if post.is_featured %}
+                    <span class="badge bg-warning ms-2">
+                        <i class="fas fa-star me-1"></i>추천
+                    </span>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <h1 class="display-5 mb-3">{{ post.title }}</h1>
+                
+                {% if post.summary %}
+                <p class="lead text-muted mb-4">{{ post.summary }}</p>
+                {% endif %}
+
+                <div class="post-meta">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="meta-info">
+                                <span class="me-3">
+                                    <i class="fas fa-calendar text-primary me-1"></i>
+                                    {{ post.published_at.strftime('%Y년 %m월 %d일') }}
+                                </span>
+                                <span class="me-3">
+                                    <i class="fas fa-clock text-success me-1"></i>
+                                    {{ post.reading_time }}분 소요
+                                </span>
+                                <span class="me-3">
+                                    <i class="fas fa-eye text-info me-1"></i>
+                                    {{ post.view_count }}회 조회
+                                </span>
+                                {% if post.learning_date %}
+                                <span>
+                                    <i class="fas fa-book text-warning me-1"></i>
+                                    {{ post.learning_date.strftime('%Y.%m.%d') }} 학습
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="share-buttons">
+                                <button class="btn btn-outline-primary btn-sm" onclick="sharePost('twitter')">
+                                    <i class="fab fa-twitter"></i>
+                                </button>
+                                <button class="btn btn-outline-info btn-sm" onclick="sharePost('linkedin')">
+                                    <i class="fab fa-linkedin"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="copyPostLink()">
+                                    <i class="fas fa-link"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thumbnail Image -->
+            {% if post.thumbnail_path %}
+            <div class="post-thumbnail mb-4">
+                <img src="{{ url_for('uploaded_file', filename=post.thumbnail_path) }}" 
+                     class="img-fluid rounded shadow" 
+                     alt="{{ post.title }}">
+            </div>
+            {% endif %}
+
+            <!-- Post Content -->
+            <div class="post-content">
+                {{ post.content|markdown }}
+            </div>
+
+            <!-- Post Footer -->
+            <div class="post-footer mt-5 pt-4 border-top">
+                <div class="row">
+                    <div class="col-md-6">
+                        {% if post.tags %}
+                        <div class="post-tags mb-3">
+                            <h6 class="mb-2">
+                                <i class="fas fa-tags me-2"></i>태그
+                            </h6>
+                            {% set tag_list = post.tags.split(',') %}
+                            {% for tag in tag_list %}
+                            <a href="{{ url_for('learning_blog') }}?tag={{ tag.strip() }}" 
+                               class="badge bg-primary text-decoration-none me-2 mb-2">
+                                {{ tag.strip() }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if post.source_url %}
+                        <div class="source-info mb-3">
+                            <h6 class="mb-2">
+                                <i class="fas fa-external-link-alt me-2"></i>참고 자료
+                            </h6>
+                            <a href="{{ post.source_url }}" target="_blank" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-link me-1"></i>원본 자료 보기
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if post.practice_code_url %}
+                        <div class="code-info">
+                            <h6 class="mb-2">
+                                <i class="fas fa-code me-2"></i>실습 코드
+                            </h6>
+                            <a href="{{ post.practice_code_url }}" target="_blank" class="btn btn-outline-dark btn-sm">
+                                <i class="fab fa-github me-1"></i>코드 보기
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="post-navigation mt-5">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {% if prev_post %}
+                        <div class="nav-item prev-post">
+                            <div class="nav-label">
+                                <i class="fas fa-chevron-left me-1"></i>이전 포스트
+                            </div>
+                            <a href="{{ url_for('learning_post_detail', slug=prev_post.slug) }}" 
+                               class="nav-title">
+                                {{ prev_post.title }}
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3 text-md-end">
+                        {% if next_post %}
+                        <div class="nav-item next-post">
+                            <div class="nav-label">
+                                다음 포스트<i class="fas fa-chevron-right ms-1"></i>
+                            </div>
+                            <a href="{{ url_for('learning_post_detail', slug=next_post.slug) }}" 
+                               class="nav-title">
+                                {{ next_post.title }}
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Table of Contents -->
+            <div class="card sticky-top mb-4" style="top: 20px;">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-list me-2"></i>목차
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="toc"></div>
+                </div>
+            </div>
+
+            <!-- Related Posts -->
+            {% if related_posts %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>관련 포스트
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% for related in related_posts %}
+                    <div class="related-item mb-3">
+                        <div class="d-flex">
+                            {% if related.thumbnail_path %}
+                            <img src="{{ url_for('uploaded_file', filename=related.thumbnail_path) }}" 
+                                 class="related-thumb me-3" alt="{{ related.title }}">
+                            {% else %}
+                            <div class="related-thumb-placeholder me-3">
+                                <i class="{{ post.category.icon_class }}"></i>
+                            </div>
+                            {% endif %}
+                            <div class="related-content">
+                                <h6 class="mb-1">
+                                    <a href="{{ url_for('learning_post_detail', slug=related.slug) }}" 
+                                       class="text-decoration-none">
+                                        {{ related.title }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">
+                                    {{ related.published_at.strftime('%m.%d') }}
+                                    · {{ related.reading_time }}분
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Category Info -->
+            {% if post.category %}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="{{ post.category.icon_class }} me-2"></i>{{ post.category.name }}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if post.category.description %}
+                    <p class="mb-3">{{ post.category.description }}</p>
+                    {% endif %}
+                    <a href="{{ url_for('learning_category', category_id=post.category.id) }}" 
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-folder-open me-1"></i>카테고리 전체 보기
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.post-header {
+    padding-bottom: 20px;
+    border-bottom: 2px solid #eee;
+}
+
+.meta-info span {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.share-buttons .btn {
+    margin-left: 5px;
+}
+
+.post-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #333;
+}
+
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4,
+.post-content h5,
+.post-content h6 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.post-content h2 {
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #eee;
+}
+
+.post-content pre {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+
+.post-content blockquote {
+    border-left: 4px solid #007bff;
+    padding: 1rem;
+    background: #f8f9fa;
+    margin: 1.5rem 0;
+}
+
+.post-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    margin: 1rem 0;
+}
+
+.post-tags .badge {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+}
+
+.nav-item {
+    padding: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.nav-item:hover {
+    background: #f8f9fa;
+    border-color: #007bff;
+}
+
+.nav-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.nav-title {
+    font-weight: 600;
+    text-decoration: none;
+    color: #333;
+}
+
+.nav-title:hover {
+    color: #007bff;
+}
+
+.related-thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.related-thumb-placeholder {
+    width: 60px;
+    height: 60px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+}
+
+.related-item:last-child {
+    margin-bottom: 0 !important;
+}
+
+#toc {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#toc ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+#toc li {
+    margin-bottom: 5px;
+}
+
+#toc a {
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+#toc a:hover {
+    color: #007bff;
+}
+
+@media (max-width: 768px) {
+    .post-content {
+        font-size: 1rem;
+    }
+    
+    .share-buttons {
+        margin-top: 15px;
+    }
+    
+    .related-thumb,
+    .related-thumb-placeholder {
+        width: 50px;
+        height: 50px;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 목차 생성
+    generateTOC();
+    
+    // 스크롤 스파이
+    initScrollSpy();
+    
+    // 코드 블록 복사 기능
+    addCopyButtons();
+});
+
+function generateTOC() {
+    const toc = document.getElementById('toc');
+    const headings = document.querySelectorAll('.post-content h1, .post-content h2, .post-content h3');
+    
+    if (headings.length === 0) {
+        toc.innerHTML = '<p class="text-muted">목차가 없습니다</p>';
+        return;
+    }
+    
+    const tocList = document.createElement('ul');
+    tocList.className = 'list-unstyled';
+    
+    headings.forEach((heading, index) => {
+        const id = 'heading-' + index;
+        heading.id = id;
+        
+        const li = document.createElement('li');
+        li.style.paddingLeft = (parseInt(heading.tagName[1]) - 1) * 15 + 'px';
+        
+        const a = document.createElement('a');
+        a.href = '#' + id;
+        a.textContent = heading.textContent;
+        a.addEventListener('click', function(e) {
+            e.preventDefault();
+            heading.scrollIntoView({ behavior: 'smooth' });
+        });
+        
+        li.appendChild(a);
+        tocList.appendChild(li);
+    });
+    
+    toc.appendChild(tocList);
+}
+
+function initScrollSpy() {
+    const headings = document.querySelectorAll('.post-content h1, .post-content h2, .post-content h3');
+    const tocLinks = document.querySelectorAll('#toc a');
+    
+    function updateActiveHeading() {
+        let current = '';
+        
+        headings.forEach(heading => {
+            const rect = heading.getBoundingClientRect();
+            if (rect.top <= 100) {
+                current = heading.id;
+            }
+        });
+        
+        tocLinks.forEach(link => {
+            link.classList.remove('text-primary', 'fw-bold');
+            link.classList.add('text-muted');
+            
+            if (link.getAttribute('href') === '#' + current) {
+                link.classList.remove('text-muted');
+                link.classList.add('text-primary', 'fw-bold');
+            }
+        });
+    }
+    
+    window.addEventListener('scroll', updateActiveHeading);
+    updateActiveHeading();
+}
+
+function addCopyButtons() {
+    const codeBlocks = document.querySelectorAll('pre code');
+    
+    codeBlocks.forEach(block => {
+        const pre = block.closest('pre');
+        pre.style.position = 'relative';
+        
+        const button = document.createElement('button');
+        button.className = 'btn btn-sm btn-outline-secondary';
+        button.innerHTML = '<i class="fas fa-copy"></i>';
+        button.style.cssText = `
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+        `;
+        
+        button.addEventListener('click', () => {
+            navigator.clipboard.writeText(block.textContent).then(() => {
+                button.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    button.innerHTML = '<i class="fas fa-copy"></i>';
+                }, 2000);
+            });
+        });
+        
+        pre.appendChild(button);
+    });
+}
+
+function sharePost(platform) {
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent(document.title);
+    
+    let shareUrl = '';
+    
+    switch(platform) {
+        case 'twitter':
+            shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
+            break;
+        case 'linkedin':
+            shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+            break;
+    }
+    
+    if (shareUrl) {
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+}
+
+function copyPostLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}
