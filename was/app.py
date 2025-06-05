@@ -1797,7 +1797,88 @@ def admin_learning_categories():
         return redirect(url_for('admin_learning'))
     
     ##################################################################################
+@app.route('/admin/learning/category', methods=['POST'])
+@app.route('/admin/learning/category/<int:category_id>', methods=['PUT', 'DELETE'])
+@login_required
+def admin_learning_category_manage(category_id=None):
+    """학습 카테고리 생성/수정/삭제"""
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': '권한이 없습니다.'}), 403
+    
+    try:
+        if request.method == 'POST':
+            # 새 카테고리 생성
+            category = LearningCategory(
+                name=request.form.get('name'),
+                description=request.form.get('description'),
+                color=request.form.get('color', '#007bff'),
+                icon_class=request.form.get('icon_class', 'fas fa-book'),
+                sort_order=int(request.form.get('sort_order', 0)),
+                is_active=request.form.get('is_active') == 'on'
+            )
+            
+            db.session.add(category)
+            db.session.commit()
+            
+            return jsonify({'success': True, 'message': '카테고리가 생성되었습니다.'})
+            
+        elif request.method == 'PUT':
+            # 카테고리 수정
+            category = LearningCategory.query.get_or_404(category_id)
+            
+            category.name = request.form.get('name')
+            category.description = request.form.get('description')
+            category.color = request.form.get('color', '#007bff')
+            category.icon_class = request.form.get('icon_class', 'fas fa-book')
+            category.sort_order = int(request.form.get('sort_order', 0))
+            category.is_active = request.form.get('is_active') == 'on'
+            
+            db.session.commit()
+            
+            return jsonify({'success': True, 'message': '카테고리가 수정되었습니다.'})
+            
+        elif request.method == 'DELETE':
+            # 카테고리 삭제
+            category = LearningCategory.query.get_or_404(category_id)
+            
+            # 해당 카테고리의 포스트들을 다른 카테고리로 이동하거나 삭제
+            posts_count = LearningPost.query.filter_by(category_id=category_id).count()
+            if posts_count > 0:
+                return jsonify({
+                    'success': False, 
+                    'message': f'이 카테고리에 {posts_count}개의 포스트가 있습니다. 먼저 포스트들을 이동하거나 삭제해주세요.'
+                }), 400
+            
+            db.session.delete(category)
+            db.session.commit()
+            
+            return jsonify({'success': True, 'message': '카테고리가 삭제되었습니다.'})
+            
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"카테고리 관리 오류: {e}")
+        return jsonify({'success': False, 'message': '처리 중 오류가 발생했습니다.'}), 500
 
+# 디버그용 샘플 데이터 생성 라우트
+@app.route('/debug/create-sample-learning-data')
+def debug_create_sample_data():
+    """샘플 학습 데이터 생성 (디버그용)"""
+    if not app.debug:
+        return "Debug mode only", 404
+    
+    try:
+        success = create_sample_learning_data()
+        if success:
+            return jsonify({
+                'success': True,
+                'message': '샘플 데이터가 생성되었습니다.',
+                'categories': LearningCategory.query.count(),
+                'posts': LearningPost.query.count()
+            })
+        else:
+            return jsonify({'success': False, 'message': '샘플 데이터 생성에 실패했습니다.'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 
