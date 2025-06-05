@@ -1,0 +1,362 @@
+<!-- was/templates/admin/learning/categories.html -->
+
+{% extends "base.html" %}
+
+{% block title %}학습 카테고리 관리 - 관리자{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">학습 카테고리 관리</h1>
+                    <p class="text-muted mb-0">학습 블로그의 카테고리를 관리합니다</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                        <i class="fas fa-plus me-1"></i>새 카테고리 추가
+                    </button>
+                    <a href="{{ url_for('admin_learning') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>대시보드
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Grid -->
+    <div class="row">
+        {% if categories %}
+            {% for category in categories %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 category-card">
+                    <div class="card-header text-center" style="background-color: {{ category.color }}; color: white;">
+                        <i class="{{ category.icon_class }} fa-2x mb-2"></i>
+                        <h5 class="mb-0">{{ category.name }}</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if category.description %}
+                        <p class="card-text">{{ category.description }}</p>
+                        {% endif %}
+                        
+                        <div class="category-stats mb-3">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="stat-number">{{ category.posts.count() }}</div>
+                                    <div class="stat-label">포스트</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="stat-number">{{ category.sort_order }}</div>
+                                    <div class="stat-label">순서</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="category-status mb-3">
+                            {% if category.is_active %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>활성
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-pause me-1"></i>비활성
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="btn-group w-100">
+                            <button class="btn btn-outline-primary btn-sm" 
+                                    onclick="editCategory({{ category.id }}, '{{ category.name }}', '{{ category.description or '' }}', '{{ category.color }}', '{{ category.icon_class }}', {{ category.sort_order }}, {{ category.is_active|lower }})">
+                                <i class="fas fa-edit"></i> 수정
+                            </button>
+                            <a href="{{ url_for('learning_category', category_id=category.id) }}" 
+                               class="btn btn-outline-info btn-sm" target="_blank">
+                                <i class="fas fa-eye"></i> 보기
+                            </a>
+                            <button class="btn btn-outline-danger btn-sm" 
+                                    onclick="deleteCategory({{ category.id }}, '{{ category.name }}')">
+                                <i class="fas fa-trash"></i> 삭제
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-folder fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">카테고리가 없습니다</h4>
+                <p class="text-muted mb-4">첫 번째 학습 카테고리를 만들어보세요!</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                    <i class="fas fa-plus me-1"></i>카테고리 추가하기
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Category Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="categoryModalTitle">
+                    <i class="fas fa-folder me-2"></i>새 카테고리 추가
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="categoryForm" method="POST" action="/admin/learning/category">
+                <div class="modal-body">
+                    <input type="hidden" id="categoryId" name="category_id">
+                    
+                    <div class="mb-3">
+                        <label for="categoryName" class="form-label">카테고리명 *</label>
+                        <input type="text" class="form-control" id="categoryName" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="categoryDescription" class="form-label">설명</label>
+                        <textarea class="form-control" id="categoryDescription" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="categoryColor" class="form-label">색상</label>
+                                <input type="color" class="form-control form-control-color" id="categoryColor" name="color" value="#007bff">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="categorySortOrder" class="form-label">정렬 순서</label>
+                                <input type="number" class="form-control" id="categorySortOrder" name="sort_order" value="0" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="categoryIcon" class="form-label">아이콘 클래스</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="categoryIcon" name="icon_class" 
+                                   value="fas fa-book" placeholder="fas fa-book">
+                            <button type="button" class="btn btn-outline-secondary" onclick="showIconPreview()">
+                                <i class="fas fa-eye"></i> 미리보기
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            예: fas fa-code, fab fa-python, fas fa-database
+                            <div id="iconPreview" class="mt-2"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="categoryActive" name="is_active" checked>
+                        <label class="form-check-label" for="categoryActive">
+                            활성 카테고리
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="submit" class="btn btn-primary" id="categorySubmitBtn">
+                        <i class="fas fa-save me-1"></i>저장
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>카테고리 삭제
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>정말로 이 카테고리를 삭제하시겠습니까?</p>
+                <div class="alert alert-warning">
+                    <strong id="deleteCategoryName"></strong> 카테고리와 관련된 모든 포스트가 영향을 받을 수 있습니다.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-danger" id="confirmCategoryDelete">
+                    <i class="fas fa-trash me-1"></i>삭제하기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.category-card {
+    transition: all 0.3s ease;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-transform: uppercase;
+}
+
+.form-control-color {
+    width: 100%;
+    height: 38px;
+}
+
+#iconPreview {
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    text-align: center;
+}
+
+#iconPreview i {
+    font-size: 2rem;
+    color: #333;
+}
+</style>
+
+<script>
+let deleteCategoryId = null;
+
+// 카테고리 수정
+function editCategory(id, name, description, color, iconClass, sortOrder, isActive) {
+    document.getElementById('categoryModalTitle').innerHTML = '<i class="fas fa-edit me-2"></i>카테고리 수정';
+    document.getElementById('categorySubmitBtn').innerHTML = '<i class="fas fa-save me-1"></i>수정';
+    
+    document.getElementById('categoryId').value = id;
+    document.getElementById('categoryName').value = name;
+    document.getElementById('categoryDescription').value = description;
+    document.getElementById('categoryColor').value = color;
+    document.getElementById('categoryIcon').value = iconClass;
+    document.getElementById('categorySortOrder').value = sortOrder;
+    document.getElementById('categoryActive').checked = isActive;
+    
+    showIconPreview();
+    new bootstrap.Modal(document.getElementById('categoryModal')).show();
+}
+
+// 새 카테고리 추가
+function resetCategoryForm() {
+    document.getElementById('categoryModalTitle').innerHTML = '<i class="fas fa-folder me-2"></i>새 카테고리 추가';
+    document.getElementById('categorySubmitBtn').innerHTML = '<i class="fas fa-save me-1"></i>저장';
+    
+    document.getElementById('categoryForm').reset();
+    document.getElementById('categoryId').value = '';
+    document.getElementById('categoryColor').value = '#007bff';
+    document.getElementById('categoryIcon').value = 'fas fa-book';
+    document.getElementById('categoryActive').checked = true;
+    showIconPreview();
+}
+
+// 모달이 닫힐 때 폼 리셋
+document.getElementById('categoryModal').addEventListener('hidden.bs.modal', resetCategoryForm);
+
+// 아이콘 미리보기
+function showIconPreview() {
+    const iconClass = document.getElementById('categoryIcon').value;
+    const color = document.getElementById('categoryColor').value;
+    const preview = document.getElementById('iconPreview');
+    
+    if (iconClass) {
+        preview.innerHTML = `<i class="${iconClass}" style="color: ${color}"></i>`;
+        preview.style.display = 'block';
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+// 아이콘 클래스 변경시 미리보기 업데이트
+document.getElementById('categoryIcon').addEventListener('input', showIconPreview);
+document.getElementById('categoryColor').addEventListener('change', showIconPreview);
+
+// 폼 제출 처리
+document.getElementById('categoryForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const categoryId = document.getElementById('categoryId').value;
+    
+    const url = categoryId ? `/admin/learning/category/${categoryId}` : '/admin/learning/category';
+    const method = categoryId ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('저장에 실패했습니다: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('저장 중 오류가 발생했습니다.');
+    });
+});
+
+// 카테고리 삭제
+function deleteCategory(categoryId, categoryName) {
+    deleteCategoryId = categoryId;
+    document.getElementById('deleteCategoryName').textContent = categoryName;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+document.getElementById('confirmCategoryDelete').addEventListener('click', function() {
+    if (deleteCategoryId) {
+        fetch(`/admin/learning/category/${deleteCategoryId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('삭제에 실패했습니다: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('삭제 중 오류가 발생했습니다.');
+        });
+        
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+    }
+});
+
+// 페이지 로드시 첫 번째 카테고리의 아이콘 미리보기 설정
+document.addEventListener('DOMContentLoaded', function() {
+    showIconPreview();
+});
+</script>
+{% endblock %}

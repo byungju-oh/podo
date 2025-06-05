@@ -1,0 +1,289 @@
+<!-- was/templates/admin/learning/posts.html -->
+
+{% extends "base.html" %}
+
+{% block title %}학습 포스트 관리 - 관리자{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">학습 포스트 관리</h1>
+                    <p class="text-muted mb-0">모든 학습 포스트를 관리합니다</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin_learning_post_new') }}" class="btn btn-primary me-2">
+                        <i class="fas fa-plus me-1"></i>새 포스트 작성
+                    </a>
+                    <a href="{{ url_for('admin_learning') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>대시보드
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="category" class="form-label">카테고리</label>
+                            <select name="category" id="category" class="form-select">
+                                <option value="">모든 카테고리</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" 
+                                        {{ 'selected' if current_category == category.id }}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">상태</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">모든 상태</option>
+                                <option value="published" {{ 'selected' if current_status == 'published' }}>발행됨</option>
+                                <option value="draft" {{ 'selected' if current_status == 'draft' }}>초안</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i>필터 적용
+                                </button>
+                                <a href="{{ url_for('admin_learning_posts') }}" class="btn btn-outline-secondary ms-2">
+                                    <i class="fas fa-times me-1"></i>초기화
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Posts Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>포스트 목록
+                        {% if posts.total %}
+                        <span class="badge bg-primary">{{ posts.total }}개</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if posts.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>제목</th>
+                                    <th>카테고리</th>
+                                    <th>상태</th>
+                                    <th>조회수</th>
+                                    <th>작성일</th>
+                                    <th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for post in posts.items %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if post.thumbnail_path %}
+                                            <img src="{{ url_for('uploaded_file', filename=post.thumbnail_path) }}" 
+                                                 class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" 
+                                                 style="width: 40px; height: 40px;">
+                                                <i class="fas fa-file-alt text-muted"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-bold">{{ post.title }}</div>
+                                                <small class="text-muted">{{ post.slug }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if post.category %}
+                                        <span class="badge" style="background-color: {{ post.category.color }}">
+                                            {{ post.category.name }}
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if post.is_published %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-eye"></i> 발행됨
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-file"></i> 초안
+                                        </span>
+                                        {% endif %}
+                                        {% if post.is_featured %}
+                                        <span class="badge bg-warning ms-1">
+                                            <i class="fas fa-star"></i> 추천
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ post.view_count or 0 }}</td>
+                                    <td>{{ post.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            {% if post.is_published %}
+                                            <a href="{{ url_for('learning_post_detail', slug=post.slug) }}" 
+                                               class="btn btn-outline-info" target="_blank">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% endif %}
+                                            <a href="{{ url_for('admin_learning_post_edit', post_id=post.id) }}" 
+                                               class="btn btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-outline-danger" 
+                                                    onclick="deletePost({{ post.id }}, '{{ post.title }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if posts.pages > 1 %}
+                    <nav aria-label="페이지 네비게이션" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if posts.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_learning_posts', page=posts.prev_num, category=current_category, status=current_status) }}">
+                                    이전
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for page_num in posts.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != posts.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin_learning_posts', page=page_num, category=current_category, status=current_status) }}">
+                                            {{ page_num }}
+                                        </a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                    {% endif %}
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if posts.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_learning_posts', page=posts.next_num, category=current_category, status=current_status) }}">
+                                    다음
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">포스트가 없습니다</h5>
+                        <p class="text-muted">첫 번째 학습 포스트를 작성해보세요!</p>
+                        <a href="{{ url_for('admin_learning_post_new') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>포스트 작성하기
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>포스트 삭제
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>정말로 이 포스트를 삭제하시겠습니까?</p>
+                <div class="alert alert-warning">
+                    <strong id="deletePostTitle"></strong> 포스트가 영구적으로 삭제됩니다.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">
+                    <i class="fas fa-trash me-1"></i>삭제하기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let deletePostId = null;
+
+function deletePost(postId, postTitle) {
+    deletePostId = postId;
+    document.getElementById('deletePostTitle').textContent = postTitle;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+document.getElementById('confirmDelete').addEventListener('click', function() {
+    if (deletePostId) {
+        fetch(`/admin/learning/post/${deletePostId}/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('삭제에 실패했습니다: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('삭제 중 오류가 발생했습니다.');
+        });
+        
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+    }
+});
+</script>
+{% endblock %}
