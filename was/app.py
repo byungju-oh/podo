@@ -466,16 +466,22 @@ def safe_init_db():
 
 def init_default_data():
     try:
-        admin = User.query.filter_by(username='admin').first()
+        # 환경변수에서 관리자 정보 가져오기
+        admin = User.query.filter_by(username=ADMIN_USERNAME).first()
         if not admin:
             admin = User(
-                username='admin',
-                email='admin@example.com',
-                password_hash=generate_password_hash('admin123'),
+                username=ADMIN_USERNAME,
+                email=ADMIN_EMAIL,
+                password_hash=generate_password_hash(ADMIN_PASSWORD),
                 is_admin=True
             )
             db.session.add(admin)
-            logger.info("Admin user created")
+            logger.info(f"Admin user created: {ADMIN_USERNAME}")
+        else:
+            # 기존 관리자 계정의 비밀번호 업데이트 (필요시)
+            if os.environ.get('UPDATE_ADMIN_PASSWORD', '').lower() == 'true':
+                admin.password_hash = generate_password_hash(ADMIN_PASSWORD)
+                logger.info(f"Admin password updated for: {ADMIN_USERNAME}")
         
         default_tech_stacks = [
             {'name': 'Python', 'category': 'language', 'icon_class': 'fab fa-python', 'color': '#3776ab', 'proficiency': 85, 'is_primary': True},

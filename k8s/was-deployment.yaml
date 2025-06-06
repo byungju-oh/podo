@@ -55,11 +55,39 @@ spec:
         - containerPort: 5000
           name: http
         env:
+        # 데이터베이스 연결 정보
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
               name: app-secrets
               key: database-url
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: db-host
+        - name: DB_PORT
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: db-port
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: db-name
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: db-user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: db-password
+        
+        # Flask 애플리케이션 설정
         - name: SECRET_KEY
           valueFrom:
             secretKeyRef:
@@ -69,16 +97,42 @@ spec:
           value: "production"
         - name: PYTHONUNBUFFERED
           value: "1"
+        
+        # 관리자 계정 설정
+        - name: ADMIN_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: admin-username
+        - name: ADMIN_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: admin-email
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: admin-password
+        
+        # Pod 식별 정보
         - name: INSTANCE_ID
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
-        # 파일 업로드 크기 제한 환경변수 추가
+        
+        # 파일 업로드 설정
         - name: MAX_CONTENT_LENGTH
-          value: "104857600"  # 100MB in bytes
-        # 업로드 폴더 경로
+          value: "34857600"  # 30MB in bytes
         - name: UPLOAD_FOLDER
           value: "/app/uploads"
+        - name: MAX_FILE_SIZE_MB
+          value: "30"
+        
+        # 관리자 비밀번호 업데이트 플래그 (필요시)
+        # - name: UPDATE_ADMIN_PASSWORD
+        #   value: "false"
+        
         resources:
           requests:
             memory: "512Mi"  # 메모리 증가 (큰 파일 처리용)
@@ -86,6 +140,7 @@ spec:
           limits:
             memory: "1Gi"    # 메모리 한도 대폭 증가
             cpu: "500m"
+        
         # 시작 준비 상태 체크 (데이터베이스 초기화 완료 확인)
         readinessProbe:
           httpGet:
@@ -96,6 +151,7 @@ spec:
           timeoutSeconds: 10
           successThreshold: 1
           failureThreshold: 6
+        
         # 생존 상태 체크 (일반적인 헬스체크)
         livenessProbe:
           httpGet:
@@ -106,6 +162,7 @@ spec:
           timeoutSeconds: 10
           successThreshold: 1
           failureThreshold: 3
+        
         # 시작 시간 체크 (느린 초기화 허용)
         startupProbe:
           httpGet:
@@ -116,9 +173,11 @@ spec:
           timeoutSeconds: 10
           successThreshold: 1
           failureThreshold: 30  # 5분까지 허용
+        
         volumeMounts:
         - name: upload-storage
           mountPath: /app/uploads
+        
         # 보안 컨텍스트
         securityContext:
           runAsNonRoot: true
@@ -166,18 +225,6 @@ spec:
     name: http
   selector:
     app: flask
-
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: app-secrets
-  namespace: was
-type: Opaque
-data:
-  database-url: bXlzcWwrcHlteXNxbDovL3Jvb3Q6MTIzNEBteXNxbC1zZXJ2aWNlLmRiLnN2Yy5jbHVzdGVyLmxvY2FsOjMzMDYvcG9ydGZvbGlv  # mysql+pymysql://root:1234@mysql-service.db.svc.cluster.local:3306/portfolio
-  secret-key: eW91ci1zZWNyZXQta2V5LWNoYW5nZS10aGlz  # your-secret-key-change-this
-
 
 ---
 # HorizontalPodAutoscaler (선택사항 - 자동 스케일링)
