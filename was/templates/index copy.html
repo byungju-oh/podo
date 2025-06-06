@@ -47,10 +47,10 @@
             {% endfor %}
         </div>
         
-        <!-- Auto-play Control 
+        <!-- Auto-play Control -->
         <button class="bg-control bg-autoplay active" id="bgAutoplay" title="자동 재생">
             <i class="fas fa-play"></i>
-        </button>  -->
+        </button>
     </div>
     {% endif %}
     
@@ -99,11 +99,8 @@
                     </a>-->
                 </div>
             </div>
-
-            <!--돌아가는 토글
             <div class="col-lg-4 text-center">
                 <div class="hero-image">
-
                     <div class="tech-orbit">
                         <div class="orbit-item aws"><i class="fab fa-aws"></i></div>
                         <div class="orbit-item docker"><i class="fab fa-docker"></i></div>
@@ -112,16 +109,11 @@
                         <div class="orbit-item react"><i class="fab fa-react"></i></div>
                         <div class="orbit-item database"><i class="fas fa-database"></i></div>
                     </div>
-
-
-
                     <div class="profile-circle">
                         <i class="fas fa-code fa-4x text-white"></i>
                     </div>
                 </div>
             </div>
-        -->
-
         </div>
     </div>
 </section>
@@ -625,8 +617,6 @@
     right: 30px;
 }
 
-/*
-
 .bg-autoplay {
     bottom: -80px;
     left: 50%;
@@ -645,7 +635,6 @@
     background: rgba(220, 53, 69, 0.8);
     border-color: rgba(220, 53, 69, 1);
 }
-*/
 
 /* 배경 인디케이터 */
 .bg-indicators {
@@ -739,7 +728,6 @@
     50% { transform: translateY(-10px); }
 }
 
-/*
 .tech-orbit {
     position: absolute;
     top: 0;
@@ -776,8 +764,6 @@
     0% { transform: rotate(0deg) translateX(100px) rotate(0deg); }
     100% { transform: rotate(360deg) translateX(100px) rotate(-360deg); }
 }
-
-*/
 
 /* 통계 섹션 */
 .stats-section {
@@ -1233,7 +1219,7 @@ function initBackgroundSlider() {
     // 이벤트 리스너 설정
     if (prevBtn) prevBtn.addEventListener('click', () => previousSlide());
     if (nextBtn) nextBtn.addEventListener('click', () => nextSlide());
-   // if (autoplayBtn) autoplayBtn.addEventListener('click', () => toggleAutoplay());
+    if (autoplayBtn) autoplayBtn.addEventListener('click', () => toggleAutoplay());
     
     // 인디케이터 클릭 이벤트
     indicators.forEach((indicator, index) => {
@@ -1249,17 +1235,12 @@ function initBackgroundSlider() {
             toggleAutoplay();
         }
     });
-
-
-    // 마우스 휠 이벤트 (전체 페이지에서 작동)
-    document.addEventListener('wheel', (e) => {
-    // 히어로 섹션이 화면에 보일 때만 작동
-        const heroSection = document.getElementById('heroSection');
-        if (heroSection) {
-            const rect = heroSection.getBoundingClientRect();
-            const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
-            
-            if (isVisible && Math.abs(e.deltaY) > 50) {
+    
+    // 마우스 휠 이벤트 (선택사항)
+    const heroSection = document.getElementById('heroSection');
+    if (heroSection) {
+        heroSection.addEventListener('wheel', (e) => {
+            if (Math.abs(e.deltaY) > 50) { // 충분히 큰 스크롤만 감지
                 e.preventDefault();
                 if (e.deltaY > 0) {
                     nextSlide();
@@ -1267,23 +1248,8 @@ function initBackgroundSlider() {
                     previousSlide();
                 }
             }
-        }
-    }, { passive: false });
-    
-    // // 마우스 휠 이벤트 (선택사항)
-    // const heroSection = document.getElementById('heroSection');
-    // if (heroSection) {
-    //     heroSection.addEventListener('wheel', (e) => {
-    //         if (Math.abs(e.deltaY) > 50) { // 충분히 큰 스크롤만 감지
-    //             e.preventDefault();
-    //             if (e.deltaY > 0) {
-    //                 nextSlide();
-    //             } else {
-    //                 previousSlide();
-    //             }
-    //         }
-    //     }, { passive: false });
-    // }
+        }, { passive: false });
+    }
     
     // 자동 재생 시작
     startAutoplay();
