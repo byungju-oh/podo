@@ -485,6 +485,8 @@
 
 {% endblock %}
 
+<!-- 기존 templates/admin.html의 scripts 블록을 이것으로 완전히 교체하세요 -->
+
 {% block scripts %}
 <style>
 .border-left-primary { border-left: 0.25rem solid #4e73df !important; }
@@ -534,74 +536,74 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<!-- 모든 JavaScript를 하나의 script 태그에 넣기 -->
 <script>
-// 전역 변수
-let deleteWorkId = null;
+console.log('=== JavaScript 시작 ===');
 
-// DOM 로드 완료 후 실행
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM 로드 완료');
-    
-    // 삭제 확인 버튼 이벤트 리스너
-    const confirmDeleteBtn = document.getElementById('confirmDelete');
-    if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener('click', handleDeleteConfirm);
-        console.log('삭제 확인 버튼 이벤트 리스너 등록됨');
-    }
-    
-    // 모달 이벤트 리스너
-    const deleteModal = document.getElementById('deleteModal');
-    if (deleteModal) {
-        deleteModal.addEventListener('hidden.bs.modal', resetDeleteModal);
-        console.log('모달 이벤트 리스너 등록됨');
-    }
-    
-    // 차트 및 애니메이션 초기화
-    initializeChart();
-    initializeCardAnimations();
-    setInterval(updateTime, 1000);
-});
+// 1. 전역 변수 선언 (window 객체에 명시적으로 할당)
+window.deleteWorkId = null;
 
-// 작품 삭제 함수 - 전역 정의
-function deleteWork(workId) {
-    console.log('deleteWork 함수 호출됨, workId:', workId);
+// 2. 함수들을 window 객체에 직접 할당하여 전역으로 만들기
+window.deleteWork = function(workId) {
+    console.log('=== deleteWork 함수 실행 ===');
+    console.log('workId:', workId);
+    console.log('typeof workId:', typeof workId);
     
     if (!workId) {
-        console.error('workId가 제공되지 않음');
-        showNotification('삭제할 작품을 선택해주세요.', 'error');
+        console.error('workId가 없습니다!');
+        alert('삭제할 작품을 선택해주세요.');
         return;
     }
     
-    deleteWorkId = workId;
+    window.deleteWorkId = workId;
+    console.log('deleteWorkId 설정됨:', window.deleteWorkId);
     
     try {
-        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        // Bootstrap 체크
+        if (typeof bootstrap === 'undefined') {
+            console.error('Bootstrap이 로드되지 않음!');
+            alert('페이지를 새로고침해주세요.');
+            return;
+        }
+        
+        const modalElement = document.getElementById('deleteModal');
+        if (!modalElement) {
+            console.error('deleteModal 요소를 찾을 수 없음!');
+            alert('삭제 모달을 찾을 수 없습니다.');
+            return;
+        }
+        
+        const deleteModal = new bootstrap.Modal(modalElement);
         deleteModal.show();
-        console.log('모달 표시됨');
+        console.log('모달 표시 성공');
+        
     } catch (error) {
         console.error('모달 표시 오류:', error);
-        showNotification('삭제 모달을 표시하는 중 오류가 발생했습니다.', 'error');
+        alert('삭제 모달을 표시하는 중 오류가 발생했습니다: ' + error.message);
     }
-}
+};
 
-// 작품 수정 함수 - 전역 정의
-function editWork(workId) {
-    console.log('editWork 함수 호출됨, workId:', workId);
+window.editWork = function(workId) {
+    console.log('=== editWork 함수 실행 ===');
+    console.log('workId:', workId);
     
     if (!workId) {
-        console.error('workId가 제공되지 않음');
-        showNotification('수정할 작품을 선택해주세요.', 'error');
+        console.error('workId가 없습니다!');
+        alert('수정할 작품을 선택해주세요.');
         return;
     }
     
-    window.location.href = `/admin/edit_work/${workId}`;
-}
+    const url = `/admin/edit_work/${workId}`;
+    console.log('이동할 URL:', url);
+    window.location.href = url;
+};
 
-// 삭제 확인 처리 함수
+// 3. 삭제 확인 처리 함수
 function handleDeleteConfirm() {
-    console.log('삭제 확인 버튼 클릭됨, deleteWorkId:', deleteWorkId);
+    console.log('=== 삭제 확인 버튼 클릭 ===');
+    console.log('deleteWorkId:', window.deleteWorkId);
     
-    if (!deleteWorkId) {
+    if (!window.deleteWorkId) {
         console.error('deleteWorkId가 설정되지 않음');
         showNotification('삭제할 작품을 선택해주세요.', 'error');
         return;
@@ -622,10 +624,10 @@ function handleDeleteConfirm() {
         console.warn('CSRF 토큰을 찾을 수 없음');
     }
     
-    console.log('삭제 요청 시작, URL:', `/admin/delete_work/${deleteWorkId}`);
+    console.log('삭제 요청 시작, URL:', `/admin/delete_work/${window.deleteWorkId}`);
     
     // 삭제 요청
-    fetch(`/admin/delete_work/${deleteWorkId}`, {
+    fetch(`/admin/delete_work/${window.deleteWorkId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
@@ -673,20 +675,8 @@ function handleDeleteConfirm() {
     });
 }
 
-// 모달 상태 초기화
-function resetDeleteModal() {
-    console.log('모달 상태 초기화');
-    deleteWorkId = null;
-    
-    const confirmBtn = document.getElementById('confirmDelete');
-    if (confirmBtn) {
-        confirmBtn.innerHTML = '<i class="fas fa-trash me-1"></i>삭제하기';
-        confirmBtn.disabled = false;
-    }
-}
-
-// 데이터 백업 함수
-function backupData() {
+// 4. 기타 함수들
+window.backupData = function() {
     const btn = event.target;
     const originalText = btn.innerHTML;
     
@@ -698,10 +688,9 @@ function backupData() {
         btn.innerHTML = originalText;
         btn.disabled = false;
     }, 2000);
-}
+};
 
-// 캐시 지우기 함수
-function clearCache() {
+window.clearCache = function() {
     const btn = event.target;
     const originalText = btn.innerHTML;
     
@@ -713,10 +702,12 @@ function clearCache() {
         btn.innerHTML = originalText;
         btn.disabled = false;
     }, 1000);
-}
+};
 
-// 알림 표시 함수
+// 5. 알림 표시 함수
 function showNotification(message, type = 'info') {
+    console.log('알림 표시:', message, type);
+    
     // 기존 알림 제거
     const existingNotification = document.querySelector('.delete-notification');
     if (existingNotification) {
@@ -772,7 +763,19 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-// 차트 초기화
+// 6. 모달 상태 초기화
+function resetDeleteModal() {
+    console.log('모달 상태 초기화');
+    window.deleteWorkId = null;
+    
+    const confirmBtn = document.getElementById('confirmDelete');
+    if (confirmBtn) {
+        confirmBtn.innerHTML = '<i class="fas fa-trash me-1"></i>삭제하기';
+        confirmBtn.disabled = false;
+    }
+}
+
+// 7. 차트 초기화
 function initializeChart() {
     const ctx = document.getElementById('categoryChart');
     if (ctx) {
@@ -822,7 +825,7 @@ function initializeChart() {
     }
 }
 
-// 카드 애니메이션 초기화
+// 8. 카드 애니메이션
 function initializeCardAnimations() {
     const statCards = document.querySelectorAll('.card');
     
@@ -842,7 +845,7 @@ function initializeCardAnimations() {
     });
 }
 
-// 실시간 시간 업데이트
+// 9. 실시간 시간 업데이트
 function updateTime() {
     const now = new Date();
     const timeString = now.toLocaleString('ko-KR');
@@ -852,18 +855,70 @@ function updateTime() {
     }
 }
 
-// 디버깅용 함수
-function debugFunctions() {
+// 10. 디버깅 함수
+window.debugFunctions = function() {
     console.log('=== 함수 디버깅 ===');
-    console.log('deleteWork:', typeof deleteWork);
-    console.log('editWork:', typeof editWork);
-    console.log('deleteWorkId:', deleteWorkId);
+    console.log('window.deleteWork:', typeof window.deleteWork);
+    console.log('window.editWork:', typeof window.editWork);
+    console.log('deleteWorkId:', window.deleteWorkId);
     console.log('confirmDelete 버튼:', document.getElementById('confirmDelete'));
     console.log('deleteModal:', document.getElementById('deleteModal'));
     console.log('Bootstrap:', typeof bootstrap);
-}
+    
+    // 테스트 호출
+    try {
+        console.log('deleteWork 함수 테스트 호출...');
+        // deleteWork(123); // 실제로는 호출하지 않음
+        console.log('editWork 함수 테스트 호출...');
+        // editWork(123); // 실제로는 호출하지 않음
+    } catch (error) {
+        console.error('함수 테스트 오류:', error);
+    }
+};
 
-// 페이지 로드 확인
-console.log('JavaScript 파일 로드됨');
+// 11. DOM 로드 후 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== DOM 로드 완료 ===');
+    
+    // 함수 정의 확인
+    console.log('deleteWork 정의됨:', typeof window.deleteWork);
+    console.log('editWork 정의됨:', typeof window.editWork);
+    
+    // 삭제 확인 버튼 이벤트 리스너
+    const confirmDeleteBtn = document.getElementById('confirmDelete');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', handleDeleteConfirm);
+        console.log('삭제 확인 버튼 이벤트 리스너 등록됨');
+    } else {
+        console.error('confirmDelete 버튼을 찾을 수 없음');
+    }
+    
+    // 모달 이벤트 리스너
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+        deleteModal.addEventListener('hidden.bs.modal', resetDeleteModal);
+        console.log('모달 이벤트 리스너 등록됨');
+    } else {
+        console.error('deleteModal을 찾을 수 없음');
+    }
+    
+    // 차트 및 애니메이션 초기화
+    try {
+        initializeChart();
+        initializeCardAnimations();
+        setInterval(updateTime, 1000);
+        console.log('초기화 완료');
+    } catch (error) {
+        console.error('초기화 오류:', error);
+    }
+    
+    // 디버깅 정보 출력
+    window.debugFunctions();
+});
+
+// 즉시 실행으로 함수 존재 확인
+console.log('즉시 확인 - deleteWork:', typeof window.deleteWork);
+console.log('즉시 확인 - editWork:', typeof window.editWork);
+console.log('=== JavaScript 로드 완료 ===');
 </script>
 {% endblock %}
