@@ -2,7 +2,7 @@
 
 {% extends "base.html" %}
 
-{% block title %}{{ post.title }} - 학습 블로그{% endblock %}
+{% block title %}{{ post.title }} - 학습{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -10,7 +10,7 @@
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ url_for('index') }}">홈</a></li>
-            <li class="breadcrumb-item"><a href="{{ url_for('learning_blog') }}">학습 블로그</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('learning_blog') }}">학습</a></li>
             {% if post.category %}
             <li class="breadcrumb-item">
                 <a href="{{ url_for('learning_category', category_id=post.category.id) }}">
