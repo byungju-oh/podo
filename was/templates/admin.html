@@ -111,10 +111,7 @@
         </div>
     </div>
 
-<!-- Statistics Cards 다음 줄에 추가 -->
-    </div>
-
-    <!-- Learning Blog Management Section (새로 추가) -->
+    <!-- Learning Blog Management Section -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card shadow">
@@ -208,9 +205,6 @@
         </div>
     </div>
 
-
-
-
     <!-- Main Content Area -->
     <div class="row">
         <!-- Portfolio Management -->
@@ -276,21 +270,20 @@
                                         <span class="text-muted">-</span>
                                         {% endif %}
                                     </td>
-                                    <!-- 버튼 부분 수정 -->
-<td>
-    <div class="btn-group btn-group-sm">
-        <button class="btn btn-outline-primary" 
-                onclick="editWork({{ work.id }})"
-                title="작품 수정">
-            <i class="fas fa-edit"></i>
-        </button>
-        <button class="btn btn-outline-danger" 
-                onclick="deleteWork({{ work.id }})"
-                title="작품 삭제">
-            <i class="fas fa-trash"></i>
-        </button>
-    </div>
-</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" 
+                                                    onclick="editWork({{ work.id }})"
+                                                    title="작품 수정">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" 
+                                                    onclick="deleteWork({{ work.id }})"
+                                                    title="작품 삭제">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -327,26 +320,17 @@
                     </h5>
                 </div>
                 <div class="card-body">
-
-
-
-
-
-    <!-- 새로 추가할 학습 블로그 버튼 -->
-    <a href="{{ url_for('admin_learning') }}" class="btn btn-success btn-sm">
-        <i class="fas fa-graduation-cap me-2"></i>학습 블로그 관리
-    </a>
- 
-
-
                     <div class="d-grid gap-2">
                         <a href="{{ url_for('add_work') }}" class="btn btn-primary btn-sm">
                             <i class="fas fa-plus me-2"></i>새 작품 추가
                         </a>
-                        <button class="btn btn-success btn-sm" onclick="backupData()">
+                        <a href="{{ url_for('admin_learning') }}" class="btn btn-success btn-sm">
+                            <i class="fas fa-graduation-cap me-2"></i>학습 블로그 관리
+                        </a>
+                        <button class="btn btn-info btn-sm" onclick="backupData()">
                             <i class="fas fa-download me-2"></i>데이터 백업
                         </button>
-                        <a href="{{ url_for('index') }}" class="btn btn-info btn-sm" target="_blank">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary btn-sm" target="_blank">
                             <i class="fas fa-eye me-2"></i>사이트 미리보기
                         </a>
                         <button class="btn btn-warning btn-sm" onclick="clearCache()">
@@ -476,7 +460,6 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<!-- 모달 부분 수정 -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -534,38 +517,17 @@
     background: #e3e6f0;
 }
 
-.text-xs {
-    font-size: 0.7rem;
-}
+.text-xs { font-size: 0.7rem; }
+.font-weight-bold { font-weight: 700 !important; }
+.text-gray-800 { color: #5a5c69 !important; }
+.text-gray-300 { color: #dddfeb !important; }
 
-.font-weight-bold {
-    font-weight: 700 !important;
-}
-
-.text-gray-800 {
-    color: #5a5c69 !important;
-}
-
-.text-gray-300 {
-    color: #dddfeb !important;
-}
-
-.card {
-    transition: all 0.3s ease;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-}
+.card { transition: all 0.3s ease; }
+.card:hover { transform: translateY(-2px); }
 
 @media (max-width: 768px) {
-    .container-fluid {
-        padding: 0 15px;
-    }
-    
-    .table-responsive {
-        font-size: 0.875rem;
-    }
+    .container-fluid { padding: 0 15px; }
+    .table-responsive { font-size: 0.875rem; }
 }
 </style>
 
@@ -573,113 +535,156 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+// 전역 변수
 let deleteWorkId = null;
 
-// 작품 삭제 함수 - ID만 받음
-function deleteWork(workId) {
-    console.log('deleteWork 호출됨:', workId); // 디버깅용
-    deleteWorkId = workId;
-    
-    // Bootstrap 5 문법 사용
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    deleteModal.show();
-}
-
-// 삭제 확인 버튼 이벤트
+// DOM 로드 완료 후 실행
 document.addEventListener('DOMContentLoaded', function() {
-    const confirmDeleteBtn = document.getElementById('confirmDelete');
+    console.log('DOM 로드 완료');
     
+    // 삭제 확인 버튼 이벤트 리스너
+    const confirmDeleteBtn = document.getElementById('confirmDelete');
     if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener('click', function() {
-            if (!deleteWorkId) {
-                console.error('deleteWorkId가 설정되지 않음');
-                return;
-            }
-            
-            const btn = this;
-            const originalText = btn.innerHTML;
-            
-            // 버튼 상태 변경
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>삭제 중...';
-            btn.disabled = true;
-            
-            // CSRF 토큰 가져오기
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
-                             document.querySelector('input[name="csrf_token"]')?.value;
-            
-            console.log('삭제 요청 시작:', deleteWorkId); // 디버깅용
-            
-            // 삭제 요청
-            fetch(`/admin/delete_work/${deleteWorkId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({
-                    csrf_token: csrfToken
-                })
-            })
-            .then(response => {
-                console.log('응답 상태:', response.status); // 디버깅용
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('응답 데이터:', data); // 디버깅용
-                if (data.success) {
-                    // 성공 알림
-                    showNotification(data.message || '프로젝트가 삭제되었습니다.', 'success');
-                    
-                    // 모달 닫기
-                    const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
-                    if (deleteModal) {
-                        deleteModal.hide();
-                    }
-                    
-                    // 페이지 새로고침
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    throw new Error(data.message || '삭제에 실패했습니다.');
-                }
-            })
-            .catch(error => {
-                console.error('삭제 오류:', error);
-                showNotification(error.message || '삭제 중 오류가 발생했습니다.', 'error');
-            })
-            .finally(() => {
-                // 버튼 상태 복원
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
-        });
+        confirmDeleteBtn.addEventListener('click', handleDeleteConfirm);
+        console.log('삭제 확인 버튼 이벤트 리스너 등록됨');
     }
     
-    // 모달 닫힐 때 상태 초기화
+    // 모달 이벤트 리스너
     const deleteModal = document.getElementById('deleteModal');
     if (deleteModal) {
-        deleteModal.addEventListener('hidden.bs.modal', function() {
-            deleteWorkId = null;
-            
-            // 버튼 상태 복원
-            const confirmBtn = document.getElementById('confirmDelete');
-            if (confirmBtn) {
-                confirmBtn.innerHTML = '<i class="fas fa-trash me-1"></i>삭제하기';
-                confirmBtn.disabled = false;
-            }
-        });
+        deleteModal.addEventListener('hidden.bs.modal', resetDeleteModal);
+        console.log('모달 이벤트 리스너 등록됨');
     }
+    
+    // 차트 및 애니메이션 초기화
+    initializeChart();
+    initializeCardAnimations();
+    setInterval(updateTime, 1000);
 });
 
-// 작품 수정 함수
+// 작품 삭제 함수 - 전역 정의
+function deleteWork(workId) {
+    console.log('deleteWork 함수 호출됨, workId:', workId);
+    
+    if (!workId) {
+        console.error('workId가 제공되지 않음');
+        showNotification('삭제할 작품을 선택해주세요.', 'error');
+        return;
+    }
+    
+    deleteWorkId = workId;
+    
+    try {
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
+        console.log('모달 표시됨');
+    } catch (error) {
+        console.error('모달 표시 오류:', error);
+        showNotification('삭제 모달을 표시하는 중 오류가 발생했습니다.', 'error');
+    }
+}
+
+// 작품 수정 함수 - 전역 정의
 function editWork(workId) {
+    console.log('editWork 함수 호출됨, workId:', workId);
+    
+    if (!workId) {
+        console.error('workId가 제공되지 않음');
+        showNotification('수정할 작품을 선택해주세요.', 'error');
+        return;
+    }
+    
     window.location.href = `/admin/edit_work/${workId}`;
 }
+
+// 삭제 확인 처리 함수
+function handleDeleteConfirm() {
+    console.log('삭제 확인 버튼 클릭됨, deleteWorkId:', deleteWorkId);
+    
+    if (!deleteWorkId) {
+        console.error('deleteWorkId가 설정되지 않음');
+        showNotification('삭제할 작품을 선택해주세요.', 'error');
+        return;
+    }
+    
+    const btn = this;
+    const originalText = btn.innerHTML;
+    
+    // 버튼 상태 변경
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>삭제 중...';
+    btn.disabled = true;
+    
+    // CSRF 토큰 가져오기
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+                     document.querySelector('input[name="csrf_token"]')?.value;
+    
+    if (!csrfToken) {
+        console.warn('CSRF 토큰을 찾을 수 없음');
+    }
+    
+    console.log('삭제 요청 시작, URL:', `/admin/delete_work/${deleteWorkId}`);
+    
+    // 삭제 요청
+    fetch(`/admin/delete_work/${deleteWorkId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            csrf_token: csrfToken
+        })
+    })
+    .then(response => {
+        console.log('응답 상태:', response.status, response.statusText);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('응답 데이터:', data);
+        if (data.success) {
+            showNotification(data.message || '프로젝트가 삭제되었습니다.', 'success');
+            
+            // 모달 닫기
+            const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+            if (deleteModal) {
+                deleteModal.hide();
+            }
+            
+            // 페이지 새로고침
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            throw new Error(data.message || '삭제에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('삭제 오류:', error);
+        showNotification(error.message || '삭제 중 오류가 발생했습니다.', 'error');
+    })
+    .finally(() => {
+        // 버튼 상태 복원
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+// 모달 상태 초기화
+function resetDeleteModal() {
+    console.log('모달 상태 초기화');
+    deleteWorkId = null;
+    
+    const confirmBtn = document.getElementById('confirmDelete');
+    if (confirmBtn) {
+        confirmBtn.innerHTML = '<i class="fas fa-trash me-1"></i>삭제하기';
+        confirmBtn.disabled = false;
+    }
+}
+
 // 데이터 백업 함수
 function backupData() {
     const btn = event.target;
@@ -688,9 +693,8 @@ function backupData() {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>백업 중...';
     btn.disabled = true;
     
-    // 실제 구현에서는 서버로 백업 요청
     setTimeout(() => {
-        alert('데이터 백업이 완료되었습니다.');
+        showNotification('데이터 백업이 완료되었습니다.', 'success');
         btn.innerHTML = originalText;
         btn.disabled = false;
     }, 2000);
@@ -705,88 +709,12 @@ function clearCache() {
     btn.disabled = true;
     
     setTimeout(() => {
-        alert('캐시가 성공적으로 지워졌습니다.');
+        showNotification('캐시가 성공적으로 지워졌습니다.', 'success');
         btn.innerHTML = originalText;
         btn.disabled = false;
     }, 1000);
 }
 
-// 카테고리 차트 생성
-document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('categoryChart');
-    if (ctx) {
-        {% if works %}
-        // 카테고리별 데이터 준비
-        const categoryData = {};
-        {% for work in works %}
-        const category = '{{ work.category or "미분류" }}';
-        categoryData[category] = (categoryData[category] || 0) + 1;
-        {% endfor %}
-        
-        const labels = Object.keys(categoryData);
-        const data = Object.values(categoryData);
-        const colors = [
-            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
-            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
-        ];
-        
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: colors.slice(0, labels.length),
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true
-                        }
-                    }
-                }
-            }
-        });
-        {% else %}
-        // 데이터가 없을 때
-        ctx.parentElement.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-chart-pie fa-3x mb-3"></i><p>표시할 데이터가 없습니다</p></div>';
-        {% endif %}
-    }
-    
-    // 통계 카드 애니메이션
-    const statCards = document.querySelectorAll('.card');
-    statCards.forEach((card, index) => {
-        setTimeout(() => {
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, index * 100);
-    });
-});
-
-// 페이지 로딩 시 카드 애니메이션 초기화
-document.querySelectorAll('.card').forEach(card => {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(20px)';
-    card.style.transition = 'all 0.6s ease';
-});
-
-// 실시간 시간 업데이트
-function updateTime() {
-    const now = new Date();
-    const timeString = now.toLocaleString('ko-KR');
-    const timeElement = document.querySelector('.current-time');
-    if (timeElement) {
-        timeElement.textContent = timeString;
-    }
-}
 // 알림 표시 함수
 function showNotification(message, type = 'info') {
     // 기존 알림 제거
@@ -844,6 +772,98 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-setInterval(updateTime, 1000);
+// 차트 초기화
+function initializeChart() {
+    const ctx = document.getElementById('categoryChart');
+    if (ctx) {
+        {% if works %}
+        // 카테고리별 데이터 준비
+        const categoryData = {};
+        {% for work in works %}
+        const category = '{{ work.category or "미분류" }}';
+        categoryData[category] = (categoryData[category] || 0) + 1;
+        {% endfor %}
+        
+        const labels = Object.keys(categoryData);
+        const data = Object.values(categoryData);
+        const colors = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+        ];
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors.slice(0, labels.length),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+        {% else %}
+        ctx.parentElement.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-chart-pie fa-3x mb-3"></i><p>표시할 데이터가 없습니다</p></div>';
+        {% endif %}
+    }
+}
+
+// 카드 애니메이션 초기화
+function initializeCardAnimations() {
+    const statCards = document.querySelectorAll('.card');
+    
+    // 초기 스타일 설정
+    statCards.forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'all 0.6s ease';
+    });
+    
+    // 애니메이션 실행
+    statCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+}
+
+// 실시간 시간 업데이트
+function updateTime() {
+    const now = new Date();
+    const timeString = now.toLocaleString('ko-KR');
+    const timeElement = document.querySelector('.current-time');
+    if (timeElement) {
+        timeElement.textContent = timeString;
+    }
+}
+
+// 디버깅용 함수
+function debugFunctions() {
+    console.log('=== 함수 디버깅 ===');
+    console.log('deleteWork:', typeof deleteWork);
+    console.log('editWork:', typeof editWork);
+    console.log('deleteWorkId:', deleteWorkId);
+    console.log('confirmDelete 버튼:', document.getElementById('confirmDelete'));
+    console.log('deleteModal:', document.getElementById('deleteModal'));
+    console.log('Bootstrap:', typeof bootstrap);
+}
+
+// 페이지 로드 확인
+console.log('JavaScript 파일 로드됨');
 </script>
 {% endblock %}
