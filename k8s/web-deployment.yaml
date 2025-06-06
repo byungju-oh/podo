@@ -1,4 +1,4 @@
-# web-deployment.yaml
+# 최종 web-deployment.yaml - hostPath로 uploads 폴더 공유
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -47,17 +47,19 @@ spec:
         - name: nginx-config
           mountPath: /etc/nginx/conf.d
           readOnly: true
-        # 업로드된 파일들을 Nginx에서 직접 서빙하기 위한 볼륨 마운트
-        - name: upload-storage
+        # WAS의 uploads 폴더를 직접 마운트 (읽기 전용)
+        - name: shared-uploads
           mountPath: /var/www/html/uploads
           readOnly: true
       volumes:
       - name: nginx-config
         configMap:
           name: nginx-config
-      - name: upload-storage
-        persistentVolumeClaim:
-          claimName: upload-pvc
+      # hostPath로 실제 PVC 경로 마운트
+      - name: shared-uploads
+        hostPath:
+          path: /var/lib/rancher/k3s/storage/pvc-ebd7394f-39c4-4554-87bb-1bff08939402_was_upload-pvc
+          type: Directory
 
 ---
 apiVersion: v1
@@ -89,42 +91,53 @@ data:
         listen 80;
         server_name localhost;
         
-        # 파일 업로드 크기 제한 증가 (35MB) - 가장 중요한 추가!
+        # 파일 업로드 크기 제한 (35MB)
         client_max_body_size 35M;
-        
-        # 타임아웃 설정 증가 (큰 파일 업로드용)
         client_body_timeout 120s;
         client_header_timeout 120s;
         send_timeout 120s;
-        
-        # 업로드 버퍼 크기 증가
         client_body_buffer_size 256k;
-        large_client_header_buffers 4 16k;
 
         # Security headers
         add_header X-Frame-Options "SAMEORIGIN" always;
         add_header X-XSS-Protection "1; mode=block" always;
         add_header X-Content-Type-Options "nosniff" always;
 
-        # Static files
+        # 업로드된 파일 직접 서빙 (Nginx가 파일시스템에서 직접 서빙)
+        location /uploads/ {
+            alias /var/www/html/uploads/;
+            
+            # 파일 존재 확인 및 404 처리
+            try_files $uri =404;
+            
+            # 캐시 설정 (성능 최적화)
+            expires 7d;
+            add_header Cache-Control "public";
+            
+            # 이미지 파일 최적화
+            location ~* \.(jpg|jpeg|png|gif|ico|svg|webp)$ {
+                expires 30d;
+                add_header Cache-Control "public, immutable";
+                add_header Vary Accept-Encoding;
+                
+                # 이미지 압축 (gzip)
+                gzip on;
+                gzip_types image/svg+xml;
+            }
+            
+            # 보안: 디렉토리 리스팅 방지
+            autoindex off;
+            
+            # 로그 기록 (디버깅용)
+            access_log /var/log/nginx/uploads_access.log;
+            error_log /var/log/nginx/uploads_error.log;
+        }
+
+        # Static files (CSS, JS)
         location /static/ {
             alias /var/www/html/static/;
             expires 30d;
             add_header Cache-Control "public, immutable";
-        }
-        
-        # 업로드된 파일들 직접 서빙 (성능 향상)
-        location /uploads/ {
-            alias /var/www/html/uploads/;
-            expires 7d;
-            add_header Cache-Control "public";
-            
-            # 이미지 파일 압축
-            location ~* \.(jpg|jpeg|png|gif|ico|svg)$ {
-                expires 30d;
-                add_header Cache-Control "public, immutable";
-                add_header Vary Accept-Encoding;
-            }
         }
 
         # Main application
@@ -140,14 +153,10 @@ data:
             proxy_send_timeout 120s;
             proxy_read_timeout 120s;
             
-            # 큰 파일 업로드를 위한 버퍼링 설정
+            # 큰 파일 업로드를 위한 설정
             proxy_buffering off;
             proxy_request_buffering off;
             proxy_max_temp_file_size 0;
-            
-            # 프록시 버퍼 크기 증가
-            proxy_buffer_size 4k;
-            proxy_buffers 8 4k;
         }
 
         # Health check
@@ -157,23 +166,17 @@ data:
             add_header Content-Type text/plain;
         }
 
+        # 404 에러 페이지
+        error_page 404 /404.html;
+        location = /404.html {
+            root /usr/share/nginx/html;
+            internal;
+        }
+
+        # 50x 에러 페이지
         error_page 500 502 503 504 /50x.html;
         location = /50x.html {
             root /usr/share/nginx/html;
+            internal;
         }
     }
-
----
-# 업로드 파일 저장용 PVC (web namespace에도 필요)
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: upload-pvc
-  namespace: web
-spec:
-  accessModes:
-    - ReadWriteOnce  # local-path는 ReadWriteMany 미지원
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: local-path
