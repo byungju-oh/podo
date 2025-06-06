@@ -1,4 +1,4 @@
-<!-- was/templates/learning/index.html (새 파일 생성) -->
+<!-- was/templates/learning/index.html -->
 
 {% extends "base.html" %}
 
@@ -6,348 +6,356 @@
 
 {% block content %}
 <div class="container mt-4">
-    <!-- Hero Section -->
-    <div class="hero-section text-center mb-5">
-        <h1 class="display-4 mb-3">
-            <i class="fas fa-graduation-cap me-3"></i>학습
-        </h1>
-        <p class="lead">지속적인 학습과 성장의 기록</p>
-    </div>
+   <!-- Hero Section -->
+   <div class="hero-section text-center mb-5">
+       <h1 class="display-4 mb-3">
+           <i class="fas fa-graduation-cap me-3"></i>학습
+       </h1>
+       <p class="lead">지속적인 학습과 성장의 기록</p>
+   </div>
 
-    <!-- Categories Section -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <h2 class="section-title mb-4">
-                <i class="fas fa-folder-open me-2"></i>학습 카테고리
-            </h2>
-            <div class="row">
-                {% for category, post_count in categories %}
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="category-card h-100">
-                        <div class="category-icon" style="color: {{ category.color }}">
-                            <i class="{{ category.icon_class }} fa-3x"></i>
-                        </div>
-                        <div class="category-content">
-                            <h5>{{ category.name }}</h5>
-                            <p class="text-muted">{{ category.description }}</p>
-                            <div class="category-stats">
-                                <span class="badge" style="background-color: {{ category.color }}">
-                                    {{ post_count }}개 포스트
-                                </span>
-                            </div>
-                        </div>
-                        <div class="category-overlay">
-                            <a href="{{ url_for('learning_category', category_id=category.id) }}" 
-                               class="btn btn-light">
-                                <i class="fas fa-arrow-right me-1"></i>보러가기
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
+   <!-- Categories Section -->
+   <div class="row mb-5">
+       <div class="col-12">
+           <h2 class="section-title mb-4">
+               <i class="fas fa-folder-open me-2"></i>학습 카테고리
+           </h2>
+           <div class="row">
+               {% for category, post_count in categories %}
+               <div class="col-lg-4 col-md-6 mb-4">
+                   <div class="category-card h-100">
+                       <div class="category-icon" style="color: {{ category.color }}">
+                           <i class="{{ category.icon_class }} fa-3x"></i>
+                       </div>
+                       <div class="category-content">
+                           <h5>{{ category.name }}</h5>
+                           <p class="text-muted">{{ category.description }}</p>
+                           <div class="category-stats">
+                               <span class="badge" style="background-color: {{ category.color }}">
+                                   {{ post_count }}개 포스트
+                               </span>
+                           </div>
+                       </div>
+                       <div class="category-overlay">
+                           <a href="{{ url_for('learning_category', category_id=category.id) }}" 
+                              class="btn btn-light">
+                               <i class="fas fa-arrow-right me-1"></i>보러가기
+                           </a>
+                       </div>
+                   </div>
+               </div>
+               {% endfor %}
+           </div>
+       </div>
+   </div>
 
-    <!-- Featured Posts -->
-    {% if featured_posts %}
-    <div class="row mb-5">
-        <div class="col-12">
-            <h2 class="section-title mb-4">
-                <i class="fas fa-star me-2"></i>추천 포스트
-            </h2>
-            <div class="row">
-                {% for post in featured_posts %}
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="featured-post-card h-100">
-                        {% if post.thumbnail_path %}
-                        <img src="{{ url_for('uploaded_file', filename=post.thumbnail_path) }}" 
-                             class="card-img-top" alt="{{ post.title }}">
-                        {% else %}
-                        <div class="post-placeholder">
-                            <i class="{{ post.category.icon_class }} fa-3x"></i>
-                        </div>
-                        {% endif %}
-                        
-                        <div class="card-body">
-                            <div class="post-meta mb-2">
-                                <span class="badge" style="background-color: {{ post.category.color }}">
-                                    {{ post.category.name }}
-                                </span>
-                                <span class="text-muted ms-2">
-                                    <i class="fas fa-clock me-1"></i>{{ post.reading_time }}분
-                                </span>
-                            </div>
-                            
-                            <h5 class="card-title">{{ post.title }}</h5>
-                            {% if post.summary %}
-                            <p class="card-text">{{ post.summary[:100] }}...</p>
-                            {% endif %}
-                            
-                            <div class="post-stats">
-                                <small class="text-muted">
-                                    <i class="fas fa-eye me-1"></i>{{ post.view_count }}
-                                    <i class="fas fa-calendar ms-3 me-1"></i>{{ post.published_at.strftime('%Y.%m.%d') }}
-                                </small>
-                            </div>
-                        </div>
-                        
-                        <div class="card-footer">
-                            <a href="{{ url_for('learning_post_detail', slug=post.slug) }}" 
-                               class="btn btn-primary btn-sm">
-                                <i class="fas fa-book-open me-1"></i>읽어보기
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    {% endif %}
+   <!-- Featured Posts -->
+   {% if featured_posts %}
+   <div class="row mb-5">
+       <div class="col-12">
+           <h2 class="section-title mb-4">
+               <i class="fas fa-star me-2"></i>추천 포스트
+           </h2>
+           <div class="row">
+               {% for post in featured_posts %}
+               <div class="col-lg-4 col-md-6 mb-4">
+                   <div class="featured-post-card h-100">
+                       {% if post.thumbnail_path %}
+                       <img src="{{ url_for('uploaded_file', filename=post.thumbnail_path) }}" 
+                            class="card-img-top" alt="{{ post.title }}">
+                       {% else %}
+                       <div class="post-placeholder">
+                           {% if post.category %}
+                           <i class="{{ post.category.icon_class }} fa-3x"></i>
+                           {% else %}
+                           <i class="fas fa-file-alt fa-3x"></i>
+                           {% endif %}
+                       </div>
+                       {% endif %}
+                       
+                       <div class="card-body">
+                           <div class="post-meta mb-2">
+                               {% if post.category %}
+                               <span class="badge" style="background-color: {{ post.category.color }}">
+                                   {{ post.category.name }}
+                               </span>
+                               {% endif %}
+                           </div>
+                           
+                           <h5 class="card-title">{{ post.title }}</h5>
+                           {% if post.summary %}
+                           <p class="card-text">{{ post.summary[:100] }}...</p>
+                           {% endif %}
+                           
+                           <div class="post-stats">
+                               <small class="text-muted">
+                                   <i class="fas fa-eye me-1"></i>{{ post.view_count }}
+                                   <i class="fas fa-calendar ms-3 me-1"></i>{{ post.published_at.strftime('%Y.%m.%d') }}
+                               </small>
+                           </div>
+                       </div>
+                       
+                       <div class="card-footer">
+                           <a href="{{ url_for('learning_post_detail', slug=post.slug) }}" 
+                              class="btn btn-primary btn-sm">
+                               <i class="fas fa-book-open me-1"></i>읽어보기
+                           </a>
+                       </div>
+                   </div>
+               </div>
+               {% endfor %}
+           </div>
+       </div>
+   </div>
+   {% endif %}
 
-    <!-- Recent Posts -->
-    <div class="row mb-5">
-        <div class="col-lg-8">
-            <h2 class="section-title mb-4">
-                <i class="fas fa-clock me-2"></i>최근 포스트
-            </h2>
-            
-            {% for post in recent_posts %}
-            <div class="recent-post-item mb-4">
-                <div class="row">
-                    <div class="col-md-3">
-                        {% if post.thumbnail_path %}
-                        <img src="{{ url_for('uploaded_file', filename=post.thumbnail_path) }}" 
-                             class="img-fluid rounded" alt="{{ post.title }}">
-                        {% else %}
-                        <div class="post-thumbnail-placeholder">
-                            <i class="{{ post.category.icon_class }} fa-2x"></i>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-9">
-                        <div class="post-meta mb-2">
-                            <span class="badge" style="background-color: {{ post.category.color }}">
-                                {{ post.category.name }}
-                            </span>
-                            <span class="text-muted ms-2">{{ post.published_at.strftime('%Y년 %m월 %d일') }}</span>
-                        </div>
-                        
-                        <h5><a href="{{ url_for('learning_post_detail', slug=post.slug) }}" 
-                               class="text-decoration-none">{{ post.title }}</a></h5>
-                        
-                        {% if post.summary %}
-                        <p class="text-muted">{{ post.summary[:150] }}...</p>
-                        {% endif %}
-                        
-                        <div class="post-stats">
-                            <small class="text-muted">
-                                <i class="fas fa-clock me-1"></i>{{ post.reading_time }}분
-                                <i class="fas fa-eye ms-3 me-1"></i>{{ post.view_count }}
-                                {% if post.difficulty %}
-                                <span class="ms-3 difficulty-{{ post.difficulty }}">
-                                    <i class="fas fa-signal me-1"></i>{{ post.difficulty }}
-                                </span>
-                                {% endif %}
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-            
-            <div class="text-center mt-4">
-                <a href="{{ url_for('learning_category', category_id='all') }}" class="btn btn-outline-primary">
-                    <i class="fas fa-list me-2"></i>모든 포스트 보기
-                </a>
-            </div>
-        </div>
+   <!-- Recent Posts -->
+   <div class="row mb-5">
+       <div class="col-lg-8">
+           <h2 class="section-title mb-4">
+               <i class="fas fa-clock me-2"></i>최근 포스트
+           </h2>
+           
+           {% for post in recent_posts %}
+           <div class="recent-post-item mb-4">
+               <div class="row">
+                   <div class="col-md-3">
+                       {% if post.thumbnail_path %}
+                       <img src="{{ url_for('uploaded_file', filename=post.thumbnail_path) }}" 
+                            class="img-fluid rounded" alt="{{ post.title }}">
+                       {% else %}
+                       <div class="post-thumbnail-placeholder">
+                           {% if post.category %}
+                           <i class="{{ post.category.icon_class }} fa-2x"></i>
+                           {% else %}
+                           <i class="fas fa-file-alt fa-2x"></i>
+                           {% endif %}
+                       </div>
+                       {% endif %}
+                   </div>
+                   <div class="col-md-9">
+                       <div class="post-meta mb-2">
+                           {% if post.category %}
+                           <span class="badge" style="background-color: {{ post.category.color }}">
+                               {{ post.category.name }}
+                           </span>
+                           {% endif %}
+                           <span class="text-muted ms-2">{{ post.published_at.strftime('%Y년 %m월 %d일') }}</span>
+                       </div>
+                       
+                       <h5><a href="{{ url_for('learning_post_detail', slug=post.slug) }}" 
+                              class="text-decoration-none">{{ post.title }}</a></h5>
+                       
+                       {% if post.summary %}
+                       <p class="text-muted">{{ post.summary[:150] }}...</p>
+                       {% endif %}
+                       
+                       <div class="post-stats">
+                           <small class="text-muted">
+                               <i class="fas fa-eye ms-3 me-1"></i>{{ post.view_count }}
+                               {% if post.difficulty %}
+                               <span class="ms-3 difficulty-{{ post.difficulty }}">
+                                   <i class="fas fa-signal me-1"></i>{{ post.difficulty }}
+                               </span>
+                               {% endif %}
+                           </small>
+                       </div>
+                   </div>
+               </div>
+           </div>
+           {% endfor %}
+           
+           <div class="text-center mt-4">
+               <a href="{{ url_for('learning_blog') }}" class="btn btn-outline-primary">
+                   <i class="fas fa-list me-2"></i>모든 포스트 보기
+               </a>
+           </div>
+       </div>
 
-        <!-- Sidebar -->
-        <div class="col-lg-4">
-            <!-- Popular Tags -->
-            {% if popular_tags %}
-            <div class="sidebar-widget mb-4">
-                <h5 class="widget-title">
-                    <i class="fas fa-tags me-2"></i>인기 태그
-                </h5>
-                <div class="tag-cloud">
-                    {% for tag in popular_tags %}
-                    <a href="{{ url_for('learning_blog') }}?tag={{ tag.name }}" 
-                       class="tag-item" style="color: {{ tag.color }}">
-                        {{ tag.name }}
-                        <span class="tag-count">{{ tag.usage_count }}</span>
-                    </a>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
+       <!-- Sidebar -->
+       <div class="col-lg-4">
+           <!-- Popular Tags -->
+           {% if popular_tags %}
+           <div class="sidebar-widget mb-4">
+               <h5 class="widget-title">
+                   <i class="fas fa-tags me-2"></i>인기 태그
+               </h5>
+               <div class="tag-cloud">
+                   {% for tag in popular_tags %}
+                   <a href="{{ url_for('learning_blog') }}?tag={{ tag.name }}" 
+                      class="tag-item" style="color: {{ tag.color }}">
+                       {{ tag.name }}
+                       <span class="tag-count">{{ tag.usage_count }}</span>
+                   </a>
+                   {% endfor %}
+               </div>
+           </div>
+           {% endif %}
 
-            <!-- Learning Stats -->
-            <div class="sidebar-widget">
-                <h5 class="widget-title">
-                    <i class="fas fa-chart-bar me-2"></i>학습 통계
-                </h5>
-                <div class="learning-stats">
-                    <div class="stat-item">
-                        <div class="stat-number">{{ recent_posts|length }}</div>
-                        <div class="stat-label">총 포스트</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ categories|length }}</div>
-                        <div class="stat-label">학습 분야</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ popular_tags|length }}</div>
-                        <div class="stat-label">활용 기술</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+           <!-- Learning Stats -->
+           <div class="sidebar-widget">
+               <h5 class="widget-title">
+                   <i class="fas fa-chart-bar me-2"></i>학습 통계
+               </h5>
+               <div class="learning-stats">
+                   <div class="stat-item">
+                       <div class="stat-number">{{ recent_posts|length }}</div>
+                       <div class="stat-label">총 포스트</div>
+                   </div>
+                   <div class="stat-item">
+                       <div class="stat-number">{{ categories|length }}</div>
+                       <div class="stat-label">학습 분야</div>
+                   </div>
+                   <div class="stat-item">
+                       <div class="stat-number">{{ popular_tags|length }}</div>
+                       <div class="stat-label">활용 기술</div>
+                   </div>
+               </div>
+           </div>
+       </div>
+   </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <style>
 .hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 80px 0;
-    border-radius: 15px;
-    margin-bottom: 50px;
+   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+   color: white;
+   padding: 80px 0;
+   border-radius: 15px;
+   margin-bottom: 50px;
 }
 
 .category-card {
-    background: white;
-    border-radius: 15px;
-    padding: 30px;
-    text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+   background: white;
+   border-radius: 15px;
+   padding: 30px;
+   text-align: center;
+   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+   transition: all 0.3s ease;
+   position: relative;
+   overflow: hidden;
 }
 
 .category-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+   transform: translateY(-10px);
+   box-shadow: 0 20px 40px rgba(0,0,0,0.15);
 }
 
 .category-card:hover .category-overlay {
-    opacity: 1;
+   opacity: 1;
 }
 
 .category-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
+   position: absolute;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   background: rgba(0,0,0,0.8);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   opacity: 0;
+   transition: opacity 0.3s ease;
 }
 
 .featured-post-card,
 .recent-post-item {
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-    overflow: hidden;
+   background: white;
+   border-radius: 15px;
+   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+   transition: all 0.3s ease;
+   overflow: hidden;
 }
 
 .featured-post-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+   transform: translateY(-5px);
+   box-shadow: 0 15px 35px rgba(0,0,0,0.15);
 }
 
 .post-placeholder,
 .post-thumbnail-placeholder {
-    height: 200px;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #6c757d;
+   height: 200px;
+   background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   color: #6c757d;
 }
 
 .post-thumbnail-placeholder {
-    height: 100px;
-    border-radius: 8px;
+   height: 100px;
+   border-radius: 8px;
 }
 
 .sidebar-widget {
-    background: white;
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    margin-bottom: 25px;
+   background: white;
+   border-radius: 15px;
+   padding: 25px;
+   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+   margin-bottom: 25px;
 }
 
 .widget-title {
-    color: #2c3e50;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #f8f9fa;
+   color: #2c3e50;
+   margin-bottom: 20px;
+   padding-bottom: 10px;
+   border-bottom: 2px solid #f8f9fa;
 }
 
 .tag-cloud {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+   display: flex;
+   flex-wrap: wrap;
+   gap: 8px;
 }
 
 .tag-item {
-    background: #f8f9fa;
-    padding: 5px 12px;
-    border-radius: 20px;
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
+   background: #f8f9fa;
+   padding: 5px 12px;
+   border-radius: 20px;
+   text-decoration: none;
+   font-size: 0.9rem;
+   font-weight: 500;
+   transition: all 0.3s ease;
 }
 
 .tag-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+   transform: translateY(-2px);
+   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
 .tag-count {
-    background: rgba(255,255,255,0.8);
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-size: 0.8rem;
-    margin-left: 5px;
+   background: rgba(255,255,255,0.8);
+   padding: 2px 6px;
+   border-radius: 10px;
+   font-size: 0.8rem;
+   margin-left: 5px;
 }
 
 .learning-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    text-align: center;
+   display: grid;
+   grid-template-columns: repeat(3, 1fr);
+   gap: 20px;
+   text-align: center;
 }
 
 .stat-item {
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 10px;
+   padding: 15px;
+   background: #f8f9fa;
+   border-radius: 10px;
 }
 
 .stat-number {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #667eea;
+   font-size: 2rem;
+   font-weight: bold;
+   color: #667eea;
 }
 
 .stat-label {
-    color: #6c757d;
-    font-size: 0.9rem;
+   color: #6c757d;
+   font-size: 0.9rem;
 }
 
 .difficulty-beginner { color: #28a745; }
@@ -355,77 +363,77 @@
 .difficulty-advanced { color: #dc3545; }
 
 @media (max-width: 768px) {
-    .hero-section {
-        padding: 50px 0;
-    }
-    
-    .category-card {
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-    
-    .learning-stats {
-        grid-template-columns: 1fr;
-    }
-    
-    .recent-post-item .row {
-        flex-direction: column;
-    }
-    
-    .post-thumbnail-placeholder {
-        height: 150px;
-        margin-bottom: 15px;
-    }
+   .hero-section {
+       padding: 50px 0;
+   }
+   
+   .category-card {
+       padding: 20px;
+       margin-bottom: 20px;
+   }
+   
+   .learning-stats {
+       grid-template-columns: 1fr;
+   }
+   
+   .recent-post-item .row {
+       flex-direction: column;
+   }
+   
+   .post-thumbnail-placeholder {
+       height: 150px;
+       margin-bottom: 15px;
+   }
 }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 카운터 애니메이션
-    animateCounters();
-    
-    // 스크롤 애니메이션
-    observeElements();
+   // 카운터 애니메이션
+   animateCounters();
+   
+   // 스크롤 애니메이션
+   observeElements();
 });
 
 function animateCounters() {
-    const counters = document.querySelectorAll('.stat-number');
-    
-    counters.forEach(counter => {
-        const target = parseInt(counter.textContent);
-        const duration = 2000;
-        const step = target / (duration / 16);
-        let current = 0;
-        
-        const timer = setInterval(() => {
-            current += step;
-            if (current >= target) {
-                current = target;
-                clearInterval(timer);
-            }
-            counter.textContent = Math.floor(current);
-        }, 16);
-    });
+   const counters = document.querySelectorAll('.stat-number');
+   
+   counters.forEach(counter => {
+       const target = parseInt(counter.textContent);
+       const duration = 2000;
+       const step = target / (duration / 16);
+       let current = 0;
+       
+       const timer = setInterval(() => {
+           current += step;
+           if (current >= target) {
+               current = target;
+               clearInterval(timer);
+           }
+           counter.textContent = Math.floor(current);
+       }, 16);
+   });
 }
 
 function observeElements() {
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    }, {
-        threshold: 0.1
-    });
+   const observer = new IntersectionObserver((entries) => {
+       entries.forEach(entry => {
+           if (entry.isIntersecting) {
+               entry.target.style.opacity = '1';
+               entry.target.style.transform = 'translateY(0)';
+           }
+       });
+   }, {
+       threshold: 0.1
+   });
 
-    document.querySelectorAll('.category-card, .featured-post-card, .recent-post-item, .sidebar-widget').forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(20px)';
-        el.style.transition = 'all 0.6s ease';
-        observer.observe(el);
-    });
+   document.querySelectorAll('.category-card, .featured-post-card, .recent-post-item, .sidebar-widget').forEach(el => {
+       el.style.opacity = '0';
+       el.style.transform = 'translateY(20px)';
+       el.style.transition = 'all 0.6s ease';
+       observer.observe(el);
+   });
 }
 </script>
 {% endblock %}

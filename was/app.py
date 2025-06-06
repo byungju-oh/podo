@@ -1649,7 +1649,7 @@ def admin_learning_post_new():
                 difficulty=difficulty,
                 learning_date=learning_date,
                 source_url=source_url if source_url else None,
-                reading_time=calculate_reading_time(content),
+                
                 is_published=is_published,
                 is_featured=is_featured,
                 published_at=datetime.utcnow() if is_published else None
@@ -1702,7 +1702,7 @@ def admin_learning_post_edit(post_id):
             post.source_url = request.form.get('source_url', '').strip() or None
             post.is_published = 'is_published' in request.form
             post.is_featured = 'is_featured' in request.form
-            post.reading_time = calculate_reading_time(post.content)
+            
             post.updated_at = datetime.utcnow()
             
             # 발행 상태 변경시 발행일 업데이트
@@ -1858,6 +1858,193 @@ def admin_learning_category_manage(category_id=None):
         db.session.rollback()
         logger.error(f"카테고리 관리 오류: {e}")
         return jsonify({'success': False, 'message': '처리 중 오류가 발생했습니다.'}), 500
+    
+@app.route('/admin/learning/upload-image', methods=['POST'])
+@login_required
+def admin_learning_upload_image():
+    """학습 포스트 본문 이미지 업로드 API"""
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': '권한이 없습니다.'}), 403
+    
+    try:
+        # CSRF 토큰 검증은 자동으로 처리됨
+        
+        if 'image' not in request.files:
+            return jsonify({'success': False, 'message': '이미지 파일이 없습니다.'}), 400
+        
+        file = request.files['image']
+        
+        if file.filename == '':
+            return jsonify({'success': False, 'message': '파일이 선택되지 않았습니다.'}), 400
+        
+        # 파일 크기 확인 (10MB)
+        if file.content_length and file.content_length > 10 * 1024 * 1024:
+            return jsonify({'success': False, 'message': '파일 크기가 10MB를 초과합니다.'}), 400
+        
+        # 파일 타입 확인
+        if not file.content_type.startswith('image/'):
+            return jsonify({'success': False, 'message': '이미지 파일만 업로드 가능합니다.'}), 400
+        
+        # 파일명 보안 처리
+        filename = secure_filename(file.filename)
+        if not filename:
+            return jsonify({'success': False, 'message': '잘못된 파일명입니다.'}), 400
+        
+        # 고유한 파일명 생성
+        name, ext = os.path.splitext(filename)
+        unique_filename = f"content_{uuid.uuid4().hex[:8]}_{int(datetime.now().timestamp())}{ext}"
+        
+        # 업로드 폴더 확인
+        upload_folder = app.config['UPLOAD_FOLDER']
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder, exist_ok=True)
+        
+        # 파일 저장
+        file_path = os.path.join(upload_folder, unique_filename)
+        file.save(file_path)
+        
+        # 이미지 최적화 (선택사항)
+        try:
+            optimize_image(file_path)
+        except Exception as e:
+            logger.warning(f"이미지 최적화 실패: {e}")
+        
+        # URL 생성
+        image_url = url_for('uploaded_file', filename=unique_filename, _external=False)
+        
+        logger.info(f"학습 포스트 이미지 업로드 성공: {unique_filename}")
+        
+        return jsonify({
+            'success': True,
+            'message': '이미지가 성공적으로 업로드되었습니다.',
+            'filename': unique_filename,
+            'url': image_url,
+            'markdown': f'![이미지 설명]({image_url})'
+        })
+        
+    except Exception as e:
+        logger.error(f"학습 포스트 이미지 업로드 오류: {e}", exc_info=True)
+        return jsonify({
+            'success': False, 
+            'message': f'이미지 업로드 중 오류가 발생했습니다: {str(e)}'
+        }), 500
+
+@app.route('/admin/learning/delete-image', methods=['POST'])
+@login_required
+def admin_learning_delete_image():
+    """학습 포스트 이미지 삭제 API"""
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': '권한이 없습니다.'}), 403
+    
+    try:
+        filename = request.json.get('filename')
+        
+        if not filename:
+            return jsonify({'success': False, 'message': '파일명이 제공되지 않았습니다.'}), 400
+        
+        # 보안: 파일명 검증 (path traversal 방지)
+        filename = secure_filename(filename)
+        if not filename or '..' in filename or filename.startswith('/'):
+            return jsonify({'success': False, 'message': '잘못된 파일명입니다.'}), 400
+        
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        # 파일 존재 확인 및 삭제
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            logger.info(f"학습 포스트 이미지 삭제: {filename}")
+            return jsonify({'success': True, 'message': '이미지가 삭제되었습니다.'})
+        else:
+            return jsonify({'success': False, 'message': '파일을 찾을 수 없습니다.'}), 404
+            
+    except Exception as e:
+        logger.error(f"학습 포스트 이미지 삭제 오류: {e}", exc_info=True)
+        return jsonify({
+            'success': False, 
+            'message': f'이미지 삭제 중 오류가 발생했습니다: {str(e)}'
+        }), 500
+
+@app.route('/admin/learning/upload-bulk-images', methods=['POST'])
+@login_required
+def admin_learning_upload_bulk_images():
+    """다중 이미지 업로드 API (선택사항)"""
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': '권한이 없습니다.'}), 403
+    
+    try:
+        uploaded_files = []
+        failed_files = []
+        
+        # 다중 파일 처리
+        for key in request.files:
+            files = request.files.getlist(key)
+            
+            for file in files:
+                if file.filename == '':
+                    continue
+                
+                try:
+                    # 개별 파일 업로드 처리
+                    if not file.content_type.startswith('image/'):
+                        failed_files.append({
+                            'filename': file.filename,
+                            'error': '이미지 파일이 아닙니다.'
+                        })
+                        continue
+                    
+                    filename = secure_filename(file.filename)
+                    if not filename:
+                        failed_files.append({
+                            'filename': file.filename,
+                            'error': '잘못된 파일명입니다.'
+                        })
+                        continue
+                    
+                    # 고유한 파일명 생성
+                    name, ext = os.path.splitext(filename)
+                    unique_filename = f"content_{uuid.uuid4().hex[:8]}_{int(datetime.now().timestamp())}{ext}"
+                    
+                    # 파일 저장
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                    file.save(file_path)
+                    
+                    # 이미지 최적화
+                    try:
+                        optimize_image(file_path)
+                    except Exception as e:
+                        logger.warning(f"이미지 최적화 실패: {e}")
+                    
+                    # URL 생성
+                    image_url = url_for('uploaded_file', filename=unique_filename, _external=False)
+                    
+                    uploaded_files.append({
+                        'original_name': file.filename,
+                        'filename': unique_filename,
+                        'url': image_url,
+                        'markdown': f'![{name}]({image_url})'
+                    })
+                    
+                except Exception as e:
+                    failed_files.append({
+                        'filename': file.filename,
+                        'error': str(e)
+                    })
+        
+        logger.info(f"다중 이미지 업로드 완료: {len(uploaded_files)}개 성공, {len(failed_files)}개 실패")
+        
+        return jsonify({
+            'success': True,
+            'message': f'{len(uploaded_files)}개 이미지 업로드 완료',
+            'uploaded_files': uploaded_files,
+            'failed_files': failed_files
+        })
+        
+    except Exception as e:
+        logger.error(f"다중 이미지 업로드 오류: {e}", exc_info=True)
+        return jsonify({
+            'success': False, 
+            'message': f'다중 이미지 업로드 중 오류가 발생했습니다: {str(e)}'
+        }), 500
 
 # 디버그용 샘플 데이터 생성 라우트
 @app.route('/debug/create-sample-learning-data')
