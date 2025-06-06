@@ -1,4 +1,4 @@
-# 최종 web-deployment.yaml - hostPath로 uploads 폴더 공유
+# 최종 web-deployment.yaml - 수정된 버전 (서비스 이름 사용)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -140,7 +140,7 @@ data:
             add_header Cache-Control "public, immutable";
         }
 
-        # Main application
+        # Main application - 🔥 수정된 부분: 서비스 이름 사용
         location / {
             proxy_pass http://flask-service.was.svc.cluster.local:5000;
             proxy_set_header Host $host;
@@ -148,10 +148,10 @@ data:
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
             
-            # 프록시 타임아웃 증가 (큰 파일 업로드용)
-            proxy_connect_timeout 120s;
-            proxy_send_timeout 120s;
-            proxy_read_timeout 120s;
+            # 프록시 타임아웃 설정 (적절한 값으로 조정)
+            proxy_connect_timeout 30s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
             
             # 큰 파일 업로드를 위한 설정
             proxy_buffering off;
