@@ -172,8 +172,8 @@ metadata:
   namespace: web
 spec:
   accessModes:
-    - ReadWriteMany  # 여러 Pod에서 접근 가능하도록
+    - ReadWriteOnce  # local-path는 ReadWriteMany 미지원
   resources:
     requests:
-      storage: 10Gi
+      storage: 1Gi
   storageClassName: local-path

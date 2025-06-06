@@ -186,7 +186,7 @@ metadata:
   namespace: was
 spec:
   accessModes:
-    - ReadWriteMany  # 여러 Pod와 namespace에서 접근하기 위해 변경
+    - ReadWriteOnce  # local-path는 ReadWriteMany 미지원
   resources:
     requests:
       storage: 20Gi  # 스토리지 크기 증가 (10Gi → 20Gi)
