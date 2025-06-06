@@ -178,19 +178,6 @@ data:
   database-url: bXlzcWwrcHlteXNxbDovL3Jvb3Q6MTIzNEBteXNxbC1zZXJ2aWNlLmRiLnN2Yy5jbHVzdGVyLmxvY2FsOjMzMDYvcG9ydGZvbGlv  # mysql+pymysql://root:1234@mysql-service.db.svc.cluster.local:3306/portfolio
   secret-key: eW91ci1zZWNyZXQta2V5LWNoYW5nZS10aGlz  # your-secret-key-change-this
 
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: upload-pvc
-  namespace: was
-spec:
-  accessModes:
-    - ReadWriteOnce  # local-path는 ReadWriteMany 미지원
-  resources:
-    requests:
-      storage: 20Gi  # 스토리지 크기 증가 (10Gi → 20Gi)
-  storageClassName: local-path
 
 ---
 # HorizontalPodAutoscaler (선택사항 - 자동 스케일링)

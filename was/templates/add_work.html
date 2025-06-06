@@ -864,13 +864,13 @@ function validateField(field) {
     // 특정 필드별 유효성 검사
     switch (field.id) {
         case 'title':
-            if (value && value.length < 5) {
+            if (value && value.length < 1) {
                 isValid = false;
                 errorMessage = '제목은 최소 1자 이상이어야 합니다.';
             }
             break;
         case 'description':
-            if (value && value.length < 20) {
+            if (value && value.length < 0) {
                 isValid = false;
                 errorMessage = '설명은 최소 0자 이상이어야 합니다.';
             }
