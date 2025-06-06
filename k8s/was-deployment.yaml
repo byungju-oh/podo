@@ -73,12 +73,18 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        # 파일 업로드 크기 제한 환경변수 추가
+        - name: MAX_CONTENT_LENGTH
+          value: "104857600"  # 100MB in bytes
+        # 업로드 폴더 경로
+        - name: UPLOAD_FOLDER
+          value: "/app/uploads"
         resources:
           requests:
-            memory: "256Mi"
+            memory: "512Mi"  # 메모리 증가 (큰 파일 처리용)
             cpu: "200m"
           limits:
-            memory: "512Mi"
+            memory: "1Gi"    # 메모리 한도 대폭 증가
             cpu: "500m"
         # 시작 준비 상태 체크 (데이터베이스 초기화 완료 확인)
         readinessProbe:
@@ -180,10 +186,10 @@ metadata:
   namespace: was
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany  # 여러 Pod와 namespace에서 접근하기 위해 변경
   resources:
     requests:
-      storage: 10Gi
+      storage: 20Gi  # 스토리지 크기 증가 (10Gi → 20Gi)
   storageClassName: local-path
 
 ---

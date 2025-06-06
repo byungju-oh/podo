@@ -47,10 +47,18 @@ spec:
         - name: nginx-config
           mountPath: /etc/nginx/conf.d
           readOnly: true
+        # 업로드된 파일들을 Nginx에서 직접 서빙하기 위한 볼륨 마운트
+        - name: upload-storage
+          mountPath: /var/www/html/uploads
+          readOnly: true
       volumes:
       - name: nginx-config
         configMap:
           name: nginx-config
+      - name: upload-storage
+        persistentVolumeClaim:
+          claimName: upload-pvc
+
 ---
 apiVersion: v1
 kind: Service
@@ -68,6 +76,7 @@ spec:
     protocol: TCP
   selector:
     app: nginx
+
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -79,6 +88,18 @@ data:
     server {
         listen 80;
         server_name localhost;
+        
+        # 파일 업로드 크기 제한 증가 (35MB) - 가장 중요한 추가!
+        client_max_body_size 35M;
+        
+        # 타임아웃 설정 증가 (큰 파일 업로드용)
+        client_body_timeout 120s;
+        client_header_timeout 120s;
+        send_timeout 120s;
+        
+        # 업로드 버퍼 크기 증가
+        client_body_buffer_size 256k;
+        large_client_header_buffers 4 16k;
 
         # Security headers
         add_header X-Frame-Options "SAMEORIGIN" always;
@@ -91,6 +112,20 @@ data:
             expires 30d;
             add_header Cache-Control "public, immutable";
         }
+        
+        # 업로드된 파일들 직접 서빙 (성능 향상)
+        location /uploads/ {
+            alias /var/www/html/uploads/;
+            expires 7d;
+            add_header Cache-Control "public";
+            
+            # 이미지 파일 압축
+            location ~* \.(jpg|jpeg|png|gif|ico|svg)$ {
+                expires 30d;
+                add_header Cache-Control "public, immutable";
+                add_header Vary Accept-Encoding;
+            }
+        }
 
         # Main application
         location / {
@@ -99,9 +134,20 @@ data:
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            proxy_connect_timeout 30s;
-            proxy_send_timeout 30s;
-            proxy_read_timeout 30s;
+            
+            # 프록시 타임아웃 증가 (큰 파일 업로드용)
+            proxy_connect_timeout 120s;
+            proxy_send_timeout 120s;
+            proxy_read_timeout 120s;
+            
+            # 큰 파일 업로드를 위한 버퍼링 설정
+            proxy_buffering off;
+            proxy_request_buffering off;
+            proxy_max_temp_file_size 0;
+            
+            # 프록시 버퍼 크기 증가
+            proxy_buffer_size 4k;
+            proxy_buffers 8 4k;
         }
 
         # Health check
@@ -116,3 +162,18 @@ data:
             root /usr/share/nginx/html;
         }
     }
+
+---
+# 업로드 파일 저장용 PVC (web namespace에도 필요)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: upload-pvc
+  namespace: web
+spec:
+  accessModes:
+    - ReadWriteMany  # 여러 Pod에서 접근 가능하도록
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-path

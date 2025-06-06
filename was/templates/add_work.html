@@ -866,13 +866,13 @@ function validateField(field) {
         case 'title':
             if (value && value.length < 5) {
                 isValid = false;
-                errorMessage = '제목은 최소 5자 이상이어야 합니다.';
+                errorMessage = '제목은 최소 1자 이상이어야 합니다.';
             }
             break;
         case 'description':
             if (value && value.length < 20) {
                 isValid = false;
-                errorMessage = '설명은 최소 20자 이상이어야 합니다.';
+                errorMessage = '설명은 최소 0자 이상이어야 합니다.';
             }
             break;
         case 'github_url':

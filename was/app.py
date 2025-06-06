@@ -164,11 +164,11 @@ class DatabaseLock(db.Model):
 class ProjectForm(FlaskForm):
     title = StringField('프로젝트명', 
                        validators=[DataRequired(message='프로젝트명을 입력해주세요.'), 
-                                 Length(min=5, max=200, message='프로젝트명은 5-200자 사이여야 합니다.')])
+                                 Length(min=1, max=200, message='프로젝트명은 1-200자 사이여야 합니다.')])
     
     description = TextAreaField('간단한 설명', 
                               validators=[DataRequired(message='프로젝트 설명을 입력해주세요.'), 
-                                        Length(min=20, max=1000, message='설명은 20-1000자 사이여야 합니다.')])
+                                        Length(max=1000)])
     
     detailed_description = TextAreaField('상세 설명', 
                                        validators=[Optional(), 
@@ -1028,7 +1028,7 @@ def add_work():
                 # 이미지 파일 처리
                 image_path = None
                 if form.image.data:
-                    image_path = handle_image_upload(form.image.data, max_size_mb=20)  # 20MB까지 허용
+                    image_path = handle_image_upload(form.image.data, max_size_mb=30)  # 20MB까지 허용
                     if not image_path:
                         flash('이미지 업로드에 실패했습니다. 파일 형식을 확인하거나 크기를 줄여주세요.', 'error')
                         return render_template('add_work.html', form=form, recent_works=get_recent_works())
