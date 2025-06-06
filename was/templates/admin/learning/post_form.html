@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if post %}포스트 수정{% else %}새 포스트 작성{% endif %} - 학습 관리
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">
+                        {% if post %}포스트 수정{% else %}새 포스트 작성{% endif %}
+                    </h1>
+                    <p class="text-muted mb-0">학습 내용을 정리하고 공유해보세요</p>
+                </div>
+                <a href="{{ url_for('admin_learning_posts') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>목록으로 돌아가기
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="postForm">
+        <!-- CSRF 토큰 -->
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-edit me-2"></i>포스트 내용
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- 제목 -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">제목 *</label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   value="{{ post.title if post else '' }}" 
+                                   placeholder="학습한 내용의 제목을 입력하세요" required>
+                        </div>
+
+                        <!-- 요약 -->
+                        <div class="mb-3">
+                            <label for="summary" class="form-label">요약</label>
+                            <textarea class="form-control" id="summary" name="summary" rows="3"
+                                      placeholder="포스트의 간단한 요약을 작성하세요">{{ post.summary if post else '' }}</textarea>
+                            <div class="form-text">목록에서 표시될 간략한 설명입니다.</div>
+                        </div>
+
+                        <!-- 내용 -->
+                        <div class="mb-3">
+                            <label for="content" class="form-label">내용 *</label>
+                            <div class="editor-toolbar mb-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('**', '**')">
+                                    <i class="fas fa-bold"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('*', '*')">
+                                    <i class="fas fa-italic"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('`', '`')">
+                                    <i class="fas fa-code"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('```\n', '\n```')">
+                                    <i class="fas fa-file-code"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('# ', '')">
+                                    H1
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('## ', '')">
+                                    H2
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('- ', '')">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertMarkdown('[', '](url)')">
+                                    <i class="fas fa-link"></i>
+                                </button>
+                            </div>
+                            <textarea class="form-control" id="content" name="content" rows="20" 
+                                      placeholder="마크다운 형식으로 학습 내용을 작성하세요..." required>{{ post.content if post else '' }}</textarea>
+                            <div class="form-text">
+                                마크다운 문법을 사용할 수 있습니다. 
+                                <a href="https://guides.github.com/features/mastering-markdown/" target="_blank">마크다운 가이드</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- 발행 설정 -->
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cog me-2"></i>발행 설정
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_published" name="is_published"
+                                       {{ 'checked' if post and post.is_published }}>
+                                <label class="form-check-label" for="is_published">
+                                    <i class="fas fa-eye me-1"></i>지금 발행하기
+                                </label>
+                            </div>
+                            <div class="form-text">체크하면 즉시 공개됩니다.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured"
+                                       {{ 'checked' if post and post.is_featured }}>
+                                <label class="form-check-label" for="is_featured">
+                                    <i class="fas fa-star me-1"></i>추천 포스트
+                                </label>
+                            </div>
+                            <div class="form-text">메인 페이지에 우선 표시됩니다.</div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                {% if post %}수정 완료{% else %}포스트 저장{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 카테고리 및 메타데이터 -->
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-folder me-2"></i>카테고리 및 정보
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="category_id" class="form-label">카테고리 *</label>
+                            <select class="form-select" id="category_id" name="category_id" required>
+                                <option value="">카테고리 선택</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" 
+                                        {{ 'selected' if post and post.category_id == category.id }}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="difficulty" class="form-label">난이도</label>
+                            <select class="form-select" id="difficulty" name="difficulty">
+                                <option value="beginner" {{ 'selected' if post and post.difficulty == 'beginner' }}>초급</option>
+                                <option value="intermediate" {{ 'selected' if post and post.difficulty == 'intermediate' }}>중급</option>
+                                <option value="advanced" {{ 'selected' if post and post.difficulty == 'advanced' }}>고급</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">태그</label>
+                            <input type="text" class="form-control" id="tags" name="tags" 
+                                   value="{{ post.tags if post else '' }}"
+                                   placeholder="Python, Django, 웹개발">
+                            <div class="form-text">쉼표로 구분하여 입력하세요.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 썸네일 이미지 -->
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-image me-2"></i>썸네일 이미지
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if post and post.thumbnail_path %}
+                        <div class="current-thumbnail mb-3">
+                            <img src="{{ url_for('uploaded_file', filename=post.thumbnail_path) }}" 
+                                 class="img-fluid rounded" alt="현재 썸네일">
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="thumbnail" class="form-label">썸네일 이미지</label>
+                            <input type="file" class="form-control" id="thumbnail" name="thumbnail" accept="image/*">
+                            <div class="form-text">JPG, PNG, GIF (최대 10MB)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.editor-toolbar {
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 10px;
+}
+
+.editor-toolbar .btn {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+#content {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.current-thumbnail img {
+    max-height: 200px;
+    object-fit: cover;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const contentTextarea = document.getElementById('content');
+    
+    // 자동 높이 조정
+    autoResize(contentTextarea);
+    contentTextarea.addEventListener('input', function() {
+        autoResize(this);
+    });
+});
+
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+function insertMarkdown(before, after) {
+    const textarea = document.getElementById('content');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    
+    const newText = before + selectedText + after;
+    
+    textarea.value = textarea.value.substring(0, start) + newText + textarea.value.substring(end);
+    
+    // 커서 위치 조정
+    const newCursorPos = start + before.length + selectedText.length;
+    textarea.setSelectionRange(newCursorPos, newCursorPos);
+    textarea.focus();
+    
+    autoResize(textarea);
+}
+</script>
+{% endblock %}
