@@ -687,7 +687,9 @@ def get_recent_works():
         logger.error(f"최근 프로젝트 조회 실패: {str(e)}")
         return []
 
-# 기존 라우트들 (그대로 유지)
+# app.py에 추가할 코드
+
+# 기존 index 라우트를 다음과 같이 수정
 @app.route('/')
 def index():
     featured_projects = Project.query.filter_by(is_featured=True, is_public=True)\
@@ -706,11 +708,61 @@ def index():
                                        .order_by(Experience.start_date.desc())\
                                        .limit(3).all()
     
+    # 배경용 아트워크 이미지들 가져오기 (아트워크 타입이면서 이미지가 있는 프로젝트만)
+    artwork_projects = Project.query.filter(
+        Project.is_public == True,
+        Project.project_type == 'art',
+        Project.image_path.isnot(None),
+        Project.image_path != ''
+    ).order_by(Project.created_at.desc()).all()
+    
+    # 아트워크가 없으면 기본 배경 사용
+    if not artwork_projects:
+        artwork_projects = []
+    
     return render_template('index.html', 
                          featured_projects=featured_projects,
                          recent_projects=recent_projects,
                          primary_techs=primary_techs,
-                         recent_experiences=recent_experiences)
+                         recent_experiences=recent_experiences,
+                         artwork_projects=artwork_projects)
+
+# 배경 이미지 API 엔드포인트 추가
+@app.route('/api/background-images')
+def api_background_images():
+    """배경용 이미지 목록 API"""
+    try:
+        artwork_projects = Project.query.filter(
+            Project.is_public == True,
+            Project.project_type == 'art',
+            Project.image_path.isnot(None),
+            Project.image_path != ''
+        ).order_by(Project.created_at.desc()).all()
+        
+        images = []
+        for project in artwork_projects:
+            images.append({
+                'id': project.id,
+                'title': project.title,
+                'description': project.description,
+                'image_url': url_for('uploaded_file', filename=project.image_path),
+                'project_type': project.project_type,
+                'category': project.category
+            })
+        
+        return jsonify({
+            'success': True,
+            'images': images,
+            'total': len(images)
+        })
+        
+    except Exception as e:
+        logger.error(f"배경 이미지 API 오류: {e}")
+        return jsonify({
+            'success': False,
+            'message': '이미지를 불러오는 중 오류가 발생했습니다.',
+            'images': []
+        }), 500
 
 @app.route('/portfolio')
 def portfolio():

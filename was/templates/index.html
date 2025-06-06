@@ -3,9 +3,59 @@
 {% block title %}IT 엔지니어 포트폴리오 - 홈{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="hero-section mb-5">
-    <div class="container">
+<!-- Hero Section with Dynamic Background -->
+<section class="hero-section mb-5" id="heroSection">
+    <!-- Background Image Container -->
+    <div class="hero-background" id="heroBackground">
+        {% if artwork_projects %}
+            {% for project in artwork_projects %}
+            <div class="background-slide" data-project-id="{{ project.id }}" 
+                 style="background-image: url('{{ url_for('uploaded_file', filename=project.image_path) }}')">
+                <div class="background-overlay"></div>
+                <div class="background-info">
+                    <div class="project-title">{{ project.title }}</div>
+                    <div class="project-category">아트워크 • {{ project.category or '작품' }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <!-- 아트워크가 없을 때 기본 배경 -->
+            <div class="background-slide default-bg active">
+                <div class="background-overlay"></div>
+                <div class="background-info">
+                    <div class="project-title">IT 엔지니어 포트폴리오</div>
+                    <div class="project-category">아트워크를 추가하면 배경이 바뀝니다</div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Background Navigation Controls -->
+    {% if artwork_projects and artwork_projects|length > 1 %}
+    <div class="background-controls">
+        <button class="bg-control bg-prev" id="bgPrev">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="bg-control bg-next" id="bgNext">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        
+        <!-- Background Indicators -->
+        <div class="bg-indicators">
+            {% for project in artwork_projects %}
+            <span class="bg-indicator" data-slide="{{ loop.index0 }}"></span>
+            {% endfor %}
+        </div>
+        
+        <!-- Auto-play Control -->
+        <button class="bg-control bg-autoplay active" id="bgAutoplay" title="자동 재생">
+            <i class="fas fa-play"></i>
+        </button>
+    </div>
+    {% endif %}
+    
+    <!-- Hero Content -->
+    <div class="container hero-content">
         <div class="row align-items-center">
             <div class="col-lg-8">
                 <h1 class="display-4 fw-bold mb-4">
@@ -461,24 +511,191 @@
 
 {% block scripts %}
 <style>
+/* 기존 스타일은 유지하고 새로운 배경 관련 스타일 추가 */
+
 /* 헤로 섹션 스타일링 */
 .hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
     color: white;
     padding: 120px 0;
-    position: relative;
     overflow: hidden;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
 }
 
-.hero-section::before {
-    content: '';
+/* 배경 이미지 컨테이너 */
+.hero-background {
     position: absolute;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.background-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    filter: brightness(0.9) contrast(1.1);
+}
+
+.background-slide.active {
+    opacity: 1;
+    filter: brightness(1) contrast(1);
+}
+
+.background-slide.default-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.background-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, 
+        rgba(102, 126, 234, 0.8) 0%, 
+        rgba(118, 75, 162, 0.8) 100%);
+    backdrop-filter: blur(2px);
+}
+
+/* 배경 이미지 정보 */
+.background-info {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.background-slide.active .background-info {
+    opacity: 1;
+}
+
+.project-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.project-category {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* 배경 컨트롤 */
+.background-controls {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 100%;
     pointer-events: none;
+}
+
+.bg-control {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    pointer-events: auto;
+}
+
+.bg-control:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+    color: white;
+}
+
+.bg-prev {
+    left: 30px;
+}
+
+.bg-next {
+    right: 30px;
+}
+
+.bg-autoplay {
+    bottom: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+}
+
+.bg-autoplay.active {
+    background: rgba(40, 167, 69, 0.8);
+    border-color: rgba(40, 167, 69, 1);
+}
+
+.bg-autoplay.paused {
+    background: rgba(220, 53, 69, 0.8);
+    border-color: rgba(220, 53, 69, 1);
+}
+
+/* 배경 인디케이터 */
+.bg-indicators {
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    pointer-events: auto;
+}
+
+.bg-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+}
+
+.bg-indicator.active {
+    background: rgba(255, 255, 255, 0.9);
+    transform: scale(1.2);
+}
+
+.bg-indicator:hover {
+    background: rgba(255, 255, 255, 0.7);
+    transform: scale(1.1);
+}
+
+/* 히어로 콘텐츠 */
+.hero-content {
+    position: relative;
+    z-index: 5;
+}
+
+/* 기존 히어로 패턴 제거 */
+.hero-section::before {
+    display: none;
 }
 
 .typing-text {
@@ -522,7 +739,7 @@
     align-items: center;
     justify-content: center;
     margin: 50px auto;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
     animation: float 3s ease-in-out infinite;
 }
 
@@ -543,7 +760,7 @@
     position: absolute;
     width: 60px;
     height: 60px;
-    background: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.15);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -551,8 +768,9 @@
     font-size: 1.5rem;
     color: white;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
     animation: orbit 10s linear infinite;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 .orbit-item.aws { animation-delay: 0s; top: 20px; right: 80px; }
@@ -842,6 +1060,7 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
 }
 
 .cta-buttons .btn:hover {
@@ -853,6 +1072,7 @@
 @media (max-width: 768px) {
     .hero-section {
         padding: 80px 0;
+        min-height: 80vh;
     }
     
     .display-4 {
@@ -874,6 +1094,44 @@
         width: 40px;
         height: 40px;
         font-size: 1rem;
+    }
+    
+    .bg-control {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .bg-prev {
+        left: 15px;
+    }
+    
+    .bg-next {
+        right: 15px;
+    }
+    
+    .bg-autoplay {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+        bottom: -60px;
+    }
+    
+    .bg-indicators {
+        bottom: -30px;
+    }
+    
+    .background-info {
+        bottom: 10px;
+        left: 10px;
+    }
+    
+    .project-title {
+        font-size: 1rem;
+    }
+    
+    .project-category {
+        font-size: 0.8rem;
     }
     
     .section-title {
@@ -944,26 +1202,226 @@
 </style>
 
 <script>
+// 배경 슬라이더 관련 변수
+let currentSlide = 0;
+let totalSlides = 0;
+let autoplayInterval = null;
+let isAutoplay = true;
+let backgroundImages = [];
+
 // 페이지 로드 시 애니메이션
 document.addEventListener('DOMContentLoaded', function() {
-    // 통계 카운터 애니메이션
+    // 기존 애니메이션 함수들
     animateCounters();
-    
-    // 스크롤 애니메이션 관찰자
     observeElements();
-    
-    // 기술 스택 프로그레스 바 애니메이션
     animateProgressBars();
+    
+    // 배경 슬라이더 초기화
+    initBackgroundSlider();
 });
 
-// 카운터 애니메이션
+// 배경 슬라이더 초기화
+function initBackgroundSlider() {
+    const slides = document.querySelectorAll('.background-slide');
+    const indicators = document.querySelectorAll('.bg-indicator');
+    const prevBtn = document.getElementById('bgPrev');
+    const nextBtn = document.getElementById('bgNext');
+    const autoplayBtn = document.getElementById('bgAutoplay');
+    
+    totalSlides = slides.length;
+    
+    if (totalSlides <= 1) return; // 슬라이드가 1개 이하면 컨트롤 숨김
+    
+    // 초기 슬라이드 설정 (랜덤하게 시작)
+    currentSlide = Math.floor(Math.random() * totalSlides);
+    showSlide(currentSlide);
+    
+    // 이벤트 리스너 설정
+    if (prevBtn) prevBtn.addEventListener('click', () => previousSlide());
+    if (nextBtn) nextBtn.addEventListener('click', () => nextSlide());
+    if (autoplayBtn) autoplayBtn.addEventListener('click', () => toggleAutoplay());
+    
+    // 인디케이터 클릭 이벤트
+    indicators.forEach((indicator, index) => {
+        indicator.addEventListener('click', () => goToSlide(index));
+    });
+    
+    // 키보드 이벤트
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') previousSlide();
+        if (e.key === 'ArrowRight') nextSlide();
+        if (e.key === ' ') {
+            e.preventDefault();
+            toggleAutoplay();
+        }
+    });
+    
+    // 마우스 휠 이벤트 (선택사항)
+    const heroSection = document.getElementById('heroSection');
+    if (heroSection) {
+        heroSection.addEventListener('wheel', (e) => {
+            if (Math.abs(e.deltaY) > 50) { // 충분히 큰 스크롤만 감지
+                e.preventDefault();
+                if (e.deltaY > 0) {
+                    nextSlide();
+                } else {
+                    previousSlide();
+                }
+            }
+        }, { passive: false });
+    }
+    
+    // 자동 재생 시작
+    startAutoplay();
+    
+    // 포커스 이벤트 (탭이 비활성화될 때 자동재생 멈춤)
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopAutoplay();
+        } else if (isAutoplay) {
+            startAutoplay();
+        }
+    });
+    
+    // 배경 이미지 정보 수집 (API 호출 대신 DOM에서 직접)
+    backgroundImages = Array.from(slides).map((slide, index) => {
+        const projectId = slide.dataset.projectId;
+        const info = slide.querySelector('.background-info');
+        return {
+            index: index,
+            projectId: projectId,
+            title: info ? info.querySelector('.project-title')?.textContent : '',
+            category: info ? info.querySelector('.project-category')?.textContent : ''
+        };
+    });
+}
+
+// 슬라이드 표시
+function showSlide(index) {
+    const slides = document.querySelectorAll('.background-slide');
+    const indicators = document.querySelectorAll('.bg-indicator');
+    
+    if (index >= totalSlides) currentSlide = 0;
+    if (index < 0) currentSlide = totalSlides - 1;
+    
+    // 모든 슬라이드 비활성화
+    slides.forEach(slide => slide.classList.remove('active'));
+    indicators.forEach(indicator => indicator.classList.remove('active'));
+    
+    // 현재 슬라이드 활성화
+    if (slides[currentSlide]) {
+        slides[currentSlide].classList.add('active');
+    }
+    if (indicators[currentSlide]) {
+        indicators[currentSlide].classList.add('active');
+    }
+    
+    // 배경 정보 업데이트 (선택사항)
+    updateBackgroundInfo();
+}
+
+// 다음 슬라이드
+function nextSlide() {
+    currentSlide++;
+    if (currentSlide >= totalSlides) currentSlide = 0;
+    showSlide(currentSlide);
+    
+    // 수동 조작시 잠시 자동재생 멈춤
+    if (isAutoplay) {
+        stopAutoplay();
+        setTimeout(() => {
+            if (isAutoplay) startAutoplay();
+        }, 3000);
+    }
+}
+
+// 이전 슬라이드
+function previousSlide() {
+    currentSlide--;
+    if (currentSlide < 0) currentSlide = totalSlides - 1;
+    showSlide(currentSlide);
+    
+    // 수동 조작시 잠시 자동재생 멈춤
+    if (isAutoplay) {
+        stopAutoplay();
+        setTimeout(() => {
+            if (isAutoplay) startAutoplay();
+        }, 3000);
+    }
+}
+
+// 특정 슬라이드로 이동
+function goToSlide(index) {
+    currentSlide = index;
+    showSlide(currentSlide);
+    
+    // 수동 조작시 잠시 자동재생 멈춤
+    if (isAutoplay) {
+        stopAutoplay();
+        setTimeout(() => {
+            if (isAutoplay) startAutoplay();
+        }, 3000);
+    }
+}
+
+// 자동재생 토글
+function toggleAutoplay() {
+    const autoplayBtn = document.getElementById('bgAutoplay');
+    
+    if (isAutoplay) {
+        stopAutoplay();
+        isAutoplay = false;
+        if (autoplayBtn) {
+            autoplayBtn.classList.remove('active');
+            autoplayBtn.classList.add('paused');
+            autoplayBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            autoplayBtn.title = '자동 재생 중지됨';
+        }
+    } else {
+        startAutoplay();
+        isAutoplay = true;
+        if (autoplayBtn) {
+            autoplayBtn.classList.remove('paused');
+            autoplayBtn.classList.add('active');
+            autoplayBtn.innerHTML = '<i class="fas fa-play"></i>';
+            autoplayBtn.title = '자동 재생';
+        }
+    }
+}
+
+// 자동재생 시작
+function startAutoplay() {
+    stopAutoplay(); // 기존 인터벌 정리
+    autoplayInterval = setInterval(() => {
+        nextSlide();
+    }, 5000); // 5초마다 변경
+}
+
+// 자동재생 중지
+function stopAutoplay() {
+    if (autoplayInterval) {
+        clearInterval(autoplayInterval);
+        autoplayInterval = null;
+    }
+}
+
+// 배경 정보 업데이트 (선택사항)
+function updateBackgroundInfo() {
+    const currentBg = backgroundImages[currentSlide];
+    if (currentBg && currentBg.projectId) {
+        // 프로젝트 상세 정보를 표시하거나 다른 UI 업데이트
+        console.log(`현재 배경: ${currentBg.title} (${currentBg.category})`);
+    }
+}
+
+// 기존 함수들...
 function animateCounters() {
     const counters = document.querySelectorAll('.stat-number');
     
     counters.forEach(counter => {
         const target = parseInt(counter.getAttribute('data-target'));
-        const duration = 2000; // 2초
-        const step = target / (duration / 16); // 60fps 기준
+        const duration = 2000;
+        const step = target / (duration / 16);
         let current = 0;
         
         const timer = setInterval(() => {
@@ -977,7 +1435,6 @@ function animateCounters() {
     });
 }
 
-// 스크롤 애니메이션 관찰자
 function observeElements() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -990,14 +1447,12 @@ function observeElements() {
         rootMargin: '0px 0px -50px 0px'
     });
 
-    // 애니메이션할 요소들 관찰
     document.querySelectorAll('.project-card, .tech-category-card, .timeline-item, .stat-card').forEach(el => {
         el.classList.add('fade-in');
         observer.observe(el);
     });
 }
 
-// 프로그레스 바 애니메이션
 function animateProgressBars() {
     const progressBars = document.querySelectorAll('.progress');
     
@@ -1022,16 +1477,7 @@ function animateProgressBars() {
 
 // 이력서 다운로드 함수
 function downloadResume() {
-    // 실제 구현에서는 서버에서 PDF 파일을 제공
     alert('이력서 다운로드 기능이 곧 제공될 예정입니다.');
-    
-    // 예시: 실제 구현
-    // const link = document.createElement('a');
-    // link.href = '/static/resume.pdf';
-    // link.download = 'IT_Engineer_Resume.pdf';
-    // document.body.appendChild(link);
-    // link.click();
-    // document.body.removeChild(link);
 }
 
 // 부드러운 스크롤
@@ -1063,7 +1509,6 @@ document.querySelectorAll('.project-card').forEach(card => {
 let ticking = false;
 
 function updateScrollElements() {
-    // 스크롤 기반 애니메이션 로직
     ticking = false;
 }
 
@@ -1074,15 +1519,46 @@ window.addEventListener('scroll', function() {
     }
 });
 
-// 다크 모드 토글 (선택사항)
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+// 터치 이벤트 지원 (모바일)
+let touchStartX = 0;
+let touchEndX = 0;
+
+document.getElementById('heroSection')?.addEventListener('touchstart', e => {
+    touchStartX = e.changedTouches[0].screenX;
+});
+
+document.getElementById('heroSection')?.addEventListener('touchend', e => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+});
+
+function handleSwipe() {
+    const swipeThreshold = 50;
+    const diff = touchStartX - touchEndX;
+    
+    if (Math.abs(diff) > swipeThreshold) {
+        if (diff > 0) {
+            nextSlide(); // 왼쪽으로 스와이프 -> 다음 슬라이드
+        } else {
+            previousSlide(); // 오른쪽으로 스와이프 -> 이전 슬라이드
+        }
+    }
 }
 
-// 로컬 스토리지에서 다크 모드 설정 불러오기
-if (localStorage.getItem('darkMode') === 'true') {
-    document.body.classList.add('dark-mode');
+// Intersection Observer로 히어로 섹션이 보일 때만 자동재생
+const heroObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            if (isAutoplay) startAutoplay();
+        } else {
+            stopAutoplay();
+        }
+    });
+}, { threshold: 0.5 });
+
+const heroSection = document.getElementById('heroSection');
+if (heroSection) {
+    heroObserver.observe(heroSection);
 }
 </script>
 {% endblock %}
