@@ -1251,24 +1251,24 @@ function initBackgroundSlider() {
     });
 
 
-    // 마우스 휠 이벤트 (전체 페이지에서 작동)
-    document.addEventListener('wheel', (e) => {
-    // 히어로 섹션이 화면에 보일 때만 작동
-        const heroSection = document.getElementById('heroSection');
-        if (heroSection) {
-            const rect = heroSection.getBoundingClientRect();
-            const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+    // // 마우스 휠 이벤트 (전체 페이지에서 작동)
+    // document.addEventListener('wheel', (e) => {
+    // // 히어로 섹션이 화면에 보일 때만 작동
+    //     const heroSection = document.getElementById('heroSection');
+    //     if (heroSection) {
+    //         const rect = heroSection.getBoundingClientRect();
+    //         const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
             
-            if (isVisible && Math.abs(e.deltaY) > 50) {
-                e.preventDefault();
-                if (e.deltaY > 0) {
-                    nextSlide();
-                } else {
-                    previousSlide();
-                }
-            }
-        }
-    }, { passive: false });
+    //         if (isVisible && Math.abs(e.deltaY) > 50) {
+    //             e.preventDefault();
+    //             if (e.deltaY > 0) {
+    //                 nextSlide();
+    //             } else {
+    //                 previousSlide();
+    //             }
+    //         }
+    //     }
+    // }, { passive: false });
     
     // // 마우스 휠 이벤트 (선택사항)
     // const heroSection = document.getElementById('heroSection');
