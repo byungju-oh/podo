@@ -282,9 +282,9 @@
                                                     onclick="editWork({{ work.id }})">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-outline-danger" 
-        onclick="deleteWork({{ work.id }}, '{{ work.title|replace("'", "\\'") }}')">
-    <i class="fas fa-trash"></i>
+                                            <button class="btn btn-outline-primary" 
+        onclick="editWork({{ work.id }})">
+    <i class="fas fa-edit"></i>
 </button>
                                         </div>
                                     </td>
@@ -576,10 +576,9 @@
 <script>
 let deleteWorkId = null;
 
-// 작품 삭제 함수
-function deleteWork(workId, workTitle) {
+// 작품 삭제 함수 - ID만 받음
+function deleteWork(workId) {
     deleteWorkId = workId;
-    document.getElementById('deleteWorkTitle').textContent = workTitle;
     new bootstrap.Modal(document.getElementById('deleteModal')).show();
 }
 
@@ -643,13 +642,10 @@ document.getElementById('confirmDelete').addEventListener('click', function() {
     }
 });
 
-
-
 // 작품 수정 함수
 function editWork(workId) {
     window.location.href = `/admin/edit_work/${workId}`;
 }
-
 // 데이터 백업 함수
 function backupData() {
     const btn = event.target;
@@ -757,7 +753,6 @@ function updateTime() {
         timeElement.textContent = timeString;
     }
 }
-
 // 알림 표시 함수
 function showNotification(message, type = 'info') {
     // 기존 알림 제거
@@ -766,13 +761,13 @@ function showNotification(message, type = 'info') {
         existingNotification.remove();
     }
     
-    const alertClass = type === 'error' ? 'alert-danger' : 
-                      type === 'success' ? 'alert-success' : 
-                      type === 'warning' ? 'alert-warning' : 'alert-info';
+    const alertClass = type === 'error' ? 'alert-danger' :
+                       type === 'success' ? 'alert-success' :
+                       type === 'warning' ? 'alert-warning' : 'alert-info';
     
-    const iconClass = type === 'error' ? 'fa-exclamation-triangle' : 
-                     type === 'success' ? 'fa-check-circle' : 
-                     type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+    const iconClass = type === 'error' ? 'fa-exclamation-triangle' :
+                      type === 'success' ? 'fa-check-circle' :
+                      type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
     
     const notification = document.createElement('div');
     notification.className = `alert ${alertClass} delete-notification alert-dismissible fade show`;
@@ -818,14 +813,12 @@ function showNotification(message, type = 'info') {
 // 모달 닫힐 때 상태 초기화
 document.getElementById('deleteModal').addEventListener('hidden.bs.modal', function() {
     deleteWorkId = null;
-    document.getElementById('deleteWorkTitle').textContent = '';
     
     // 버튼 상태 복원
     const confirmBtn = document.getElementById('confirmDelete');
     confirmBtn.innerHTML = '<i class="fas fa-trash me-1"></i>삭제하기';
     confirmBtn.disabled = false;
 });
-
 setInterval(updateTime, 1000);
 </script>
 {% endblock %}
