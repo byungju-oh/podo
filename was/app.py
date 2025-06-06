@@ -36,7 +36,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-change-
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:1234@mysql:3306/portfolio')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 30 * 1024 * 1024  # 30MB max file size
 
 # Initialize extensions
 db = SQLAlchemy(app)
@@ -623,55 +623,134 @@ def calculate_reading_time(content):
     return max(1, round(words / 200))  # 분당 200단어 기준
 
 
-def handle_image_upload(file):
-    """이미지 파일 업로드 처리"""
+def handle_image_upload(file, max_size_mb=10):
+    """향상된 이미지 파일 업로드 처리"""
     try:
         if not file or not file.filename:
             return None
+        
+        # 파일 크기 체크 (업로드 전)
+        file.seek(0, 2)  # 파일 끝으로 이동
+        file_size = file.tell()
+        file.seek(0)  # 파일 시작으로 되돌림
+        
+        if file_size > max_size_mb * 1024 * 1024:
+            logger.warning(f"파일 크기 초과: {file_size / 1024 / 1024:.1f}MB > {max_size_mb}MB")
+            # 큰 파일도 처리하되 로그만 남김
         
         filename = secure_filename(file.filename)
         if not filename:
             logger.error("잘못된 파일명")
             return None
         
-        if not allowed_file(filename):
-            logger.error(f"허용되지 않는 파일 형식: {filename}")
+        # 허용된 확장자 확인
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp'}
+        file_ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+        
+        if file_ext not in allowed_extensions:
+            logger.error(f"허용되지 않는 파일 형식: {file_ext}")
             return None
         
+        # 고유한 파일명 생성
         name, ext = os.path.splitext(filename)
-        unique_filename = f"{name}_{uuid.uuid4().hex[:8]}_{int(datetime.now().timestamp())}{ext}"
+        timestamp = int(datetime.now().timestamp())
+        unique_filename = f"{name}_{uuid.uuid4().hex[:8]}_{timestamp}{ext}"
         
+        # 업로드 폴더 확인 및 생성
         upload_folder = app.config['UPLOAD_FOLDER']
         os.makedirs(upload_folder, exist_ok=True)
         
+        # 파일 저장
         file_path = os.path.join(upload_folder, unique_filename)
         file.save(file_path)
         
-        optimize_image(file_path)
+        # 이미지 최적화 (크기가 큰 경우에만)
+        if file_size > 2 * 1024 * 1024:  # 2MB 이상인 경우
+            logger.info(f"대용량 파일 최적화 시작: {file_size / 1024 / 1024:.1f}MB")
+            optimize_image(file_path, max_width=1920, max_height=1080, quality=85)
+        else:
+            # 작은 파일도 기본 최적화
+            optimize_image(file_path, max_width=2560, max_height=1440, quality=90)
         
         logger.info(f"이미지 업로드 성공: {unique_filename}")
         return unique_filename
         
     except Exception as e:
         logger.error(f"이미지 업로드 실패: {str(e)}", exc_info=True)
+        # 업로드 실패시 임시 파일 정리
+        if 'file_path' in locals() and os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except:
+                pass
         return None
 
-def optimize_image(file_path):
-    """이미지 최적화"""
+
+def optimize_image(file_path, max_width=1920, max_height=1080, quality=85):
+    """이미지 최적화 - 크기 조정 및 압축"""
     try:
         with Image.open(file_path) as img:
-            if img.width > 1200:
-                ratio = 1200 / img.width
-                new_height = int(img.height * ratio)
-                img = img.resize((1200, new_height), Image.Resampling.LANCZOS)
+            # EXIF 데이터 기반 회전 보정
+            if hasattr(img, '_getexif'):
+                exif = img._getexif()
+                if exif is not None:
+                    orientation = exif.get(274)
+                    if orientation == 3:
+                        img = img.rotate(180, expand=True)
+                    elif orientation == 6:
+                        img = img.rotate(270, expand=True)
+                    elif orientation == 8:
+                        img = img.rotate(90, expand=True)
             
+            # 원본 크기 저장
+            original_width, original_height = img.size
+            logger.info(f"원본 이미지 크기: {original_width}x{original_height}")
+            
+            # 크기 조정이 필요한지 확인
+            if original_width > max_width or original_height > max_height:
+                # 비율 유지하면서 리사이징
+                img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+                logger.info(f"리사이징된 크기: {img.size}")
+            
+            # RGBA나 P 모드를 RGB로 변환 (JPEG 저장용)
             if img.mode in ('RGBA', 'P'):
-                img = img.convert('RGB')
+                # RGBA인 경우 흰색 배경과 합성
+                if img.mode == 'RGBA':
+                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    background.paste(img, mask=img.split()[-1])  # alpha 채널을 마스크로 사용
+                    img = background
+                else:
+                    img = img.convert('RGB')
             
-            img.save(file_path, format='JPEG', optimize=True, quality=85)
+            # 파일 확장자 확인
+            file_ext = os.path.splitext(file_path)[1].lower()
+            
+            if file_ext in ['.jpg', '.jpeg']:
+                # JPEG 최적화
+                img.save(file_path, format='JPEG', optimize=True, quality=quality)
+            elif file_ext == '.png':
+                # PNG 최적화 (품질 손실 없이)
+                img.save(file_path, format='PNG', optimize=True)
+            elif file_ext == '.gif':
+                # GIF는 그대로 유지 (애니메이션 보존)
+                pass
+            else:
+                # 기타 형식은 JPEG로 변환
+                new_file_path = os.path.splitext(file_path)[0] + '.jpg'
+                img.save(new_file_path, format='JPEG', optimize=True, quality=quality)
+                # 원본 파일 삭제하고 새 파일로 교체
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                os.rename(new_file_path, file_path)
+            
+            # 최적화 후 파일 크기 확인
+            final_size = os.path.getsize(file_path)
+            logger.info(f"최적화 완료 - 파일 크기: {final_size / 1024:.1f}KB")
             
     except Exception as e:
-        logger.warning(f"이미지 최적화 실패: {str(e)}")
+        logger.error(f"이미지 최적화 실패: {str(e)}")
+        raise e
+
 
 def allowed_file(filename):
     """허용되는 파일 확장자 검사"""
@@ -949,11 +1028,11 @@ def add_work():
                 # 이미지 파일 처리
                 image_path = None
                 if form.image.data:
-                    image_path = handle_image_upload(form.image.data)
+                    image_path = handle_image_upload(form.image.data, max_size_mb=20)  # 20MB까지 허용
                     if not image_path:
-                        flash('이미지 업로드에 실패했습니다.', 'error')
+                        flash('이미지 업로드에 실패했습니다. 파일 형식을 확인하거나 크기를 줄여주세요.', 'error')
                         return render_template('add_work.html', form=form, recent_works=get_recent_works())
-                
+                                
                 # 프로젝트 데이터 생성
                 project_data = {
                     'title': form.title.data.strip(),
@@ -1375,16 +1454,16 @@ def api_projects():
 # 개선된 에러 핸들러들
 @app.errorhandler(413)
 def file_too_large(error):
-    """파일 크기 초과 에러"""
+    """파일 크기 초과 에러 개선"""
     logger.warning(f"파일 크기 초과: {request.remote_addr}")
     
     if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({
             'success': False,
-            'message': '업로드 파일이 너무 큽니다. 16MB 이하의 파일을 업로드해주세요.'
+            'message': '업로드 파일이 너무 큽니다. 30MB 이하의 파일을 업로드해주세요. 큰 이미지는 자동으로 최적화됩니다.'
         }), 413
     
-    flash('업로드 파일이 너무 큽니다. 16MB 이하의 파일을 업로드해주세요.', 'error')
+    flash('업로드 파일이 너무 큽니다. 30MB 이하의 파일을 업로드해주세요.', 'error')
     return redirect(request.url or url_for('add_work'))
 
 @app.errorhandler(400)
