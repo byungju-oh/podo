@@ -90,7 +90,7 @@
                            <div class="post-stats">
                                <small class="text-muted">
                                    <i class="fas fa-eye me-1"></i>{{ post.view_count }}
-                                   <i class="fas fa-calendar ms-3 me-1"></i>{{ post.published_at.strftime('%Y.%m.%d') }}
+                                   
                                </small>
                            </div>
                        </div>
@@ -140,7 +140,7 @@
                                {{ post.category.name }}
                            </span>
                            {% endif %}
-                           <span class="text-muted ms-2">{{ post.published_at.strftime('%Y년 %m월 %d일') }}</span>
+                        
                        </div>
                        
                        <h5><a href="{{ url_for('learning_post_detail', slug=post.slug) }}" 

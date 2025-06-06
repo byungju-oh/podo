@@ -425,33 +425,47 @@ function handleContentImages(input) {
 }
 
 function createImagePreview(file, index) {
-   const reader = new FileReader();
-   const uploadedImagesDiv = document.getElementById('uploaded_images');
-   
-   reader.onload = function(e) {
-       const imageItem = document.createElement('div');
-       imageItem.className = 'uploaded-image-item';
-       imageItem.id = `image-item-${index}`;
-       
-       imageItem.innerHTML = `
-           <img src="${e.target.result}" alt="${file.name}">
-           <div class="image-actions">
-               <div class="image-link-display" id="link-${index}">업로드 중...</div>
-               <button type="button" class="btn btn-sm btn-outline-primary mt-1" 
-                       onclick="copyImageLink(${index})" id="copy-btn-${index}" disabled>
-                   <i class="fas fa-copy"></i> 링크 복사
-               </button>
-               <button type="button" class="btn btn-sm btn-outline-success mt-1" 
-                       onclick="insertImageToContent(${index})" id="insert-btn-${index}" disabled>
-                   <i class="fas fa-plus"></i> 본문 삽입
-               </button>
-           </div>
-       `;
-       
-       uploadedImagesDiv.appendChild(imageItem);
-   };
-   
-   reader.readAsDataURL(file);
+    const reader = new FileReader();
+    const uploadedImagesDiv = document.getElementById('uploaded_images');
+    
+    reader.onload = function(e) {
+        const imageItem = document.createElement('div');
+        imageItem.className = 'uploaded-image-item';
+        imageItem.id = `image-item-${index}`;
+        
+        imageItem.innerHTML = `
+            <img src="${e.target.result}" alt="${file.name}">
+            <div class="image-actions">
+                <div class="image-link-display" id="link-${index}">업로드 중...</div>
+                <div class="btn-group mt-1" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                            onclick="copyImageLink(${index})" id="copy-btn-${index}" disabled>
+                        <i class="fas fa-copy"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-success" 
+                            onclick="insertImageToContent(${index})" id="insert-btn-${index}" disabled>
+                        기본
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" 
+                            onclick="insertImageToContent(${index}, 'center')" id="center-btn-${index}" disabled>
+                        중앙
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" 
+                            onclick="insertImageToContent(${index}, 'left')" id="left-btn-${index}" disabled>
+                        좌측
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" 
+                            onclick="insertImageToContent(${index}, 'right')" id="right-btn-${index}" disabled>
+                        우측
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        uploadedImagesDiv.appendChild(imageItem);
+    };
+    
+    reader.readAsDataURL(file);
 }
 
 function uploadImage(file, index) {
@@ -466,15 +480,21 @@ function uploadImage(file, index) {
    .then(response => response.json())
    .then(data => {
        if (data.success) {
-           const linkDiv = document.getElementById(`link-${index}`);
-           const copyBtn = document.getElementById(`copy-btn-${index}`);
-           const insertBtn = document.getElementById(`insert-btn-${index}`);
-           
-           linkDiv.textContent = data.url;
-           linkDiv.dataset.url = data.url;
-           copyBtn.disabled = false;
-           insertBtn.disabled = false;
-       } else {
+        const linkDiv = document.getElementById(`link-${index}`);
+        const copyBtn = document.getElementById(`copy-btn-${index}`);
+        const insertBtn = document.getElementById(`insert-btn-${index}`);
+        const centerBtn = document.getElementById(`center-btn-${index}`);
+        const leftBtn = document.getElementById(`left-btn-${index}`);
+        const rightBtn = document.getElementById(`right-btn-${index}`);
+        
+        linkDiv.textContent = data.url;
+        linkDiv.dataset.url = data.url;
+        copyBtn.disabled = false;
+        insertBtn.disabled = false;
+        centerBtn.disabled = false;
+        leftBtn.disabled = false;
+        rightBtn.disabled = false;
+        } else {
            const linkDiv = document.getElementById(`link-${index}`);
            linkDiv.textContent = '업로드 실패: ' + data.message;
            linkDiv.style.color = '#dc3545';
@@ -507,38 +527,53 @@ function copyImageLink(index) {
    });
 }
 
-function insertImageToContent(index) {
-   const linkDiv = document.getElementById(`link-${index}`);
-   const url = linkDiv.dataset.url;
-   const insertBtn = document.getElementById(`insert-btn-${index}`);
-   
-   if (!url) return;
-   
-   const textarea = document.getElementById('content');
-   const imageMarkdown = `\n![이미지 설명](${url})\n`;
-   
-   // 현재 커서 위치에 삽입
-   const start = textarea.selectionStart;
-   const end = textarea.selectionEnd;
-   
-   textarea.value = textarea.value.substring(0, start) + imageMarkdown + textarea.value.substring(end);
-   
-   // 커서를 삽입된 텍스트 뒤로 이동
-   const newCursorPos = start + imageMarkdown.length;
-   textarea.setSelectionRange(newCursorPos, newCursorPos);
-   textarea.focus();
-   
-   autoResize(textarea);
-   
-   // 버튼 상태 변경
-   const originalHtml = insertBtn.innerHTML;
-   insertBtn.innerHTML = '<i class="fas fa-check"></i> 삽입됨';
-   insertBtn.classList.add('copy-success');
-   
-   setTimeout(() => {
-       insertBtn.innerHTML = originalHtml;
-       insertBtn.classList.remove('copy-success');
-   }, 2000);
+function insertImageToContent(index, alignment = 'default') {
+    const linkDiv = document.getElementById(`link-${index}`);
+    const url = linkDiv.dataset.url;
+    const insertBtn = document.getElementById(`insert-btn-${index}`);
+    
+    if (!url) return;
+    
+    const textarea = document.getElementById('content');
+    let imageMarkdown;
+    
+    // 정렬 옵션에 따라 마크다운 생성
+    switch(alignment) {
+        case 'center':
+            imageMarkdown = `\n<div style="text-align: center;">\n![이미지 설명](${url})\n</div>\n\n`;
+            break;
+        case 'left':
+            imageMarkdown = `\n<div style="float: left; margin: 0 15px 15px 0; max-width: 300px;">\n![이미지 설명](${url})\n</div>\n\n`;
+            break;
+        case 'right':
+            imageMarkdown = `\n<div style="float: right; margin: 0 0 15px 15px; max-width: 300px;">\n![이미지 설명](${url})\n</div>\n\n`;
+            break;
+        default:
+            imageMarkdown = `\n![이미지 설명](${url})\n\n`;
+    }
+    
+    // 현재 커서 위치에 삽입
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    
+    textarea.value = textarea.value.substring(0, start) + imageMarkdown + textarea.value.substring(end);
+    
+    // 커서를 삽입된 텍스트 뒤로 이동
+    const newCursorPos = start + imageMarkdown.length;
+    textarea.setSelectionRange(newCursorPos, newCursorPos);
+    textarea.focus();
+    
+    autoResize(textarea);
+    
+    // 버튼 상태 변경
+    const originalHtml = insertBtn.innerHTML;
+    insertBtn.innerHTML = '<i class="fas fa-check"></i> 삽입됨';
+    insertBtn.classList.add('copy-success');
+    
+    setTimeout(() => {
+        insertBtn.innerHTML = originalHtml;
+        insertBtn.classList.remove('copy-success');
+    }, 2000);
 }
 </script>
 {% endblock %}
