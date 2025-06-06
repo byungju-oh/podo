@@ -31,12 +31,26 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Configuration
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-change-this')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:1234@mysql:3306/portfolio')
+# Configuration - 환경변수로부터 설정 로드
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-secret-key-change-this')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 
+    f"mysql+pymysql://{os.environ.get('DB_USER', 'root')}:{os.environ.get('DB_PASSWORD', '1234')}@"
+    f"{os.environ.get('DB_HOST', 'mysql')}:{os.environ.get('DB_PORT', '3306')}/"
+    f"{os.environ.get('DB_NAME', 'portfolio')}")
+    
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['MAX_CONTENT_LENGTH'] = 30 * 1024 * 1024  # 30MB max file size
+app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('MAX_CONTENT_LENGTH', '31457280'))  # 30MB 기본값
+
+# 관리자 계정 설정
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@example.com')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
+
+
+
+
+
 
 # Initialize extensions
 db = SQLAlchemy(app)
@@ -464,27 +478,27 @@ def init_default_data():
             logger.info("Admin user created")
         
         default_tech_stacks = [
-            {'name': 'Python', 'category': 'language', 'icon_class': 'fab fa-python', 'color': '#3776ab', 'proficiency': 90, 'is_primary': True},
-            {'name': 'JavaScript', 'category': 'language', 'icon_class': 'fab fa-js-square', 'color': '#f7df1e', 'proficiency': 85, 'is_primary': True},
-            {'name': 'Java', 'category': 'language', 'icon_class': 'fab fa-java', 'color': '#ed8b00', 'proficiency': 80},
+            {'name': 'Python', 'category': 'language', 'icon_class': 'fab fa-python', 'color': '#3776ab', 'proficiency': 85, 'is_primary': True},
+            {'name': 'JavaScript', 'category': 'language', 'icon_class': 'fab fa-js-square', 'color': '#f7df1e', 'proficiency': 70, 'is_primary': True},
+            {'name': 'Java', 'category': 'language', 'icon_class': 'fab fa-java', 'color': '#ed8b00', 'proficiency': 65},
             
-            {'name': 'Django', 'category': 'framework', 'icon_class': 'fas fa-server', 'color': '#092e20', 'proficiency': 85},
-            {'name': 'Flask', 'category': 'framework', 'icon_class': 'fas fa-flask', 'color': '#000000', 'proficiency': 90},
-            {'name': 'React', 'category': 'framework', 'icon_class': 'fab fa-react', 'color': '#61dafb', 'proficiency': 80, 'is_primary': True},
+            {'name': 'Django', 'category': 'framework', 'icon_class': 'fas fa-server', 'color': '#092e20', 'proficiency': 80},
+            {'name': 'Flask', 'category': 'framework', 'icon_class': 'fas fa-flask', 'color': '#000000', 'proficiency': 85},
+            {'name': 'React', 'category': 'framework', 'icon_class': 'fab fa-react', 'color': '#61dafb', 'proficiency': 70, 'is_primary': True},
             
-            {'name': 'PostgreSQL', 'category': 'database', 'icon_class': 'fas fa-database', 'color': '#336791', 'proficiency': 85},
-            {'name': 'MySQL', 'category': 'database', 'icon_class': 'fas fa-database', 'color': '#4479a1', 'proficiency': 90},
-            {'name': 'Redis', 'category': 'database', 'icon_class': 'fas fa-memory', 'color': '#dc382d', 'proficiency': 85},
+            {'name': 'PostgreSQL', 'category': 'database', 'icon_class': 'fas fa-database', 'color': '#336791', 'proficiency': 50},
+            {'name': 'MySQL', 'category': 'database', 'icon_class': 'fas fa-database', 'color': '#4479a1', 'proficiency': 80},
+            {'name': 'Redis', 'category': 'database', 'icon_class': 'fas fa-memory', 'color': '#dc382d', 'proficiency': 60},
             {'name': 'AWS', 'category': 'cloud', 'icon_class': 'fab fa-aws', 'color': '#ff9900', 'proficiency': 85, 'is_primary': True},
             {'name': 'Google Cloud', 'category': 'cloud', 'icon_class': 'fab fa-google', 'color': '#4285f4', 'proficiency': 80},
             {'name': 'Azure', 'category': 'cloud', 'icon_class': 'fab fa-microsoft', 'color': '#0078d4', 'proficiency': 75},
-            {'name': 'Docker', 'category': 'devops', 'icon_class': 'fab fa-docker', 'color': '#2496ed', 'proficiency': 90, 'is_primary': True},
+            {'name': 'Docker', 'category': 'devops', 'icon_class': 'fab fa-docker', 'color': '#2496ed', 'proficiency': 80, 'is_primary': True},
             {'name': 'Kubernetes', 'category': 'devops', 'icon_class': 'fas fa-dharmachakra', 'color': '#326ce5', 'proficiency': 85, 'is_primary': True},
-            {'name': 'Jenkins', 'category': 'devops', 'icon_class': 'fas fa-tools', 'color': '#d33833', 'proficiency': 80},
-            {'name': 'Terraform', 'category': 'devops', 'icon_class': 'fas fa-layer-group', 'color': '#623ce4', 'proficiency': 85},
-            {'name': 'Pandas', 'category': 'data', 'icon_class': 'fas fa-chart-bar', 'color': '#150458', 'proficiency': 90},
-            {'name': 'NumPy', 'category': 'data', 'icon_class': 'fas fa-calculator', 'color': '#013243', 'proficiency': 85},
-            {'name': 'TensorFlow', 'category': 'ai', 'icon_class': 'fas fa-brain', 'color': '#ff6f00', 'proficiency': 80},
+            {'name': 'Jenkins', 'category': 'devops', 'icon_class': 'fas fa-tools', 'color': '#d33833', 'proficiency': 70},
+            {'name': 'Terraform', 'category': 'devops', 'icon_class': 'fas fa-layer-group', 'color': '#623ce4', 'proficiency': 70},
+            {'name': 'Pandas', 'category': 'data', 'icon_class': 'fas fa-chart-bar', 'color': '#150458', 'proficiency': 80},
+            {'name': 'NumPy', 'category': 'data', 'icon_class': 'fas fa-calculator', 'color': '#013243', 'proficiency': 80},
+            {'name': 'TensorFlow', 'category': 'ai', 'icon_class': 'fas fa-brain', 'color': '#ff6f00', 'proficiency': 70},
             {'name': 'PyTorch', 'category': 'ai', 'icon_class': 'fas fa-fire', 'color': '#ee4c2c', 'proficiency': 75},
         ]
         
@@ -505,14 +519,14 @@ def init_default_data():
             {
                 'name': 'Certified Kubernetes Administrator (CKA)',
                 'issuer': 'Linux Foundation',
-                'issue_date': date(2024, 8, 20),
+                'issue_date': date(2024, 6, 20),
                 'category': 'devops',
                 'is_featured': True
             },
             {
                 'name': '정보처리기사',
                 'issuer': '한국산업인력공단',
-                'issue_date': date(2022, 11, 25),
+                'issue_date': date(2024, 6, 18),
                 'category': 'general',
                 'is_featured': True
             }
