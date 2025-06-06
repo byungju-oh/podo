@@ -283,9 +283,9 @@
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button class="btn btn-outline-danger" 
-                                                    onclick="deleteWork({{ work.id }}, '{{ work.title }}')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+        onclick="deleteWork({{ work.id }}, '{{ work.title|replace("'", "\\'") }}')">
+    <i class="fas fa-trash"></i>
+</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -329,25 +329,11 @@
 
 
 
-                    <div class="d-grid gap-2">
-    <a href="{{ url_for('add_work') }}" class="btn btn-primary btn-sm">
-        <i class="fas fa-plus me-2"></i>새 작품 추가
-    </a>
     <!-- 새로 추가할 학습 블로그 버튼 -->
     <a href="{{ url_for('admin_learning') }}" class="btn btn-success btn-sm">
         <i class="fas fa-graduation-cap me-2"></i>학습 블로그 관리
     </a>
-    <button class="btn btn-success btn-sm" onclick="backupData()">
-        <i class="fas fa-download me-2"></i>데이터 백업
-    </button>
-    <a href="{{ url_for('index') }}" class="btn btn-info btn-sm" target="_blank">
-        <i class="fas fa-eye me-2"></i>사이트 미리보기
-    </a>
-    <button class="btn btn-warning btn-sm" onclick="clearCache()">
-        <i class="fas fa-sync me-2"></i>캐시 지우기
-    </button>
-</div>
-
+ 
 
 
                     <div class="d-grid gap-2">
@@ -487,19 +473,20 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title text-danger">
+                <h5 class="modal-title text-danger" id="deleteModalLabel">
                     <i class="fas fa-exclamation-triangle me-2"></i>작품 삭제
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p>정말로 이 작품을 삭제하시겠습니까?</p>
                 <div class="alert alert-warning">
-                    <i class="fas fa-warning me-2"></i>
+                    <i class="fas fa-exclamation-triangle me-2"></i>
                     <strong id="deleteWorkTitle"></strong> 작품이 영구적으로 삭제됩니다.
                 </div>
                 <p class="text-muted small">이 작업은 되돌릴 수 없습니다.</p>
@@ -513,6 +500,7 @@
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -595,32 +583,67 @@ function deleteWork(workId, workTitle) {
     new bootstrap.Modal(document.getElementById('deleteModal')).show();
 }
 
-// 삭제 확인
+// 삭제 확인 버튼 이벤트 - CSRF 토큰 포함
 document.getElementById('confirmDelete').addEventListener('click', function() {
     if (deleteWorkId) {
-        // 실제 구현에서는 서버로 DELETE 요청
+        const btn = this;
+        const originalText = btn.innerHTML;
+        
+        // 버튼 상태 변경
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>삭제 중...';
+        btn.disabled = true;
+        
+        // CSRF 토큰 가져오기
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+                         document.querySelector('input[name="csrf_token"]')?.value;
+        
+        // 삭제 요청
         fetch(`/admin/delete_work/${deleteWorkId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
-            }
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                csrf_token: csrfToken
+            })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
-                location.reload();
+                // 성공 알림
+                showNotification(data.message || '프로젝트가 삭제되었습니다.', 'success');
+                
+                // 모달 닫기
+                bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                
+                // 페이지 새로고침 또는 해당 행 제거
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
             } else {
-                alert('삭제에 실패했습니다: ' + data.message);
+                throw new Error(data.message || '삭제에 실패했습니다.');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('삭제 중 오류가 발생했습니다.');
+            console.error('Delete error:', error);
+            showNotification(error.message || '삭제 중 오류가 발생했습니다.', 'error');
+        })
+        .finally(() => {
+            // 버튼 상태 복원
+            btn.innerHTML = originalText;
+            btn.disabled = false;
         });
-        
-        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
     }
 });
+
+
 
 // 작품 수정 함수
 function editWork(workId) {
@@ -734,6 +757,74 @@ function updateTime() {
         timeElement.textContent = timeString;
     }
 }
+
+// 알림 표시 함수
+function showNotification(message, type = 'info') {
+    // 기존 알림 제거
+    const existingNotification = document.querySelector('.delete-notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const alertClass = type === 'error' ? 'alert-danger' : 
+                      type === 'success' ? 'alert-success' : 
+                      type === 'warning' ? 'alert-warning' : 'alert-info';
+    
+    const iconClass = type === 'error' ? 'fa-exclamation-triangle' : 
+                     type === 'success' ? 'fa-check-circle' : 
+                     type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+    
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} delete-notification alert-dismissible fade show`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        max-width: 500px;
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: all 0.3s ease;
+    `;
+    notification.innerHTML = `
+        <i class="fas ${iconClass} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // 애니메이션
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateY(0)';
+    }, 100);
+    
+    // 자동 제거
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 300);
+        }
+    }, 5000);
+}
+
+// 모달 닫힐 때 상태 초기화
+document.getElementById('deleteModal').addEventListener('hidden.bs.modal', function() {
+    deleteWorkId = null;
+    document.getElementById('deleteWorkTitle').textContent = '';
+    
+    // 버튼 상태 복원
+    const confirmBtn = document.getElementById('confirmDelete');
+    confirmBtn.innerHTML = '<i class="fas fa-trash me-1"></i>삭제하기';
+    confirmBtn.disabled = false;
+});
 
 setInterval(updateTime, 1000);
 </script>
