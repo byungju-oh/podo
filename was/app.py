@@ -1861,6 +1861,36 @@ def admin_learning_category_manage(category_id=None):
 
 # 디버그용 샘플 데이터 생성 라우트
 @app.route('/debug/create-sample-learning-data')
+def create_sample_learning_data():
+    """샘플 학습 데이터 생성"""
+    try:
+        if LearningCategory.query.count() == 0:
+            init_learning_default_data()
+            db.session.commit()
+        
+        programming_cat = LearningCategory.query.filter_by(name='Programming').first()
+        if programming_cat and LearningPost.query.count() == 0:
+            sample_post = LearningPost(
+                title='Python 기초 학습',
+                slug='python-basics-learning',
+                content='# Python 기초\n\nPython은 강력하고 배우기 쉬운 프로그래밍 언어입니다.',
+                summary='Python 프로그래밍 언어의 기초를 학습합니다.',
+                category_id=programming_cat.id,
+                tags='Python, Programming, Basics',
+                difficulty='beginner',
+                reading_time=5,
+                is_published=True,
+                published_at=datetime.utcnow()
+            )
+            db.session.add(sample_post)
+            db.session.commit()
+        
+        return True
+    except Exception as e:
+        logger.error(f"샘플 데이터 생성 실패: {e}")
+        db.session.rollback()
+        return False
+
 def debug_create_sample_data():
     """샘플 학습 데이터 생성 (디버그용)"""
     if not app.debug:
