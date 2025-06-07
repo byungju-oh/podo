@@ -115,15 +115,35 @@
 
     <!-- 메인 콘텐츠 -->
     <div class="row">
-        <!-- 프로젝트 이미지 및 미디어 -->
+         <!-- 프로젝트 이미지 및 미디어 -->
         <div class="col-lg-8 mb-4">
             {% if project.image_path %}
-            <div class="project-image-container mb-4">
-                <img src="{{ url_for('uploaded_file', filename=project.image_path) }}" 
-                     class="img-fluid rounded shadow-lg" 
-                     alt="{{ project.title }}"
-                     style="width: 100%; max-height: 500px; object-fit: cover;">
-            </div>
+                <!-- 🎨 아트워크인 경우: 원본 비율 유지하는 반응형 -->
+                {% if project.project_type == 'art' %}
+                <div class="artwork-image-container mb-4">
+                    <img src="{{ url_for('uploaded_file', filename=project.image_path) }}" 
+                         class="artwork-image"
+                         alt="{{ project.title }}"
+                         loading="lazy"
+                         onclick="showImageModal(this.src, '{{ project.title }}')">
+                    <div class="artwork-caption">
+                        <i class="fas fa-palette me-2"></i>{{ project.title }}
+                        {% if project.category %}
+                        - {{ project.category }}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- 💻 기술 프로젝트인 경우: 기존 고정 높이 유지 -->
+                {% else %}
+                <div class="project-image-container mb-4">
+                    <img src="{{ url_for('uploaded_file', filename=project.image_path) }}" 
+                         class="img-fluid rounded shadow-lg" 
+                         alt="{{ project.title }}"
+                         style="width: 100%; max-height: 500px; object-fit: cover;"
+                         onclick="showImageModal(this.src, '{{ project.title }}')">
+                </div>
+                {% endif %}
             {% endif %}
 
             <!-- 비디오 임베드 -->
@@ -428,14 +448,54 @@
     backdrop-filter: blur(10px);
 }
 
+/* 🎨 아트워크 전용 반응형 이미지 스타일 */
+.artwork-image-container {
+    width: 100%;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.artwork-image {
+    max-width: 100%;
+    max-height: 80vh; /* 화면 높이의 80% 제한 */
+    height: auto;
+    width: auto;
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    cursor: zoom-in;
+    transition: all 0.3s ease;
+}
+
+.artwork-image:hover {
+    transform: scale(1.02);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.image-caption {
+    margin-top: 1rem;
+    font-style: italic;
+    color: #6c757d;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* 💻 기술 프로젝트 기존 스타일 유지 */
 .project-image-container img {
     transition: transform 0.3s ease;
+    cursor: zoom-in;
 }
 
 .project-image-container img:hover {
     transform: scale(1.02);
 }
 
+/* 공통 스타일 */
+.no-image-placeholder {
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+}
 .card {
     border: none;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
@@ -498,7 +558,12 @@
 .info-item:last-child {
     border-bottom: none;
 }
-
+/* 반응형 조정 */
+@media (max-width: 768px) {
+    .artwork-image {
+        max-height: 60vh;
+        border-radius: 10px;
+    }}
 /* 반응형 디자인 */
 @media (max-width: 768px) {
     .project-header {
