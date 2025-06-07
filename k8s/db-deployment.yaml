@@ -75,7 +75,7 @@ spec:
           readOnlyRootFilesystem: false
           capabilities:
             drop: ["ALL"]
-            
+            add: ["CHOWN", "SETGID", "SETUID"]
         
         resources:
           requests:
