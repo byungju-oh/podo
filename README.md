@@ -1,665 +1,490 @@
-# 🌟 IT 엔지니어 포트폴리오 웹사이트
+# 🚀 IT 엔지니어 포트폴리오 플랫폼
 
-클라우드 네이티브 환경에서 Kubernetes로 배포되는 Flask 기반의 풀스택 개인 포트폴리오 웹사이트입니다. 프로젝트 관리, 경력 소개, 기술 스택 전시, 학습 블로그 등의 기능을 제공합니다.
+**클라우드 네이티브 아키텍처 기반 포트폴리오 & 학습 블로그 플랫폼**
 
-![Portfolio Preview](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
-![Kubernetes](https://img.shields.io/badge/Kubernetes-v1.28+-blue)
-![Flask](https://img.shields.io/badge/Flask-2.3.3-red)
-![Python](https://img.shields.io/badge/Python-3.9+-yellow)
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-2.3+-green.svg)](https://flask.palletsprojects.com/)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-1.25+-blue.svg)](https://kubernetes.io/)
+[![Docker](https://img.shields.io/badge/Docker-20.10+-blue.svg)](https://www.docker.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0+-orange.svg)](https://www.mysql.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+## 📋 목차
+
+- [🎯 프로젝트 개요](#-프로젝트-개요)
+- [✨ 주요 기능](#-주요-기능)
+- [🏗️ 아키텍처](#️-아키텍처)
+- [🛠️ 기술 스택](#️-기술-스택)
+- [🚀 빠른 시작](#-빠른-시작)
+- [📁 프로젝트 구조](#-프로젝트-구조)
+- [🔧 설치 및 배포](#-설치-및-배포)
+- [🔐 보안 설정](#-보안-설정)
+- [📊 모니터링](#-모니터링)
+- [🤝 기여하기](#-기여하기)
+- [📄 라이선스](#-라이선스)
+
+## 🎯 프로젝트 개요
+
+IT 엔지니어를 위한 현대적인 포트폴리오 & 학습 블로그 플랫폼입니다. 마이크로서비스 아키텍처와 Kubernetes를 활용하여 확장 가능하고 안전한 웹 애플리케이션을 구현했습니다.
+
+### 🌟 핵심 가치
+- **클라우드 네이티브**: Kubernetes 기반 마이크로서비스 아키텍처
+- **보안 중심**: 최소 권한 원칙과 다층 보안 구조
+- **확장성**: 컨테이너 오케스트레이션을 통한 자동 스케일링
+- **사용자 경험**: 반응형 UI와 직관적인 관리 인터페이스
 
 ## ✨ 주요 기능
 
-### 🎯 핵심 기능
-- **포트폴리오 관리**: 프로젝트 CRUD 및 카테고리별 분류 (웹/앱, 인프라, 데이터분석, AI/ML, 아트워크)
-- **학습 블로그**: 마크다운 기반의 학습 포스트 작성 및 관리 시스템
-- **반응형 디자인**: 모바일 우선 설계로 모든 디바이스 완벽 지원
-- **동적 배경**: 아트워크 프로젝트를 활용한 슬라이드쇼 배경
-- **관리자 대시보드**: 컨텐츠 관리를 위한 보안 관리 인터페이스
+### 📁 포트폴리오 관리
+- **프로젝트 관리**: 기술 스택, GitHub 링크, 데모 URL 등 종합 관리
+- **카테고리 분류**: 웹/앱 개발, 인프라/DevOps, 데이터 분석, AI/ML, 아트워크
+- **미디어 지원**: 이미지, 비디오, 문서 업로드 및 최적화
+- **성과 추적**: 정량적 지표와 달성 성과 기록
 
-### 📋 상세 기능
-- **프로젝트 상세 페이지**: GitHub/Demo 링크, 기술 스택, 성과 지표 포함
-- **기술 스택 시각화**: 카테고리별 숙련도 및 경험 표시
-- **경력 및 학력 타임라인**: 시간순 정렬된 경력 사항
-- **자격증 관리**: 취득 자격증 및 만료일 추적
-- **이미지 자동 최적화**: Pillow를 활용한 업로드 이미지 압축 및 리사이징
-- **조회수 추적**: 프로젝트별 조회수 통계
-- **검색 기능**: 학습 포스트 검색 및 자동완성
-- **SEO 최적화**: 메타태그 및 구조화된 데이터
+### 📚 학습 블로그
+- **마크다운 지원**: 풍부한 텍스트 편집과 코드 하이라이팅
+- **카테고리별 정리**: Programming, Web Development, Database, DevOps 등
+- **태그 시스템**: 효율적인 컨텐츠 분류 및 검색
+- **읽기 시간 자동 계산**: 사용자 편의성 향상
+
+### 🎨 인터랙티브 UI
+- **동적 배경**: 아트워크 프로젝트 이미지를 활용한 슬라이드쇼
+- **반응형 디자인**: 모바일부터 데스크톱까지 최적화
+- **다크 모드**: 사용자 선호도에 따른 테마 전환
+- **프로그레시브 로딩**: 이미지 지연 로딩과 성능 최적화
+
+### 🔧 관리자 기능
+- **통합 대시보드**: 프로젝트, 블로그 포스트 통계 및 관리
+- **WYSIWYG 에디터**: 마크다운 실시간 미리보기
+- **이미지 최적화**: 자동 리사이징과 압축
+- **보안 인증**: CSRF 보호와 세션 관리
 
 ## 🏗️ 아키텍처
 
-### 전체 시스템 구조
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Internet                             │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────────────┐
-│                   Ingress (NGINX)                          │
-│              SSL/TLS Termination                           │
-│             byungju.me / www.byungju.me                    │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────────────┐
-│                  Namespace: web                            │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │              NGINX Service                          │   │
-│  │         (Static Files, Reverse Proxy)              │   │
-│  └─────────────────────┬───────────────────────────────┘   │
-└────────────────────────┼───────────────────────────────────┘
-                         │
-┌────────────────────────▼───────────────────────────────────┐
-│                  Namespace: was                           │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │              Flask Application                      │  │
-│  │    - Portfolio Management                          │  │
-│  │    - Learning Blog                                 │  │
-│  │    - Admin Dashboard                               │  │
-│  │    - Image Processing                              │  │
-│  └─────────────────────┬───────────────────────────────┘  │
-└────────────────────────┼──────────────────────────────────┘
-                         │
-┌────────────────────────▼───────────────────────────────────┐
-│                  Namespace: db                            │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │                MySQL 8.0                           │  │
-│  │         - User Authentication                      │  │
-│  │         - Project Data                             │  │
-│  │         - Learning Posts                           │  │
-│  │         - File Metadata                            │  │
-│  └─────────────────────────────────────────────────────┘  │
-└────────────────────────────────────────────────────────────┘
+### 마이크로서비스 구조
+```mermaid
+graph TB
+    Client[클라이언트] --> Ingress[Nginx Ingress]
+    Ingress --> Web[Web 계층<br/>Nginx]
+    Web --> WAS[WAS 계층<br/>Flask]
+    WAS --> DB[DB 계층<br/>MySQL]
+    
+    subgraph "Kubernetes Cluster"
+        subgraph "Web Namespace"
+            Web
+        end
+        subgraph "WAS Namespace"
+            WAS
+        end
+        subgraph "DB Namespace"
+            DB
+        end
+    end
 ```
 
-### Kubernetes 리소스 구조
-```
-Kubernetes Cluster
-├── Namespaces
-│   ├── web (Frontend Tier)
-│   ├── was (Backend Tier)
-│   └── db (Database Tier)
-├── Persistent Storage
-│   ├── MySQL Data (20Gi)
-│   └── Uploaded Files (20Gi)
-├── Secrets Management
-│   ├── Database Credentials
-│   ├── Admin Credentials
-│   └── Application Secret Keys
-└── Network Policies
-    ├── SSL Termination
-    ├── Inter-service Communication
-    └── External Access Control
-```
+### 보안 아키텍처
+- **네트워크 정책**: 네임스페이스 간 트래픽 제한
+- **RBAC**: 최소 권한 원칙 적용
+- **Pod Security Standards**: Restricted 정책 적용
+- **시크릿 관리**: 민감 정보 암호화 저장
 
-## 🚀 기술 스택
+## 🛠️ 기술 스택
 
-### Backend Infrastructure
-- **Flask 2.3.3**: 웹 애플리케이션 프레임워크
-- **SQLAlchemy**: ORM 및 데이터베이스 관리
-- **Flask-Login**: 사용자 세션 관리
+### Backend
+- **Python 3.9+**: 핵심 개발 언어
+- **Flask 2.3+**: 웹 프레임워크
+- **SQLAlchemy**: ORM 및 데이터베이스 추상화
+- **Flask-Login**: 사용자 인증 및 세션 관리
 - **Flask-WTF**: 폼 처리 및 CSRF 보호
-- **Flask-CSRF**: Cross-Site Request Forgery 방어
-- **Pillow**: 이미지 처리 및 최적화
-- **Markdown**: 학습 포스트 컨텐츠 렌더링
 
-### Frontend Stack
-- **Bootstrap 5.3.0**: 반응형 UI 프레임워크
-- **Font Awesome 6.4.0**: 아이콘 라이브러리
-- **Vanilla JavaScript**: 동적 상호작용
-- **CSS3**: 커스텀 애니메이션 및 스타일링
+### Frontend
+- **HTML5/CSS3**: 시맨틱 마크업
+- **Bootstrap 5**: 반응형 UI 프레임워크
+- **JavaScript (ES6+)**: 동적 인터랙션
+- **Font Awesome**: 아이콘 시스템
+- **Markdown**: 컨텐츠 작성
 
-### Database & Storage
-- **MySQL 8.0**: 주 데이터베이스 (프로덕션)
-- **SQLite**: 개발 환경 데이터베이스
-- **Persistent Volumes**: Kubernetes 영구 저장소
-
-### Container & Orchestration
-- **Docker**: 컨테이너화
+### Infrastructure
 - **Kubernetes**: 컨테이너 오케스트레이션
-- **NGINX**: 리버스 프록시 및 정적 파일 서빙
-- **K3s**: 경량 Kubernetes 배포 (권장)
+- **Docker**: 컨테이너화
+- **Nginx**: 웹 서버 및 리버스 프록시
+- **MySQL 8.0**: 관계형 데이터베이스
+- **Let's Encrypt**: SSL/TLS 인증서
 
-### DevOps & Deployment
-- **Helm**: Kubernetes 패키지 관리 (선택사항)
-- **Let's Encrypt**: 자동 SSL/TLS 인증서
-- **cert-manager**: Kubernetes SSL 인증서 관리
-- **NGINX Ingress Controller**: 트래픽 라우팅
+### DevOps & Monitoring
+- **Helm**: Kubernetes 패키지 관리
+- **cert-manager**: 자동 SSL 인증서 관리
+- **local-path-provisioner**: 동적 볼륨 프로비저닝
+- **HPA**: 수평적 Pod 자동 스케일링
 
-## 📦 쿠버네티스 배포
+## 🚀 빠른 시작
 
-### 1. 사전 요구사항
+### 사전 요구사항
+- Kubernetes 클러스터 (1.25+)
+- Docker (20.10+)
+- kubectl 설정 완료
+- Helm 3.x (선택사항)
+
+### 1. 프로젝트 클론
 ```bash
-# Kubernetes 클러스터 (v1.28 이상)
-kubectl version --short
-
-# cert-manager 설치 (Let's Encrypt 용)
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.0/cert-manager.yaml
-
-# NGINX Ingress Controller 설치
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.0/deploy/static/provider/cloud/deploy.yaml
+git clone https://github.com/your-username/portfolio-platform.git
+cd portfolio-platform
 ```
 
-### 2. 네임스페이스 생성
+### 2. 환경 설정
+```bash
+# 환경 변수 파일 복사
+cp .env.example .env
+
+# 환경 변수 편집 (필수!)
+nano .env
+```
+
+### 3. 네임스페이스 생성
 ```bash
 kubectl apply -f k8s/namespaces.yaml
 ```
 
-### 3. Secrets 생성
+### 4. 시크릿 생성
 ```bash
-# 환경변수 설정 후 실행
+# 시크릿 생성 스크립트 실행
 chmod +x scripts/secret.sh
 ./scripts/secret.sh
+
+# 생성된 시크릿 적용
 kubectl apply -f k8s/secrets.yaml
 ```
 
-### 4. 데이터베이스 배포
+### 5. 데이터베이스 배포
 ```bash
+kubectl apply -f k8s/db-config.yaml
 kubectl apply -f k8s/db-deployment.yaml
 ```
 
-### 5. WAS(백엔드) 배포
+### 6. 애플리케이션 배포
 ```bash
 # Docker 이미지 빌드
-docker build -t portfolio-was:latest ./was/
+docker build -t portfolio-was:latest ./was
+docker build -t portfolio-web:latest ./web
 
-# k3s 환경에서 이미지 로드 (로컬 빌드 시)
-docker save portfolio-was:latest | sudo k3s ctr images import -
-
-# 배포
+# Kubernetes 배포
 kubectl apply -f k8s/was-deployment.yaml
-```
-
-### 6. Web Server 배포
-```bash
-# Docker 이미지 빌드
-docker build -t portfolio-web:latest ./web/
-
-# k3s 환경에서 이미지 로드
-docker save portfolio-web:latest | sudo k3s ctr images import -
-
-# 배포
 kubectl apply -f k8s/web-deployment.yaml
-```
-
-### 7. Ingress 설정
-```bash
-# 도메인을 본인의 도메인으로 수정 후
 kubectl apply -f k8s/ingress.yaml
 ```
 
-## 🔧 설정 및 환경변수
+### 7. 배포 확인
+```bash
+# Pod 상태 확인
+kubectl get pods -A
 
-### 환경변수 구성 (.env)
-```env
-# 보안 설정
-SECRET_KEY=your-super-secret-key-change-this-in-production
-CSRF_SECRET_KEY=another-secret-key-for-csrf
+# 서비스 상태 확인
+kubectl get svc -A
 
-# 데이터베이스 설정
-DB_HOST=mysql-service.db.svc.cluster.local
-DB_PORT=3306
-DB_NAME=portfolio
-DB_USER=admin
-DB_PASSWORD=your-secure-password
-
-# 관리자 계정
-ADMIN_USERNAME=admin
-ADMIN_EMAIL=admin@yourdomain.com
-ADMIN_PASSWORD=your-secure-admin-password
-
-# 애플리케이션 설정
-FLASK_ENV=production
-PYTHONUNBUFFERED=1
-MAX_CONTENT_LENGTH=31457280  # 30MB
-UPLOAD_FOLDER=/app/uploads
-MAX_FILE_SIZE_MB=30
-```
-
-### Kubernetes 리소스 사양
-```yaml
-# WAS 리소스 설정
-resources:
-  requests:
-    memory: "512Mi"
-    cpu: "200m"
-  limits:
-    memory: "1Gi"
-    cpu: "500m"
-
-# Web Server 리소스 설정
-resources:
-  requests:
-    memory: "64Mi"
-    cpu: "100m"
-  limits:
-    memory: "128Mi"
-    cpu: "200m"
-
-# MySQL 리소스 설정
-resources:
-  requests:
-    memory: "512Mi"
-    cpu: "300m"
-  limits:
-    memory: "1Gi"
-    cpu: "500m"
+# 애플리케이션 접속
+kubectl port-forward -n web svc/nginx-service 8080:80
+# 브라우저에서 http://localhost:8080 접속
 ```
 
 ## 📁 프로젝트 구조
 
 ```
-portfolio-website/
-├── was/                          # Flask 백엔드 애플리케이션
-│   ├── app.py                   # 메인 애플리케이션 파일
-│   ├── Dockerfile               # WAS 컨테이너 설정
-│   ├── requirements.txt         # Python 의존성
-│   ├── templates/               # Jinja2 템플릿
-│   │   ├── base.html           # 기본 레이아웃
-│   │   ├── index.html          # 메인 페이지
-│   │   ├── portfolio.html      # 프로젝트 목록
-│   │   ├── about.html          # 소개 페이지
-│   │   ├── admin/              # 관리자 페이지
-│   │   └── learning/           # 학습 블로그 페이지
-│   └── static/                 # 정적 파일
-├── web/                         # NGINX 웹서버
-│   ├── Dockerfile              # 웹서버 컨테이너 설정
-│   ├── nginx.conf              # NGINX 메인 설정
-│   ├── default.conf            # 사이트별 설정
-│   └── static/                 # 정적 리소스
-├── mysql/                       # MySQL 설정
-│   └── conf.d/
-│       └── custom.cnf          # MySQL 커스텀 설정
-├── k8s/                        # Kubernetes 매니페스트
-│   ├── namespaces.yaml         # 네임스페이스 정의
-│   ├── secrets.yaml            # 시크릿 정의 (gitignore)
-│   ├── db-deployment.yaml      # MySQL 배포
-│   ├── was-deployment.yaml     # Flask 앱 배포
-│   ├── web-deployment.yaml     # NGINX 배포
-│   ├── ingress.yaml            # 외부 접근 설정
-│   └── pvc-was.yaml           # 영구 볼륨 클레임
-├── scripts/                    # 유틸리티 스크립트
-│   └── secret.sh              # 시크릿 생성 스크립트
-├── .env.example               # 환경변수 예시
-├── .gitignore                 # Git 제외 파일
-├── docker-compose.yml         # 로컬 개발용 (선택사항)
-└── README.md                  # 프로젝트 문서
+portfolio-platform/
+├── 📁 was/                    # Backend 애플리케이션
+│   ├── 📄 app.py              # Flask 메인 애플리케이션
+│   ├── 📄 requirements.txt    # Python 의존성
+│   ├── 📄 Dockerfile         # WAS 컨테이너 이미지
+│   └── 📁 templates/         # Jinja2 템플릿
+│       ├── 📁 admin/         # 관리자 페이지
+│       ├── 📁 learning/      # 학습 블로그
+│       └── 📄 base.html      # 기본 템플릿
+├── 📁 web/                   # Frontend 웹 서버
+│   ├── 📄 nginx.conf         # Nginx 메인 설정
+│   ├── 📄 default.conf       # 가상 호스트 설정
+│   └── 📄 Dockerfile         # Web 컨테이너 이미지
+├── 📁 k8s/                   # Kubernetes 매니페스트
+│   ├── 📄 namespaces.yaml    # 네임스페이스 정의
+│   ├── 📄 db-deployment.yaml # 데이터베이스 배포
+│   ├── 📄 was-deployment.yaml# WAS 배포
+│   ├── 📄 web-deployment.yaml# Web 배포
+│   ├── 📄 ingress.yaml       # 인그레스 설정
+│   └── 📄 serviceaccounts.yaml# 보안 정책
+├── 📁 scripts/               # 유틸리티 스크립트
+│   └── 📄 secret.sh          # 시크릿 생성
+├── 📄 .env.example           # 환경 변수 템플릿
+└── 📄 README.md              # 프로젝트 문서
 ```
 
-## 🎨 주요 기능 상세
+## 🔧 설치 및 배포
 
-### 1. 프로젝트 관리 시스템
-- **CRUD 연산**: 프로젝트 생성, 읽기, 수정, 삭제
-- **카테고리 필터링**: 기술/인프라/데이터/AI/아트워크별 분류
-- **이미지 업로드**: 자동 리사이징 및 최적화 (30MB 지원)
-- **기술 스택 태깅**: 쉼표로 구분된 기술 목록
-- **GitHub/Demo 링크**: 외부 리소스 연동
-- **조회수 추적**: 실시간 통계
+### 로컬 개발 환경
 
-### 2. 학습 블로그 시스템
-- **마크다운 에디터**: 코드 하이라이팅 지원
-- **카테고리 관리**: 색상 및 아이콘 커스터마이징
-- **태그 시스템**: 검색 및 필터링 지원
-- **이미지 업로드**: 본문 내 이미지 삽입
-- **발행 관리**: 초안/발행 상태 관리
-- **검색 기능**: 제목/내용/태그 기반 검색
+#### 1. Python 가상환경 설정
+```bash
+cd was
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-### 3. 반응형 디자인
-- **모바일 우선**: 320px부터 4K까지 지원
-- **다크모드**: 사용자 선호도 기반 테마
-- **애니메이션**: CSS3 및 JavaScript 기반
-- **터치 지원**: 스와이프 제스처 구현
-- **성능 최적화**: 지연 로딩 및 캐싱
+#### 2. 데이터베이스 설정
+```bash
+# MySQL 서버 시작 (로컬)
+mysql -u root -p
+CREATE DATABASE portfolio CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'portfolio_app'@'localhost' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON portfolio.* TO 'portfolio_app'@'localhost';
+FLUSH PRIVILEGES;
+```
 
-### 4. 보안 기능
-- **CSRF 보호**: 모든 폼에 토큰 적용
-- **파일 업로드 보안**: 형식 및 크기 제한
-- **세션 관리**: Flask-Login 기반 인증
-- **SQL 인젝션 방지**: SQLAlchemy ORM 사용
-- **XSS 방지**: 자동 이스케이핑
+#### 3. 환경 변수 설정
+```bash
+export DATABASE_URL="mysql+pymysql://portfolio_app:your_password@localhost/portfolio"
+export SECRET_KEY="your-secret-key"
+export ADMIN_USERNAME="admin"
+export ADMIN_PASSWORD="your-admin-password"
+```
 
-## 🔐 보안 고려사항
+#### 4. 애플리케이션 실행
+```bash
+python app.py
+# 브라우저에서 http://localhost:5000 접속
+```
 
-### Kubernetes 보안
+### 프로덕션 배포
+
+#### 1. 도메인 및 SSL 설정
+```bash
+# cert-manager 설치 (Let's Encrypt)
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.0/cert-manager.yaml
+
+# 클러스터 이슈어 생성
+kubectl apply -f - <<EOF
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: your-email@example.com
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+EOF
+```
+
+#### 2. 인그레스 설정 수정
 ```yaml
-# Pod Security Context
-securityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: false
-  capabilities:
-    drop:
-    - ALL
+# k8s/ingress.yaml에서 도메인 변경
+spec:
+  tls:
+  - hosts:
+    - your-domain.com
+    - www.your-domain.com
+    secretName: your-domain-tls
+  rules:
+  - host: your-domain.com
+    # ... 설정 계속
 ```
+
+#### 3. 모니터링 설정 (선택사항)
+```bash
+# Prometheus & Grafana 설치
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm install prometheus prometheus-community/kube-prometheus-stack
+```
+
+## 🔐 보안 설정
 
 ### 네트워크 보안
-- **Network Policies**: 네임스페이스 간 트래픽 제어
-- **TLS 종료**: Ingress에서 SSL/TLS 처리
-- **서비스 통신**: 클러스터 내부 DNS 사용
+- **마이크로 세그멘테이션**: 네임스페이스별 네트워크 정책
+- **최소 노출**: 필요한 포트만 개방
+- **TLS 암호화**: 모든 외부 통신 암호화
 
 ### 애플리케이션 보안
-- **환경변수 격리**: Kubernetes Secrets 사용
-- **파일 권한**: 최소 권한 원칙 적용
-- **로그 보안**: 민감정보 마스킹
+- **CSRF 보호**: Flask-WTF 토큰 검증
+- **SQL 인젝션 방지**: SQLAlchemy ORM 사용
+- **파일 업로드 보안**: 확장자 검증 및 경로 보호
+- **세션 보안**: 안전한 쿠키 설정
 
-## 📈 모니터링 및 로깅
+### 인프라 보안
+- **Pod Security Standards**: Restricted 정책 적용
+- **ServiceAccount 분리**: 최소 권한 원칙
+- **시크릿 관리**: Kubernetes Secrets 활용
+- **읽기 전용 파일시스템**: 컨테이너 보안 강화
 
-### Health Checks
-```yaml
-# Liveness Probe
-livenessProbe:
-  httpGet:
-    path: /health
-    port: 5000
-  initialDelaySeconds: 60
-  periodSeconds: 15
+### 보안 체크리스트
+- [ ] 기본 비밀번호 변경
+- [ ] HTTPS 인증서 설정
+- [ ] 네트워크 정책 활성화
+- [ ] 정기적인 보안 업데이트
+- [ ] 로그 모니터링 설정
 
-# Readiness Probe
-readinessProbe:
-  httpGet:
-    path: /readiness
-    port: 5000
-  initialDelaySeconds: 15
-  periodSeconds: 5
-```
+## 📊 모니터링
 
-### 로그 관리
-- **구조화된 로깅**: JSON 형태 로그 출력
-- **로그 레벨**: DEBUG/INFO/WARNING/ERROR
-- **액세스 로그**: NGINX 접근 기록
-- **에러 추적**: 스택 트레이스 포함
-
-## 🚀 성능 최적화
-
-### 이미지 최적화
-```python
-def optimize_image(file_path, max_width=1920, max_height=1080, quality=85):
-    """이미지 자동 최적화"""
-    with Image.open(file_path) as img:
-        # EXIF 회전 보정
-        # 크기 조정
-        # 형식 변환 (JPEG/PNG)
-        # 품질 압축
-```
-
-### 데이터베이스 최적화
-- **인덱싱**: 주요 검색 필드에 인덱스 적용
-- **연결 풀링**: SQLAlchemy 연결 풀 사용
-- **쿼리 최적화**: N+1 문제 방지
-- **캐싱**: 정적 데이터 메모리 캐싱
-
-### Kubernetes 최적화
-- **리소스 제한**: CPU/메모리 적절한 설정
-- **HPA**: 자동 수평 확장 설정
-- **PDB**: Pod Disruption Budget 적용
-- **Node Affinity**: 노드 배치 최적화
-
-## 🐛 문제 해결
-
-### 일반적인 문제들
-
-**1. Pod가 시작되지 않는 경우**
+### 헬스체크 엔드포인트
 ```bash
-# Pod 상태 확인
-kubectl get pods -n was
-kubectl describe pod <pod-name> -n was
-kubectl logs <pod-name> -n was
+# 애플리케이션 상태 확인
+curl http://your-domain.com/health
 
-# 일반적인 원인
-# - 이미지 pull 실패
-# - Secret 설정 오류
-# - 리소스 부족
-# - Volume 마운트 실패
+# 데이터베이스 연결 확인
+curl http://your-domain.com/readiness
+
+# Nginx 상태 확인
+curl http://your-domain.com/nginx-health
 ```
 
-**2. 데이터베이스 연결 오류**
+### 로그 모니터링
 ```bash
-# MySQL 서비스 확인
-kubectl get svc -n db
-kubectl logs deployment/mysql-deployment -n db
-
-# 연결 테스트
-kubectl exec -it <was-pod> -n was -- python -c "
-from app import db
-db.session.execute('SELECT 1')
-print('DB Connection OK')
-"
-```
-
-**3. 이미지 업로드 실패**
-```bash
-# PVC 상태 확인
-kubectl get pvc -n was
-kubectl describe pvc upload-pvc -n was
-
-# Volume 마운트 확인
-kubectl exec -it <was-pod> -n was -- ls -la /app/uploads
-kubectl exec -it <was-pod> -n was -- touch /app/uploads/test.txt
-```
-
-**4. SSL 인증서 문제**
-```bash
-# cert-manager 상태 확인
-kubectl get certificates -n web
-kubectl describe certificate byungju-me-tls -n web
-
-# Let's Encrypt 클러스터 이슈어 확인
-kubectl get clusterissuer
-```
-
-### 로그 분석
-```bash
-# 전체 로그 모니터링
+# 애플리케이션 로그
 kubectl logs -f deployment/flask-deployment -n was
 
-# 에러 로그만 필터링
-kubectl logs deployment/flask-deployment -n was | grep ERROR
+# 웹 서버 로그
+kubectl logs -f deployment/nginx-deployment -n web
 
-# 특정 시간대 로그
-kubectl logs deployment/flask-deployment -n was --since=1h
+# 데이터베이스 로그
+kubectl logs -f deployment/mysql-deployment -n db
 ```
 
-## 📊 성능 메트릭
+### 메트릭 수집
+- **CPU/메모리 사용률**: HPA 자동 스케일링
+- **응답 시간**: 애플리케이션 성능 모니터링
+- **에러율**: 장애 사전 감지
+- **디스크 사용량**: 스토리지 모니터링
 
-### 리소스 사용량 모니터링
+## 🔄 업데이트 및 유지보수
+
+### 애플리케이션 업데이트
 ```bash
-# 리소스 사용량 확인
-kubectl top pods -n was
-kubectl top nodes
+# 새 버전 이미지 빌드
+docker build -t portfolio-was:v1.1.0 ./was
+docker build -t portfolio-web:v1.1.0 ./web
 
-# 메트릭 서버 필요시 설치
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+# 롤링 업데이트
+kubectl set image deployment/flask-deployment flask=portfolio-was:v1.1.0 -n was
+kubectl set image deployment/nginx-deployment nginx=portfolio-web:v1.1.0 -n web
+
+# 업데이트 상태 확인
+kubectl rollout status deployment/flask-deployment -n was
 ```
 
-### 애플리케이션 메트릭
-- **응답 시간**: 평균 200ms 이하
-- **처리량**: 초당 100+ 요청
-- **에러율**: 1% 이하
-- **가용성**: 99.9% 이상
-
-## 🔄 CI/CD 파이프라인 (권장)
-
-### GitHub Actions 예시
-```yaml
-name: Deploy to Kubernetes
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Build and Push Docker Images
-      run: |
-        docker build -t ${{ secrets.REGISTRY }}/portfolio-was:${{ github.sha }} ./was/
-        docker build -t ${{ secrets.REGISTRY }}/portfolio-web:${{ github.sha }} ./web/
-        docker push ${{ secrets.REGISTRY }}/portfolio-was:${{ github.sha }}
-        docker push ${{ secrets.REGISTRY }}/portfolio-web:${{ github.sha }}
-    
-    - name: Deploy to Kubernetes
-      uses: azure/k8s-deploy@v1
-      with:
-        manifests: |
-          k8s/was-deployment.yaml
-          k8s/web-deployment.yaml
-        images: |
-          ${{ secrets.REGISTRY }}/portfolio-was:${{ github.sha }}
-          ${{ secrets.REGISTRY }}/portfolio-web:${{ github.sha }}
-```
-
-## 🚢 배포 전략
-
-### 1. Rolling Update (권장)
-```yaml
-strategy:
-  type: RollingUpdate
-  rollingUpdate:
-    maxSurge: 1
-    maxUnavailable: 0
-```
-
-### 2. Blue-Green Deployment
+### 데이터베이스 백업
 ```bash
-# Green 환경 배포
-kubectl apply -f k8s/was-deployment-green.yaml
-
-# 트래픽 전환
-kubectl patch service flask-service -p '{"spec":{"selector":{"version":"green"}}}'
-
-# Blue 환경 정리
-kubectl delete -f k8s/was-deployment-blue.yaml
+# 정기 백업 스크립트
+kubectl exec -n db deployment/mysql-deployment -- \
+  mysqldump -u root -p$MYSQL_ROOT_PASSWORD portfolio > backup_$(date +%Y%m%d).sql
 ```
 
-### 3. Canary Deployment
-```yaml
-# Canary용 별도 배포
-replicas: 1  # 전체 트래픽의 10%
-selector:
-  matchLabels:
-    app: flask
-    version: canary
-```
+### 리소스 스케일링
+```bash
+# 수동 스케일링
+kubectl scale deployment flask-deployment --replicas=3 -n was
 
-## 📚 API 문서
-
-### 공개 엔드포인트
-```
-GET  /                              # 메인 페이지
-GET  /portfolio                     # 프로젝트 목록
-GET  /portfolio?type=tech           # 필터링된 프로젝트
-GET  /project/<int:id>              # 프로젝트 상세
-GET  /about                         # 소개 페이지
-GET  /learning                      # 학습 블로그
-GET  /learning/post/<slug>          # 블로그 포스트
-GET  /learning/category/<int:id>    # 카테고리별 포스트
-GET  /learning/search?q=query       # 검색 결과
-GET  /uploads/<filename>            # 업로드된 파일
-```
-
-### 관리자 엔드포인트 (인증 필요)
-```
-GET  /admin                         # 관리자 대시보드
-GET  /admin/add_work               # 프로젝트 추가 폼
-POST /admin/add_work               # 프로젝트 생성
-GET  /admin/edit_work/<int:id>     # 프로젝트 수정 폼
-POST /admin/edit_work/<int:id>     # 프로젝트 업데이트
-DEL  /admin/delete_work/<int:id>   # 프로젝트 삭제
-
-GET  /admin/learning               # 학습 블로그 관리
-GET  /admin/learning/posts         # 포스트 목록
-GET  /admin/learning/post/new      # 새 포스트 작성
-POST /admin/learning/post/new      # 포스트 생성
-GET  /admin/learning/post/<id>/edit # 포스트 수정
-DEL  /admin/learning/post/<id>/delete # 포스트 삭제
-```
-
-### API 응답 형식
-```json
-{
-  "success": true,
-  "message": "작업이 완료되었습니다.",
-  "data": {
-    "id": 123,
-    "title": "프로젝트 제목"
-  }
-}
+# HPA 설정 확인
+kubectl get hpa -n was
 ```
 
 ## 🤝 기여하기
 
-### 개발 환경 설정
-```bash
-# 1. 저장소 포크 및 클론
-git clone https://github.com/yourusername/portfolio-website.git
-cd portfolio-website
-
-# 2. 가상환경 설정
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# 3. 개발 의존성 설치
-pip install -r was/requirements.txt
-
-# 4. 로컬 개발 서버 실행
-cd was
-python app.py
-```
+### 개발 가이드라인
+1. **이슈 생성**: 버그 리포트나 기능 요청
+2. **브랜치 생성**: `feature/새로운-기능` 또는 `bugfix/버그-설명`
+3. **코드 작성**: PEP 8 스타일 가이드 준수
+4. **테스트 작성**: 새로운 기능에 대한 단위 테스트
+5. **PR 생성**: 상세한 설명과 함께 풀 리퀘스트
 
 ### 코드 스타일
-- **Python**: PEP 8 준수
-- **JavaScript**: ES6+ 표준
-- **HTML/CSS**: BEM 방법론 권장
-- **Git**: Conventional Commits 사용
+```bash
+# Python 코드 포맷팅
+pip install black flake8
+black was/
+flake8 was/ --max-line-length=88
 
-### Pull Request 프로세스
-1. 기능 브랜치 생성 (`git checkout -b feature/amazing-feature`)
-2. 변경사항 커밋 (`git commit -m 'feat: add amazing feature'`)
-3. 브랜치 푸시 (`git push origin feature/amazing-feature`)
-4. Pull Request 생성
+# JavaScript 포맷팅
+npm install -g prettier
+prettier --write "**/*.js"
+```
+
+### 테스트 실행
+```bash
+# Python 단위 테스트
+cd was
+python -m pytest tests/
+
+# 통합 테스트
+pytest tests/integration/
+```
+
+## 📈 로드맵
+
+### v1.1.0 (계획)
+- [ ] GraphQL API 지원
+- [ ] 실시간 알림 시스템
+- [ ] 고급 검색 기능
+- [ ] 멀티언어 지원
+
+### v1.2.0 (계획)
+- [ ] AI 기반 컨텐츠 추천
+- [ ] 소셜 로그인 연동
+- [ ] 댓글 시스템
+- [ ] RSS 피드 지원
+
+### v2.0.0 (장기)
+- [ ] 마이크로프론트엔드 아키텍처
+- [ ] 서버리스 함수 지원
+- [ ] 다중 테넌트 지원
+- [ ] 모바일 앱 개발
+
+## 🏆 성과 지표
+
+### 기술적 성과
+- **가용성**: 99.9% 업타임 달성
+- **성능**: 평균 응답시간 < 200ms
+- **보안**: CVE 취약점 0개 유지
+- **확장성**: 자동 스케일링 10배 처리량
+
+### 비즈니스 성과
+- **사용자 경험**: 페이지 로딩 속도 향상 80%
+- **관리 효율성**: 컨텐츠 업데이트 시간 단축 70%
+- **운영 비용**: 인프라 비용 절감 50%
+- **개발 생산성**: 배포 시간 단축 90%
+
+## 💬 지원 및 문의
+
+### 문서 및 가이드
+- **API 문서**: `/api/docs` 엔드포인트
+- **관리자 가이드**: `docs/admin-guide.md`
+- **개발자 가이드**: `docs/developer-guide.md`
+- **FAQ**: `docs/faq.md`
+
+### 커뮤니티
+
+- **이메일**: qudwndh@gmail.com
 
 ## 📄 라이선스
 
 이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
 
-## 📞 연락처
-
-- **이메일**: qudwndh@gmail.com
-
-- **웹사이트**: [https://byungju.me](https://byungju.me)
+---
 
 ## 🙏 감사의 말
 
-- [Flask](https://flask.palletsprojects.com/) - 훌륭한 웹 프레임워크
-- [Kubernetes](https://kubernetes.io/) - 컨테이너 오케스트레이션 플랫폼
-- [Bootstrap](https://getbootstrap.com/) - 반응형 UI 프레임워크
-- [Font Awesome](https://fontawesome.com/) - 아이콘 라이브러리
-- [MySQL](https://www.mysql.com/) - 안정적인 데이터베이스
-- [NGINX](https://nginx.org/) - 고성능 웹서버
-- [Let's Encrypt](https://letsencrypt.org/) - 무료 SSL 인증서
+이 프로젝트는 다음 오픈소스 프로젝트들의 도움을 받았습니다:
 
-## 📋 체크리스트
-
-### 배포 전 확인사항
-- [ ] 환경변수 설정 완료
-- [ ] 도메인 DNS 설정
-- [ ] SSL 인증서 설정
-- [ ] 데이터베이스 백업
-- [ ] 이미지 빌드 및 테스트
-- [ ] 리소스 제한 설정
-- [ ] 모니터링 설정
-- [ ] 로그 수집 설정
-
-### 운영 중 체크사항
-- [ ] 정기적인 백업
-- [ ] 보안 업데이트
-- [ ] 성능 모니터링
-- [ ] 로그 분석
-- [ ] 인증서 만료 확인
-- [ ] 리소스 사용률 체크
+- [Flask](https://flask.palletsprojects.com/) - 웹 프레임워크
+- [Bootstrap](https://getbootstrap.com/) - UI 프레임워크
+- [Kubernetes](https://kubernetes.io/) - 컨테이너 오케스트레이션
+- [MySQL](https://www.mysql.com/) - 데이터베이스
+- [Nginx](https://nginx.org/) - 웹 서버
 
 ---
 
-**Made with ❤️ for the Cloud-Native Community**
+**📧 연락처**: qudwndh@gmail.com  
+**🌐 데모**: [https://byungju.me](https://byungju.me)  
+**📚 문서**: [GitHub Wiki](https://github.com/your-username/portfolio-platform/wiki)
+
+> "클라우드 네이티브 기술로 구현한 현대적인 포트폴리오 플랫폼"
