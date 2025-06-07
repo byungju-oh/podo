@@ -6,22 +6,7 @@
 
 {% block content %}
 <div class="container mt-4">
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">홈</a></li>
-            <li class="breadcrumb-item"><a href="{{ url_for('learning_blog') }}">학습</a></li>
-            {% if post.category %}
-            <li class="breadcrumb-item">
-                <a href="{{ url_for('learning_category', category_id=post.category.id) }}">
-                    {{ post.category.name }}
-                </a>
-            </li>
-            {% endif %}
-            <li class="breadcrumb-item active" aria-current="page">{{ post.title }}</li>
-        </ol>
-    </nav>
-
+    
     <div class="row">
         <!-- Main Content -->
         <div class="col-lg-8">
