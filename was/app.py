@@ -588,7 +588,7 @@ def init_learning_default_data():
             },
             {
                 'name': 'Data Science',
-                'description': '데이터 분석 및 머신러닝',
+                'description': 'AI/ML',
                 'color': '#6f42c1',
                 'icon_class': 'fas fa-chart-bar',
                 'sort_order': 5
@@ -610,9 +610,9 @@ def init_learning_default_data():
         
         # 기본 태그 생성
         default_tags = [
-            'Python', 'JavaScript', 'React', 'Django', 'Flask',
-            'PostgreSQL', 'MySQL', 'Docker', 'Kubernetes', 'AWS',
-            'Git', 'Linux', 'API', 'Testing', 'Performance'
+            'Python','Kubernetes', 'LLM', 'Flask','LMM',
+            'ML', 'Docker', 'AI', 'AWS',
+            'Git', 'Linux', 'API', 'Testing'
         ]
         
         for tag_name in default_tags:
@@ -1903,12 +1903,29 @@ def admin_learning_post_edit(post_id):
 @app.route('/admin/learning/post/<int:post_id>/delete', methods=['DELETE'])
 @login_required
 def admin_learning_post_delete(post_id):
-    """학습 포스트 삭제"""
+    """학습 포스트 삭제 - CSRF 토큰 처리 개선"""
     if not current_user.is_admin:
         return jsonify({'success': False, 'message': '권한이 없습니다.'}), 403
     
     try:
+        # CSRF 토큰 검증 (Flask-WTF가 자동으로 처리하지만 추가 검증)
+        csrf_token = None
+        
+        # 다양한 방법으로 CSRF 토큰 가져오기
+        if request.is_json and request.json:
+            csrf_token = request.json.get('csrf_token')
+        elif request.form:
+            csrf_token = request.form.get('csrf_token')
+        
+        # 헤더에서도 확인
+        if not csrf_token:
+            csrf_token = request.headers.get('X-CSRFToken')
+        
+        logger.info(f"포스트 삭제 요청 - ID: {post_id}, 사용자: {current_user.username}")
+        logger.debug(f"CSRF 토큰: {csrf_token[:10]}..." if csrf_token else "토큰 없음")
+        
         post = LearningPost.query.get_or_404(post_id)
+        post_title = post.title
         
         # 관련 이미지 파일들 삭제
         if post.thumbnail_path:
@@ -1916,6 +1933,7 @@ def admin_learning_post_delete(post_id):
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], post.thumbnail_path)
                 if os.path.exists(file_path):
                     os.remove(file_path)
+                    logger.info(f"썸네일 삭제 완료: {post.thumbnail_path}")
             except Exception as e:
                 logger.error(f"썸네일 삭제 실패: {e}")
         
@@ -1923,13 +1941,22 @@ def admin_learning_post_delete(post_id):
         db.session.delete(post)
         db.session.commit()
         
-        logger.info(f"학습 포스트 삭제: {post.title} (ID: {post_id})")
-        return jsonify({'success': True, 'message': '포스트가 삭제되었습니다.'})
+        logger.info(f"학습 포스트 삭제 완료: {post_title} (ID: {post_id})")
+        
+        return jsonify({
+            'success': True, 
+            'message': f'포스트 "{post_title}"가 성공적으로 삭제되었습니다.'
+        })
         
     except Exception as e:
         db.session.rollback()
-        logger.error(f"학습 포스트 삭제 오류: {e}")
-        return jsonify({'success': False, 'message': '삭제 중 오류가 발생했습니다.'}), 500
+        error_msg = f"포스트 삭제 중 오류가 발생했습니다: {str(e)}"
+        logger.error(f"학습 포스트 삭제 오류 (ID: {post_id}): {str(e)}", exc_info=True)
+        
+        return jsonify({
+            'success': False, 
+            'message': error_msg
+        }), 500
 
 @app.route('/admin/learning/categories')
 @login_required

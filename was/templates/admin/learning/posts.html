@@ -249,6 +249,11 @@
         </div>
     </div>
 </div>
+
+<!-- CSRF 토큰을 위한 숨겨진 폼 -->
+<form id="csrfForm" style="display: none;">
+    {{ csrf_token() }}
+</form>
 {% endblock %}
 
 {% block scripts %}
@@ -261,28 +266,161 @@ function deletePost(postId, postTitle) {
     new bootstrap.Modal(document.getElementById('deleteModal')).show();
 }
 
+// CSRF 토큰 가져오기 함수
+function getCSRFToken() {
+    // 메타 태그에서 토큰 가져오기
+    const metaToken = document.querySelector('meta[name="csrf-token"]');
+    if (metaToken) {
+        return metaToken.getAttribute('content');
+    }
+    
+    // 숨겨진 폼에서 토큰 가져오기
+    const hiddenInput = document.querySelector('#csrfForm input[name="csrf_token"]');
+    if (hiddenInput) {
+        return hiddenInput.value;
+    }
+    
+    // 다른 폼에서 토큰 가져오기
+    const csrfInput = document.querySelector('input[name="csrf_token"]');
+    if (csrfInput) {
+        return csrfInput.value;
+    }
+    
+    console.warn('CSRF token not found');
+    return null;
+}
+
+// 알림 표시 함수
+function showNotification(message, type = 'info') {
+    // 기존 알림 제거
+    const existingAlert = document.querySelector('.delete-notification');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+    
+    const alertClass = type === 'error' ? 'alert-danger' : 
+                       type === 'success' ? 'alert-success' : 'alert-info';
+    
+    const iconClass = type === 'error' ? 'fa-exclamation-triangle' : 
+                      type === 'success' ? 'fa-check-circle' : 'fa-info-circle';
+    
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} delete-notification alert-dismissible fade show`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        max-width: 500px;
+    `;
+    notification.innerHTML = `
+        <i class="fas ${iconClass} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // 자동 제거
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
 document.getElementById('confirmDelete').addEventListener('click', function() {
-    if (deletePostId) {
-        fetch(`/admin/learning/post/${deletePostId}/delete`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
+    if (!deletePostId) {
+        showNotification('삭제할 포스트를 선택해주세요.', 'error');
+        return;
+    }
+    
+    const btn = this;
+    const originalText = btn.innerHTML;
+    
+    // 버튼 상태 변경
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>삭제 중...';
+    btn.disabled = true;
+    
+    // CSRF 토큰 가져오기
+    const csrfToken = getCSRFToken();
+    
+    if (!csrfToken) {
+        showNotification('보안 토큰을 찾을 수 없습니다. 페이지를 새로고침해주세요.', 'error');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        return;
+    }
+    
+    // 삭제 요청
+    fetch(`/admin/learning/post/${deletePostId}/delete`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin', // 쿠키 포함
+        body: JSON.stringify({
+            csrf_token: csrfToken
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('삭제에 실패했습니다: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('삭제 중 오류가 발생했습니다.');
-        });
+    })
+    .then(response => {
+        console.log('응답 상태:', response.status);
         
-        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return response.json();
+    })
+    .then(data => {
+        console.log('응답 데이터:', data);
+        
+        if (data.success) {
+            showNotification(data.message || '포스트가 삭제되었습니다.', 'success');
+            
+            // 모달 닫기
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+            if (modal) {
+                modal.hide();
+            }
+            
+            // 페이지 새로고침
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            throw new Error(data.message || '삭제에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('삭제 오류:', error);
+        showNotification(error.message || '삭제 중 오류가 발생했습니다.', 'error');
+    })
+    .finally(() => {
+        // 버튼 상태 복원
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+});
+
+// 모달이 닫힐 때 초기화
+document.getElementById('deleteModal').addEventListener('hidden.bs.modal', function() {
+    deletePostId = null;
+    const confirmBtn = document.getElementById('confirmDelete');
+    confirmBtn.innerHTML = '<i class="fas fa-trash me-1"></i>삭제하기';
+    confirmBtn.disabled = false;
+});
+
+// 페이지 로드시 CSRF 토큰 확인
+document.addEventListener('DOMContentLoaded', function() {
+    const token = getCSRFToken();
+    if (!token) {
+        console.warn('CSRF 토큰을 찾을 수 없습니다. 일부 기능이 제한될 수 있습니다.');
+    } else {
+        console.log('CSRF 토큰 확인됨');
     }
 });
 </script>

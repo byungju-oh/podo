@@ -44,7 +44,7 @@
                     
                     <!-- 빠른 검색 태그 (선택사항) -->
                     <div class="quick-tags text-center mt-3">
-                        <small class="text-muted">빠른 검색: </small>
+                        
                         {% if popular_tags %}
                         {% for tag in popular_tags[:8] %}
                         <a href="{{ url_for('learning_search') }}?q={{ tag.name }}" 
