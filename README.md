@@ -199,7 +199,7 @@ CSRF_SECRET_KEY=another-secret-key-for-csrf
 DB_HOST=mysql-service.db.svc.cluster.local
 DB_PORT=3306
 DB_NAME=portfolio
-DB_USER=root
+DB_USER=admin
 DB_PASSWORD=your-secure-password
 
 # 관리자 계정
