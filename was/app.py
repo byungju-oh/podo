@@ -1946,7 +1946,57 @@ def admin_learning_categories():
         logger.error(f"카테고리 관리 페이지 오류: {e}")
         flash('카테고리 목록을 불러오는 중 오류가 발생했습니다.', 'error')
         return redirect(url_for('admin_learning'))
-    
+
+
+######검색
+# app.py에 추가할 필수 검색 API (최소한만)
+
+# 1. 검색 자동완성 API (필수)
+# 검색 자동완성 API (필수)
+@app.route('/api/learning/search/suggestions')
+def api_learning_search_suggestions():
+    try:
+        query = request.args.get('q', '').strip()
+        if not query or len(query) < 2:
+            return jsonify({'suggestions': []})
+        
+        search_pattern = f"%{query}%"
+        posts = LearningPost.query.filter(
+            LearningPost.is_published == True,
+            LearningPost.title.ilike(search_pattern)
+        ).order_by(LearningPost.view_count.desc()).limit(5).all()
+        
+        suggestions = [{'text': post.title, 'url': url_for('learning_post_detail', slug=post.slug)} 
+                      for post in posts]
+        
+        return jsonify({'suggestions': suggestions})
+    except Exception as e:
+        return jsonify({'suggestions': []})
+
+# 검색 페이지 라우트 (필수)
+@app.route('/learning/search')
+def learning_search():
+    try:
+        query = request.args.get('q', '').strip()
+        if not query:
+            return redirect(url_for('learning_blog'))
+        
+        search_pattern = f"%{query}%"
+        posts = LearningPost.query.filter(
+            LearningPost.is_published == True,
+            db.or_(
+                LearningPost.title.ilike(search_pattern),
+                LearningPost.content.ilike(search_pattern),
+                LearningPost.tags.ilike(search_pattern)
+            )
+        ).order_by(LearningPost.published_at.desc()).all()
+        
+        return render_template('learning/search_results.html', posts=posts, query=query)
+    except Exception as e:
+        flash('검색 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('learning_blog'))
+
+
     ##################################################################################
 @app.route('/admin/learning/category', methods=['POST'])
 @app.route('/admin/learning/category/<int:category_id>', methods=['PUT', 'DELETE'])

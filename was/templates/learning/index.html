@@ -14,6 +14,53 @@
        <p class="lead">지속적인 학습과 성장의 기록</p>
    </div>
 
+<!-- 검색 섹션 추가 (히어로 바로 아래) -->
+<div class="search-section bg-light py-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="search-widget">
+                    <h4 class="text-center mb-4">
+                        <i class="fas fa-search me-2"></i>학습 포스트 검색
+                    </h4>
+                    
+                    <!-- 검색 폼 -->
+                    <form action="{{ url_for('learning_search') }}" method="GET" class="search-form">
+                        <div class="input-group input-group-lg">
+                            <input type="text" 
+                                   class="form-control search-input" 
+                                   name="q" 
+                                   placeholder="제목, 내용, 태그로 검색하세요..."
+                                   id="searchInput"
+                                   autocomplete="off">
+                            <button class="btn btn-primary px-4" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- 검색 자동완성 드롭다운 -->
+                        <div class="search-dropdown" id="searchDropdown"></div>
+                    </form>
+                    
+                    <!-- 빠른 검색 태그 (선택사항) -->
+                    <div class="quick-tags text-center mt-3">
+                        <small class="text-muted">빠른 검색: </small>
+                        {% if popular_tags %}
+                        {% for tag in popular_tags[:8] %}
+                        <a href="{{ url_for('learning_search') }}?q={{ tag.name }}" 
+                           class="badge bg-secondary text-decoration-none me-2 mb-1">{{ tag.name }}</a>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
    <!-- Categories Section -->
    <div class="row mb-5">
        <div class="col-12">
@@ -385,6 +432,72 @@
        margin-bottom: 15px;
    }
 }
+
+
+/* 검색 기능 CSS */
+
+.search-section {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.search-widget {
+    position: relative;
+}
+
+.search-input {
+    border-radius: 25px;
+    border: 2px solid #e9ecef;
+    padding: 15px 20px;
+    font-size: 1.1rem;
+}
+
+.search-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 15px 15px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.search-suggestion {
+    padding: 12px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f3f5;
+    transition: background-color 0.2s;
+}
+
+.search-suggestion:hover {
+    background-color: #f8f9fa;
+}
+
+.search-suggestion:last-child {
+    border-bottom: none;
+}
+
+.quick-tags .badge {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+}
+
+.quick-tags .badge:hover {
+    background-color: #007bff !important;
+}
+
+
+
 </style>
 
 <script>
@@ -435,5 +548,82 @@ function observeElements() {
        observer.observe(el);
    });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const searchDropdown = document.getElementById('searchDropdown');
+    let searchTimeout;
+
+    // 입력시 자동완성
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        clearTimeout(searchTimeout);
+        
+        if (query.length >= 2) {
+            searchTimeout = setTimeout(() => {
+                fetchSuggestions(query);
+            }, 300);
+        } else {
+            hideDropdown();
+        }
+    });
+
+    // 자동완성 데이터 가져오기
+    async function fetchSuggestions(query) {
+        try {
+            const response = await fetch(`/api/learning/search/suggestions?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            
+            if (data.suggestions && data.suggestions.length > 0) {
+                showSuggestions(data.suggestions);
+            } else {
+                hideDropdown();
+            }
+        } catch (error) {
+            console.error('검색 오류:', error);
+            hideDropdown();
+        }
+    }
+
+    // 자동완성 결과 표시
+    function showSuggestions(suggestions) {
+        const html = suggestions.map(item => 
+            `<div class="search-suggestion" onclick="selectSuggestion('${item.url}')">
+                <i class="fas fa-file-alt me-2"></i>${item.text}
+             </div>`
+        ).join('');
+        
+        searchDropdown.innerHTML = html;
+        searchDropdown.style.display = 'block';
+    }
+
+    // 자동완성 숨기기
+    function hideDropdown() {
+        searchDropdown.style.display = 'none';
+    }
+
+    // 자동완성 항목 선택
+    window.selectSuggestion = function(url) {
+        window.location.href = url;
+    };
+
+    // 외부 클릭시 자동완성 숨기기
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+            hideDropdown();
+        }
+    });
+
+    // 엔터키로 검색
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.querySelector('.search-form').submit();
+        }
+    });
+});
+
+
 </script>
 {% endblock %}
