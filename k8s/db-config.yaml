@@ -1,0 +1,55 @@
+# mysql-init-scripts ConfigMap 생성
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init-scripts
+  namespace: db
+data:
+  01-verify-user-creation.sql: |
+    -- MySQL 초기화 스크립트 - 사용자 생성 확인
+    -- MYSQL_USER/MYSQL_PASSWORD 환경변수로 애플리케이션 사용자가 자동 생성됨
+
+    -- 타임존 설정
+    SET time_zone = '+09:00';
+
+    -- 현재 생성된 사용자 확인
+    SELECT '=== Created Users ===' as info;
+    SELECT User, Host,
+           CASE
+             WHEN User = 'root' THEN 'Database Administrator (관리용)'
+             WHEN User = 'portfolio_app' THEN 'Application User (앱 전용)'
+             ELSE 'Other User'
+           END as role,
+           plugin as auth_method
+    FROM mysql.user
+    WHERE User IN ('root', 'portfolio_app')
+    ORDER BY User;
+
+    -- 애플리케이션 사용자 권한 확인
+    SELECT '=== Application User Privileges ===' as info;
+    SHOW GRANTS FOR 'portfolio_app'@'%';
+
+    -- 생성된 데이터베이스 확인
+    SELECT '=== Available Databases ===' as info;
+    SHOW DATABASES;
+
+    -- 데이터베이스 캐릭터셋 확인
+    SELECT '=== Database Character Set ===' as info;
+    SELECT SCHEMA_NAME as 'Database',
+           DEFAULT_CHARACTER_SET_NAME as 'Charset',
+           DEFAULT_COLLATION_NAME as 'Collation'
+    FROM information_schema.SCHEMATA
+    WHERE SCHEMA_NAME = 'portfolio';
+
+    -- 연결 정보 안내
+    SELECT '=== Connection Info for Flask App ===' as info;
+    SELECT 'Host: mysql-service.db.svc.cluster.local' as connection_host;
+    SELECT 'Port: 3306' as connection_port;
+    SELECT 'Database: portfolio' as database_name;
+    SELECT 'User: portfolio_app' as app_user;
+    SELECT 'Tables will be created by Flask SQLAlchemy' as note;
+
+    -- 완료 메시지
+    SELECT '=== MySQL User Setup Completed ===' as status;
+    SELECT 'Flask app can now connect and create tables' as message;
+    SELECT NOW() as completed_at;
