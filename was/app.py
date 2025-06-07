@@ -492,9 +492,9 @@ def init_default_data():
             {'name': 'Flask', 'category': 'framework', 'icon_class': 'fas fa-flask', 'color': '#000000', 'proficiency': 85},
             {'name': 'React', 'category': 'framework', 'icon_class': 'fab fa-react', 'color': '#61dafb', 'proficiency': 70, 'is_primary': True},
             
-            {'name': 'PostgreSQL', 'category': 'database', 'icon_class': 'fas fa-database', 'color': '#336791', 'proficiency': 50},
+            
             {'name': 'MySQL', 'category': 'database', 'icon_class': 'fas fa-database', 'color': '#4479a1', 'proficiency': 80},
-            {'name': 'Redis', 'category': 'database', 'icon_class': 'fas fa-memory', 'color': '#dc382d', 'proficiency': 60},
+            
             {'name': 'AWS', 'category': 'cloud', 'icon_class': 'fab fa-aws', 'color': '#ff9900', 'proficiency': 85, 'is_primary': True},
             {'name': 'Google Cloud', 'category': 'cloud', 'icon_class': 'fab fa-google', 'color': '#4285f4', 'proficiency': 80},
             {'name': 'Azure', 'category': 'cloud', 'icon_class': 'fab fa-microsoft', 'color': '#0078d4', 'proficiency': 75},
