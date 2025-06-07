@@ -1,4 +1,4 @@
-# was-deployment.yaml
+# was-deployment.yaml - 제한적 보안 설정 적용
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7,13 +7,14 @@ metadata:
   labels:
     app: flask
     tier: backend
+    security.level: restricted
 spec:
-  replicas: 1  # 필요시 2-3으로 확장 가능
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 1
-      maxUnavailable: 0  # 무중단 배포
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: flask
@@ -22,11 +23,23 @@ spec:
       labels:
         app: flask
         tier: backend
+        security.level: restricted
     spec:
-      # Pod 종료 시 graceful shutdown 시간 (올바른 위치)
+      # 🔒 제한적 ServiceAccount 적용
+      serviceAccountName: was-service-account
+      automountServiceAccountToken: false
       terminationGracePeriodSeconds: 60
       
-      # 초기화 컨테이너로 DB 대기
+      # 🔒 보안 컨텍스트 강화
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      
+      # 초기화 컨테이너 (보안 강화)
       initContainers:
       - name: wait-for-db
         image: busybox:1.35
@@ -34,11 +47,21 @@ spec:
         args:
         - |
           echo "Waiting for MySQL to be ready..."
-          until nc -z mysql-service.db.svc.cluster.local 3306; do
+          until nc -zv mysql-service.db.svc.cluster.local 3306; do
             echo "MySQL not ready, waiting..."
             sleep 2
           done
           echo "MySQL is ready!"
+        # 🔒 초기화 컨테이너 보안 설정
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
         resources:
           requests:
             memory: "32Mi"
@@ -46,6 +69,9 @@ spec:
           limits:
             memory: "64Mi"
             cpu: "100m"
+        volumeMounts:
+        - name: tmp-volume
+          mountPath: /tmp
       
       containers:
       - name: flask
@@ -54,8 +80,10 @@ spec:
         ports:
         - containerPort: 5000
           name: http
+          protocol: TCP
+        
+        # 🔒 애플리케이션 환경변수 (기존 유지)
         env:
-        # 데이터베이스 연결 정보
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
@@ -86,8 +114,6 @@ spec:
             secretKeyRef:
               name: app-secrets
               key: db-password
-        
-        # Flask 애플리케이션 설정
         - name: SECRET_KEY
           valueFrom:
             secretKeyRef:
@@ -97,8 +123,6 @@ spec:
           value: "production"
         - name: PYTHONUNBUFFERED
           value: "1"
-        
-        # 관리자 계정 설정
         - name: ADMIN_USERNAME
           valueFrom:
             secretKeyRef:
@@ -114,86 +138,99 @@ spec:
             secretKeyRef:
               name: app-secrets
               key: admin-password
-        
-        # Pod 식별 정보
         - name: INSTANCE_ID
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
-        
-        # 파일 업로드 설정
         - name: MAX_CONTENT_LENGTH
-          value: "34857600"  # 30MB in bytes
+          value: "31457280"
         - name: UPLOAD_FOLDER
           value: "/app/uploads"
         - name: MAX_FILE_SIZE_MB
           value: "30"
         
-        # 관리자 비밀번호 업데이트 플래그 (필요시)
-        # - name: UPDATE_ADMIN_PASSWORD
-        #   value: "false"
+        # 🔒 컨테이너 보안 컨텍스트 (최대 제한)
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false  # Flask 앱이 임시 파일 생성 필요
+          capabilities:
+            drop:
+            - ALL
         
+        # 🔒 리소스 제한 강화
         resources:
           requests:
-            memory: "512Mi"  # 메모리 증가 (큰 파일 처리용)
-            cpu: "200m"
+            memory: "256Mi"  # 보안을 위해 더 엄격하게
+            cpu: "100m"
           limits:
-            memory: "1Gi"    # 메모리 한도 대폭 증가
-            cpu: "500m"
+            memory: "512Mi"  # 메모리 제한 강화
+            cpu: "300m"
         
-        # 시작 준비 상태 체크 (데이터베이스 초기화 완료 확인)
+        # 헬스체크
         readinessProbe:
           httpGet:
             path: /readiness
             port: 5000
+            scheme: HTTP
           initialDelaySeconds: 15
           periodSeconds: 5
           timeoutSeconds: 10
           successThreshold: 1
           failureThreshold: 6
         
-        # 생존 상태 체크 (일반적인 헬스체크)
         livenessProbe:
           httpGet:
             path: /health
             port: 5000
+            scheme: HTTP
           initialDelaySeconds: 60
           periodSeconds: 15
           timeoutSeconds: 10
           successThreshold: 1
           failureThreshold: 3
         
-        # 시작 시간 체크 (느린 초기화 허용)
         startupProbe:
           httpGet:
             path: /health
             port: 5000
+            scheme: HTTP
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 10
           successThreshold: 1
-          failureThreshold: 30  # 5분까지 허용
+          failureThreshold: 30
         
         volumeMounts:
         - name: upload-storage
           mountPath: /app/uploads
-        
-        # 보안 컨텍스트
-        securityContext:
-          runAsNonRoot: true
-          runAsUser: 1000
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false
-          capabilities:
-            drop:
-            - ALL
+        # 🔒 임시 디렉토리 (보안을 위한 분리된 마운트)
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: app-temp
+          mountPath: /app/temp
       
       volumes:
       - name: upload-storage
         persistentVolumeClaim:
           claimName: upload-pvc
+      # 🔒 임시 볼륨들 (보안을 위한 메모리 기반)
+      - name: tmp-volume
+        emptyDir:
+          medium: Memory
+          sizeLimit: 128Mi
+      - name: app-temp
+        emptyDir:
+          medium: Memory
+          sizeLimit: 64Mi
       
-      # Pod anti-affinity로 다른 노드에 분산 배치 (선택사항)
+      # 🔒 노드 선택 제한
+      nodeSelector:
+        kubernetes.io/os: linux
+      
+      # 🔒 Pod 간 분산 배치
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -208,6 +245,7 @@ spec:
               topologyKey: kubernetes.io/hostname
 
 ---
+# 기존 Service (변경 없음)
 apiVersion: v1
 kind: Service
 metadata:
@@ -217,7 +255,7 @@ metadata:
     app: flask
 spec:
   type: ClusterIP
-  sessionAffinity: None  # 로드밸런싱 기본값
+  sessionAffinity: None
   ports:
   - port: 5000
     targetPort: 5000
@@ -227,42 +265,44 @@ spec:
     app: flask
 
 ---
-# HorizontalPodAutoscaler (선택사항 - 자동 스케일링)
+# 보안 강화된 HorizontalPodAutoscaler
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: flask-hpa
   namespace: was
+  labels:
+    security.level: restricted
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: flask-deployment
   minReplicas: 1
-  maxReplicas: 3
+  maxReplicas: 2  # 보안을 위해 스케일링 제한
   metrics:
   - type: Resource
     resource:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 70
+        averageUtilization: 60  # 더 보수적인 임계값
   - type: Resource
     resource:
       name: memory
       target:
         type: Utilization
-        averageUtilization: 80
+        averageUtilization: 70
   behavior:
     scaleUp:
       stabilizationWindowSeconds: 300
       policies:
       - type: Percent
-        value: 100
-        periodSeconds: 15
+        value: 50  # 스케일업 속도 제한
+        periodSeconds: 60
     scaleDown:
       stabilizationWindowSeconds: 300
       policies:
       - type: Percent
-        value: 100
-        periodSeconds: 15
+        value: 50
+        periodSeconds: 60

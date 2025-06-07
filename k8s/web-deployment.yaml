@@ -1,4 +1,4 @@
-# 최종 web-deployment.yaml - 수정된 버전 (서비스 이름 사용)
+# web-deployment.yaml - 제한적 보안 설정 적용
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7,6 +7,7 @@ metadata:
   labels:
     app: nginx
     tier: frontend
+    security.level: restricted
 spec:
   replicas: 1
   selector:
@@ -17,166 +18,350 @@ spec:
       labels:
         app: nginx
         tier: frontend
+        security.level: restricted
     spec:
+      # 🔒 제한적 ServiceAccount 적용
+      serviceAccountName: web-service-account
+      automountServiceAccountToken: false
+      
+      # 🔒 보안 컨텍스트 강화
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101  # nginx 사용자
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      
       containers:
       - name: nginx
         image: portfolio-web:latest
         imagePullPolicy: Never
         ports:
         - containerPort: 80
+          protocol: TCP
+        
+        # 🔒 컨테이너 보안 컨텍스트 (최대 제한)
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 101
+          runAsGroup: 101
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true  # 읽기 전용 파일시스템
+          capabilities:
+            drop:
+            - ALL  # 모든 capabilities 제거
+        
+        # 🔒 리소스 제한 강화
         resources:
           requests:
             memory: "64Mi"
-            cpu: "100m"
+            cpu: "50m"
           limits:
             memory: "128Mi"
             cpu: "200m"
+        
+        # 헬스체크
         livenessProbe:
           httpGet:
             path: /nginx-health
             port: 80
           initialDelaySeconds: 10
           periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /nginx-health
             port: 80
           initialDelaySeconds: 5
           periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
         volumeMounts:
         - name: nginx-config
           mountPath: /etc/nginx/conf.d
           readOnly: true
-        # WAS의 uploads 폴더를 직접 마운트 (읽기 전용)
         - name: shared-uploads
           mountPath: /var/www/html/uploads
           readOnly: true
+        # 🔒 임시 디렉토리 (readOnlyRootFilesystem 대응)
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: nginx-cache
+          mountPath: /var/cache/nginx
+        - name: nginx-run
+          mountPath: /var/run
+      
       volumes:
       - name: nginx-config
         configMap:
           name: nginx-config
-      # hostPath로 실제 PVC 경로 마운트
       - name: shared-uploads
         hostPath:
           path: /var/lib/rancher/k3s/storage/pvc-ebd7394f-39c4-4554-87bb-1bff08939402_was_upload-pvc
           type: Directory
+      # 🔒 임시 볼륨들 (보안을 위한 메모리 기반)
+      - name: tmp-volume
+        emptyDir:
+          medium: Memory
+          sizeLimit: 64Mi
+      - name: nginx-cache
+        emptyDir:
+          medium: Memory
+          sizeLimit: 32Mi
+      - name: nginx-run
+        emptyDir:
+          medium: Memory
+          sizeLimit: 16Mi
+      
+      # 🔒 노드 선택 제한 (선택사항)
+      nodeSelector:
+        kubernetes.io/os: linux
+      
+      # 🔒 Pod 간 분산 (보안 격리)
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - nginx
+              topologyKey: kubernetes.io/hostname
+      
+      # 초기화 컨테이너로 DB 대기
+      initContainers:
+      - name: wait-for-db
+        image: busybox:1.35
+        command: ['sh', '-c']
+        args:
+        - |
+          echo "Waiting for MySQL to be ready..."
+          until nc -z mysql-service.db.svc.cluster.local 3306; do
+            echo "MySQL not ready, waiting..."
+            sleep 2
+          done
+          echo "MySQL is ready!"
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+      
+      containers:
+      - name: flask
+        image: portfolio-was:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5000
+          name: http
+        env:
+        # 🔥 간소화된 데이터베이스 연결 정보 (하나의 소스에서)
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: database-url
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: db-host
+        - name: DB_PORT
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: db-port
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: db-name
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: db-user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: db-password
+        
+        # Flask 애플리케이션 설정
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: secret-key
+        - name: FLASK_ENV
+          value: "production"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        
+        # 관리자 계정 설정
+        - name: ADMIN_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: admin-username
+        - name: ADMIN_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: admin-email
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: admin-password
+        
+        # Pod 식별 정보
+        - name: INSTANCE_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        
+        # 파일 업로드 설정
+        - name: MAX_CONTENT_LENGTH
+          value: "31457280"  # 30MB
+        - name: UPLOAD_FOLDER
+          value: "/app/uploads"
+        - name: MAX_FILE_SIZE_MB
+          value: "30"
+        
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 5000
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 6
+        
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 30
+        
+        volumeMounts:
+        - name: upload-storage
+          mountPath: /app/uploads
+        
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+      
+      volumes:
+      - name: upload-storage
+        persistentVolumeClaim:
+          claimName: upload-pvc
+      
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - flask
+              topologyKey: kubernetes.io/hostname
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-service
-  namespace: web
+  name: flask-service
+  namespace: was
   labels:
-    app: nginx
+    app: flask
 spec:
-  type: NodePort
+  type: ClusterIP
+  sessionAffinity: None
   ports:
-  - port: 80
-    targetPort: 80
-    nodePort: 30080
+  - port: 5000
+    targetPort: 5000
     protocol: TCP
+    name: http
   selector:
-    app: nginx
+    app: flask
 
 ---
-apiVersion: v1
-kind: ConfigMap
+# HorizontalPodAutoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
 metadata:
-  name: nginx-config
-  namespace: web
-data:
-  default.conf: |
-    server {
-        listen 80;
-        server_name localhost;
-        
-        # 파일 업로드 크기 제한 (35MB)
-        client_max_body_size 35M;
-        client_body_timeout 120s;
-        client_header_timeout 120s;
-        send_timeout 120s;
-        client_body_buffer_size 256k;
-
-        # Security headers
-        add_header X-Frame-Options "SAMEORIGIN" always;
-        add_header X-XSS-Protection "1; mode=block" always;
-        add_header X-Content-Type-Options "nosniff" always;
-
-        # 업로드된 파일 직접 서빙 (Nginx가 파일시스템에서 직접 서빙)
-        location /uploads/ {
-            alias /var/www/html/uploads/;
-            
-            # 파일 존재 확인 및 404 처리
-            try_files $uri =404;
-            
-            # 캐시 설정 (성능 최적화)
-            expires 7d;
-            add_header Cache-Control "public";
-            
-            # 이미지 파일 최적화
-            location ~* \.(jpg|jpeg|png|gif|ico|svg|webp)$ {
-                expires 30d;
-                add_header Cache-Control "public, immutable";
-                add_header Vary Accept-Encoding;
-                
-                # 이미지 압축 (gzip)
-                gzip on;
-                gzip_types image/svg+xml;
-            }
-            
-            # 보안: 디렉토리 리스팅 방지
-            autoindex off;
-            
-            # 로그 기록 (디버깅용)
-            access_log /var/log/nginx/uploads_access.log;
-            error_log /var/log/nginx/uploads_error.log;
-        }
-
-        # Static files (CSS, JS)
-        location /static/ {
-            alias /var/www/html/static/;
-            expires 30d;
-            add_header Cache-Control "public, immutable";
-        }
-
-        # Main application - 🔥 수정된 부분: 서비스 이름 사용
-        location / {
-            proxy_pass http://flask-service.was.svc.cluster.local:5000;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            
-            # 프록시 타임아웃 설정 (적절한 값으로 조정)
-            proxy_connect_timeout 30s;
-            proxy_send_timeout 60s;
-            proxy_read_timeout 60s;
-            
-            # 큰 파일 업로드를 위한 설정
-            proxy_buffering off;
-            proxy_request_buffering off;
-            proxy_max_temp_file_size 0;
-        }
-
-        # Health check
-        location /nginx-health {
-            access_log off;
-            return 200 "healthy\n";
-            add_header Content-Type text/plain;
-        }
-
-        # 404 에러 페이지
-        error_page 404 /404.html;
-        location = /404.html {
-            root /usr/share/nginx/html;
-            internal;
-        }
-
-        # 50x 에러 페이지
-        error_page 500 502 503 504 /50x.html;
-        location = /50x.html {
-            root /usr/share/nginx/html;
-            internal;
-        }
-    }
+  name: flask-hpa
+  namespace: was
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: flask-deployment
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15

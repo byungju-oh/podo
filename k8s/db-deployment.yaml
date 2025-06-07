@@ -1,4 +1,4 @@
-# db-deployment.yaml - Secret 기반으로 업데이트됨
+# MySQL Deployment - 사용자 생성만 담당
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -10,7 +10,7 @@ metadata:
 spec:
   replicas: 1
   strategy:
-    type: Recreate  # MySQL은 RWO 볼륨을 사용하므로 Recreate 전략 사용
+    type: Recreate
   selector:
     matchLabels:
       app: mysql
@@ -20,6 +20,17 @@ spec:
         app: mysql
         tier: database
     spec:
+      serviceAccountName: db-service-account
+      automountServiceAccountToken: false
+      
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      
       containers:
       - name: mysql
         image: mysql:8.0
@@ -27,34 +38,53 @@ spec:
         - containerPort: 3306
           name: mysql
         env:
-        # Secret에서 root 패스워드 가져오기
+        # MySQL Root 계정
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
               name: mysql-secrets
               key: root-password
-        # 데이터베이스 생성 설정
+        
+        # 🎯 핵심: 애플리케이션 사용자 자동 생성
         - name: MYSQL_DATABASE
-          value: "portfolio"
+          value: "portfolio"  # 데이터베이스 자동 생성
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secrets
+              key: app-user    # portfolio_app
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secrets
+              key: app-password
+        
         # 캐릭터셋 설정
         - name: MYSQL_CHARACTER_SET_SERVER
           value: "utf8mb4"
         - name: MYSQL_COLLATION_SERVER
           value: "utf8mb4_unicode_ci"
-        # 초기화 관련 설정
         - name: MYSQL_INIT_CONNECT
           value: "SET NAMES utf8mb4;"
-        # 성능 관련 환경변수
-        - name: MYSQL_INNODB_BUFFER_POOL_SIZE
-          value: "512M"
+        
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+          runAsGroup: 999
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop: ["ALL"]
+            add: ["CHOWN", "SETGID", "SETUID"]
+        
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "300m"
+            memory: "256Mi"
+            cpu: "200m"
           limits:
-            memory: "1Gi"
-            cpu: "500m"
-        # 개선된 헬스체크 (Secret 기반)
+            memory: "512Mi"
+            cpu: "400m"
+        
         livenessProbe:
           exec:
             command:
@@ -69,6 +99,7 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
+        
         readinessProbe:
           exec:
             command:
@@ -83,33 +114,22 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 5
           failureThreshold: 6
-        # 시작 프로브 (느린 초기화 허용)
-        startupProbe:
-          exec:
-            command:
-            - mysqladmin
-            - ping
-            - -h
-            - localhost
-            - -u
-            - root
-            - --password=$(MYSQL_ROOT_PASSWORD)
-          initialDelaySeconds: 10
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 30  # 5분까지 허용
+        
         volumeMounts:
         - name: mysql-storage
           mountPath: /var/lib/mysql
         - name: mysql-config
           mountPath: /etc/mysql/conf.d
           readOnly: true
-        # 보안 컨텍스트
-        securityContext:
-          runAsUser: 999  # mysql 사용자
-          runAsGroup: 999
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false
+        # 🎯 사용자 생성 확인 스크립트만 마운트
+        - name: mysql-init-scripts
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: mysql-run
+          mountPath: /var/run/mysqld
+      
       volumes:
       - name: mysql-storage
         persistentVolumeClaim:
@@ -117,9 +137,21 @@ spec:
       - name: mysql-config
         configMap:
           name: mysql-config
-      # Pod 보안 설정
-      securityContext:
-        fsGroup: 999  # mysql 그룹
+      # 🎯 간단한 사용자 확인 스크립트
+      - name: mysql-init-scripts
+        configMap:
+          name: mysql-init-scripts
+      - name: tmp-volume
+        emptyDir:
+          medium: Memory
+          sizeLimit: 64Mi
+      - name: mysql-run
+        emptyDir:
+          medium: Memory
+          sizeLimit: 32Mi
+      
+      nodeSelector:
+        kubernetes.io/os: linux
 
 ---
 apiVersion: v1
@@ -140,7 +172,6 @@ spec:
     app: mysql
 
 ---
-# MySQL Secret (별도 파일로 관리하는 것이 좋지만 여기서 통합 관리)
 apiVersion: v1
 kind: Secret
 metadata:
@@ -148,8 +179,10 @@ metadata:
   namespace: db
 type: Opaque
 data:
-  # 이 값은 generate-secrets.sh에서 자동 생성됨
-  root-password: MTIzNA==  # 1234 (실제로는 스크립트에서 .env의 DB_PASSWORD 사용)
+  # generate-secrets.sh에서 자동 설정됨
+  root-password: # MySQL Root 비밀번호
+  app-user: # portfolio_app (base64)
+  app-password: # 애플리케이션 사용자 비밀번호
 
 ---
 apiVersion: v1
@@ -174,42 +207,30 @@ metadata:
 data:
   custom.cnf: |
     [mysqld]
-    # 인증 플러그인 설정
     default-authentication-plugin=mysql_native_password
-    
-    # 캐릭터셋 설정
     character-set-server=utf8mb4
     collation-server=utf8mb4_unicode_ci
     init-connect='SET NAMES utf8mb4'
     
-    # 성능 최적화 설정
     max_connections=200
     innodb_buffer_pool_size=512M
     innodb_log_file_size=128M
     innodb_flush_log_at_trx_commit=2
     innodb_file_per_table=1
     
-    # 쿼리 캐시 설정 (MySQL 8.0에서는 제거됨)
-    # query_cache_type=1
-    # query_cache_size=64M
-    
-    # 로깅 설정
     general_log=0
     slow_query_log=1
     slow_query_log_file=/var/lib/mysql/slow.log
     long_query_time=2
     log_queries_not_using_indexes=1
     
-    # 보안 설정
     local_infile=0
     
-    # 바이너리 로그 설정 (복제용)
     server-id=1
     log-bin=mysql-bin
     binlog_format=ROW
     expire_logs_days=7
     
-    # 기타 최적화
     table_open_cache=2000
     thread_cache_size=50
     
