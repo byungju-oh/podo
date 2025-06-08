@@ -290,11 +290,13 @@
                         </table>
                     </div>
                     {% if works|length > 10 %}
-                    <div class="text-center mt-3">
-                        <a href="#" class="btn btn-outline-primary">
-                            모든 작품 보기 ({{ works|length }}개)
-                        </a>
-                    </div>
+                    {% if works|length > 10 %}
+<div class="text-center mt-3">
+    <a href="{{ url_for('admin_all_projects') }}" class="btn btn-outline-primary">
+        모든 작품 보기 ({{ works|length }}개)
+    </a>
+</div>
+{% endif %}
                     {% endif %}
                     {% else %}
                     <div class="text-center py-4">

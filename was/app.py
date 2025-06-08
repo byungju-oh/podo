@@ -1569,6 +1569,7 @@ def markdown_filter(text):
         logger.error(f"마크다운 변환 오류: {e}")
         return Markup(text.replace('\n', '<br>'))
 
+
 # 공개 학습 블로그 라우트들
 @app.route('/learning')
 def learning_blog():
@@ -1668,6 +1669,78 @@ def learning_post_detail(slug):
         logger.error(f"포스트 상세 페이지 오류: {e}")
         flash('포스트를 불러오는 중 오류가 발생했습니다.', 'error')
         return redirect(url_for('learning_blog'))
+
+
+
+# app.py에 추가할 라우트
+
+@app.route('/admin/all_projects')
+@login_required
+def admin_all_projects():
+    """관리자 - 모든 프로젝트 관리 페이지"""
+    if not current_user.is_admin:
+        flash('관리자 권한이 필요합니다.', 'error')
+        return redirect(url_for('index'))
+    
+    try:
+        # 페이지네이션 설정
+        page = request.args.get('page', 1, type=int)
+        per_page = 20  # 한 페이지당 20개
+        
+        # 필터링 옵션
+        project_type = request.args.get('type', '')
+        category = request.args.get('category', '')
+        search = request.args.get('search', '')
+        
+        # 기본 쿼리
+        query = Project.query
+        
+        # 검색 필터
+        if search:
+            query = query.filter(
+                db.or_(
+                    Project.title.ilike(f'%{search}%'),
+                    Project.description.ilike(f'%{search}%'),
+                    Project.tech_stack.ilike(f'%{search}%')
+                )
+            )
+        
+        # 타입 필터
+        if project_type:
+            query = query.filter_by(project_type=project_type)
+        
+        # 카테고리 필터
+        if category:
+            query = query.filter_by(category=category)
+        
+        # 페이지네이션 적용
+        projects = query.order_by(Project.created_at.desc())\
+                       .paginate(page=page, per_page=per_page, error_out=False)
+        
+        # 필터 옵션을 위한 데이터
+        project_types = db.session.query(Project.project_type, db.func.count(Project.id))\
+                                 .group_by(Project.project_type)\
+                                 .filter(Project.project_type.isnot(None))\
+                                 .all()
+        
+        categories = db.session.query(Project.category, db.func.count(Project.id))\
+                              .group_by(Project.category)\
+                              .filter(Project.category.isnot(None))\
+                              .all()
+        
+        return render_template('admin/all_projects.html',
+                             projects=projects,
+                             project_types=dict(project_types),
+                             categories=dict(categories),
+                             current_type=project_type,
+                             current_category=category,
+                             current_search=search)
+                             
+    except Exception as e:
+        logger.error(f"모든 프로젝트 페이지 오류: {e}")
+        flash('프로젝트 목록을 불러오는 중 오류가 발생했습니다.', 'error')
+        return redirect(url_for('admin'))
+
 
 # 관리자 학습 블로그 라우트들
 @app.route('/admin/learning')

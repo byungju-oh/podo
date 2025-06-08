@@ -41,11 +41,7 @@
         </button>
         
         <!-- Background Indicators -->
-        <div class="bg-indicators">
-            {% for project in artwork_projects %}
-            <span class="bg-indicator" data-slide="{{ loop.index0 }}"></span>
-            {% endfor %}
-        </div>
+        
         
         <!-- Auto-play Control 
         <button class="bg-control bg-autoplay active" id="bgAutoplay" title="자동 재생">
@@ -646,13 +642,7 @@
 
 /* 배경 인디케이터 */
 .bg-indicators {
-    position: absolute;
-    bottom: -40px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 10px;
-    pointer-events: auto;
+    display: none;
 }
 
 .bg-indicator {
@@ -1332,10 +1322,18 @@ function showSlide(index) {
 }
 
 // 다음 슬라이드
+// 다음 슬라이드 (랜덤 순서)
 function nextSlide() {
     currentSlide++;
-    if (currentSlide >= totalSlides) currentSlide = 0;
-    showSlide(currentSlide);
+    if (currentSlide >= slideOrder.length) {
+        // 새로운 랜덤 순서 생성
+        for (let i = slideOrder.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [slideOrder[i], slideOrder[j]] = [slideOrder[j], slideOrder[i]];
+        }
+        currentSlide = 0;
+    }
+    showSlide(slideOrder[currentSlide]);
     
     // 수동 조작시 잠시 자동재생 멈춤
     if (isAutoplay) {
