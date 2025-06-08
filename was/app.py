@@ -587,7 +587,7 @@ def init_learning_default_data():
                 'sort_order': 4
             },
             {
-                'name': 'Data Science',
+                'name': 'AI/ML',
                 'description': 'AI/ML',
                 'color': '#6f42c1',
                 'icon_class': 'fas fa-chart-bar',

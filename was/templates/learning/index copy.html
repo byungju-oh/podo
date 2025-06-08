@@ -96,7 +96,173 @@
        </div>
    </div>
 
-  
+   <!-- Featured Posts -->
+   {% if featured_posts %}
+   <div class="row mb-5">
+       <div class="col-12">
+           <h2 class="section-title mb-4">
+               <i class="fas fa-star me-2"></i>추천 포스트
+           </h2>
+           <div class="row">
+               {% for post in featured_posts %}
+               <div class="col-lg-4 col-md-6 mb-4">
+                   <div class="featured-post-card h-100">
+                       {% if post.thumbnail_path %}
+                       <img src="{{ url_for('uploaded_file', filename=post.thumbnail_path) }}" 
+                            class="card-img-top" alt="{{ post.title }}">
+                       {% else %}
+                       <div class="post-placeholder">
+                           {% if post.category %}
+                           <i class="{{ post.category.icon_class }} fa-3x"></i>
+                           {% else %}
+                           <i class="fas fa-file-alt fa-3x"></i>
+                           {% endif %}
+                       </div>
+                       {% endif %}
+                       
+                       <div class="card-body">
+                           <div class="post-meta mb-2">
+                               {% if post.category %}
+                               <span class="badge" style="background-color: {{ post.category.color }}">
+                                   {{ post.category.name }}
+                               </span>
+                               {% endif %}
+                           </div>
+                           
+                           <h5 class="card-title">{{ post.title }}</h5>
+                           {% if post.summary %}
+                           <p class="card-text">{{ post.summary[:100] }}...</p>
+                           {% endif %}
+                           
+                           <div class="post-stats">
+                               <small class="text-muted">
+                                   <i class="fas fa-eye me-1"></i>{{ post.view_count }}
+                                   
+                               </small>
+                           </div>
+                       </div>
+                       
+                       <div class="card-footer">
+                           <a href="{{ url_for('learning_post_detail', slug=post.slug) }}" 
+                              class="btn btn-primary btn-sm">
+                               <i class="fas fa-book-open me-1"></i>읽어보기
+                           </a>
+                       </div>
+                   </div>
+               </div>
+               {% endfor %}
+           </div>
+       </div>
+   </div>
+   <!--{% endif %}-->
+
+   <!-- Recent Posts -
+   <div class="row mb-5">
+       <div class="col-lg-8">
+           <h2 class="section-title mb-4">
+               <i class="fas fa-clock me-2"></i>최근 포스트
+           </h2>
+           
+           {% for post in recent_posts %}
+           <div class="recent-post-item mb-4">
+               <div class="row">
+                   <div class="col-md-3">
+                       {% if post.thumbnail_path %}
+                       <img src="{{ url_for('uploaded_file', filename=post.thumbnail_path) }}" 
+                            class="img-fluid rounded" alt="{{ post.title }}">
+                       {% else %}
+                       <div class="post-thumbnail-placeholder">
+                           {% if post.category %}
+                           <i class="{{ post.category.icon_class }} fa-2x"></i>
+                           {% else %}
+                           <i class="fas fa-file-alt fa-2x"></i>
+                           {% endif %}
+                       </div>
+                       {% endif %}
+                   </div>
+                   <div class="col-md-9">
+                       <div class="post-meta mb-2">
+                           {% if post.category %}
+                           <span class="badge" style="background-color: {{ post.category.color }}">
+                               {{ post.category.name }}
+                           </span>
+                           {% endif %}
+                        
+                       </div>
+                       
+                       <h5><a href="{{ url_for('learning_post_detail', slug=post.slug) }}" 
+                              class="text-decoration-none">{{ post.title }}</a></h5>
+                       
+                       {% if post.summary %}
+                       <p class="text-muted">{{ post.summary[:150] }}...</p>
+                       {% endif %}
+                       
+                       <div class="post-stats">
+                           <small class="text-muted">
+                               <i class="fas fa-eye ms-3 me-1"></i>{{ post.view_count }}
+                               {% if post.difficulty %}
+                               <span class="ms-3 difficulty-{{ post.difficulty }}">
+                                   <i class="fas fa-signal me-1"></i>{{ post.difficulty }}
+                               </span>
+                               {% endif %}
+                           </small>
+                       </div>
+                   </div>
+               </div>
+           </div>
+        -->
+        <!--   {% endfor %}-->
+          <!--
+           <div class="text-center mt-4">
+               <a href="{{ url_for('learning_blog') }}" class="btn btn-outline-primary">
+                   <i class="fas fa-list me-2"></i>모든 포스트 보기
+               </a>
+           </div>
+       </div> -->
+
+       <!-- Sidebar -->
+       <div class="col-lg-4">
+           <!-- Popular Tags 
+           {% if popular_tags %}
+           <div class="sidebar-widget mb-4">
+               <h5 class="widget-title">
+                   <i class="fas fa-tags me-2"></i>인기 태그
+               </h5>
+               <div class="tag-cloud">
+                   {% for tag in popular_tags %}
+                   <a href="{{ url_for('learning_blog') }}?tag={{ tag.name }}" 
+                      class="tag-item" style="color: {{ tag.color }}">
+                       {{ tag.name }}
+                       <span class="tag-count">{{ tag.usage_count }}</span>
+                   </a>
+                   {% endfor %}
+               </div>
+           </div>
+           {% endif %}
+        -->
+           <!-- Learning Stats -->
+           <div class="sidebar-widget">
+               <h5 class="widget-title">
+                   <i class="fas fa-chart-bar me-2"></i>학습 통계
+               </h5>
+               <div class="learning-stats">
+                   <div class="stat-item">
+                       <div class="stat-number">{{ recent_posts|length }}</div>
+                       <div class="stat-label">총 포스트</div>
+                   </div>
+                   <div class="stat-item">
+                       <div class="stat-number">{{ categories|length }}</div>
+                       <div class="stat-label">학습 분야</div>
+                   </div>
+                   <div class="stat-item">
+                       <div class="stat-number">{{ popular_tags|length }}</div>
+                       <div class="stat-label">활용 기술</div>
+                   </div>
+               </div>
+           </div>
+       </div>
+   </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
