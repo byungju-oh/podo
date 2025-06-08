@@ -1183,12 +1183,13 @@
 </style>
 
 <script>
-// 배경 슬라이더 관련 변수
+// 배경 슬라이더 관련 변수 (전역 변수로 선언)
 let currentSlide = 0;
 let totalSlides = 0;
 let autoplayInterval = null;
 let isAutoplay = true;
 let backgroundImages = [];
+let slideOrder = []; // 전역으로 이동
 
 // 페이지 로드 시 애니메이션
 document.addEventListener('DOMContentLoaded', function() {
@@ -1201,39 +1202,84 @@ document.addEventListener('DOMContentLoaded', function() {
     initBackgroundSlider();
 });
 
-// 배경 슬라이더 초기화
+// 랜덤 순서 생성 함수
+function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
+// 배경 슬라이더 초기화 (수정됨)
 function initBackgroundSlider() {
     const slides = document.querySelectorAll('.background-slide');
-    const indicators = document.querySelectorAll('.bg-indicator');
     const prevBtn = document.getElementById('bgPrev');
     const nextBtn = document.getElementById('bgNext');
-    const autoplayBtn = document.getElementById('bgAutoplay');
     
     totalSlides = slides.length;
     
-    if (totalSlides <= 1) return; // 슬라이드가 1개 이하면 컨트롤 숨김
+    console.log(`총 슬라이드 수: ${totalSlides}`);
     
-    // 초기 슬라이드 설정 (랜덤하게 시작)
-    currentSlide = Math.floor(Math.random() * totalSlides);
-    showSlide(currentSlide);
+    if (totalSlides <= 1) {
+        console.log('슬라이드가 1개 이하여서 컨트롤을 숨깁니다.');
+        return;
+    }
     
-    // 이벤트 리스너 설정
-    if (prevBtn) prevBtn.addEventListener('click', () => previousSlide());
-    if (nextBtn) nextBtn.addEventListener('click', () => nextSlide());
-   // if (autoplayBtn) autoplayBtn.addEventListener('click', () => toggleAutoplay());
+    // 랜덤 순서 생성 (전역 변수에 저장)
+    slideOrder = shuffleArray(Array.from({length: totalSlides}, (_, i) => i));
+    currentSlide = 0; // 랜덤 배열의 첫 번째 요소부터 시작
     
-    // 인디케이터 클릭 이벤트
-    indicators.forEach((indicator, index) => {
-        indicator.addEventListener('click', () => goToSlide(index));
-    });
+    console.log('초기 슬라이드 순서:', slideOrder);
+    console.log('시작 슬라이드 인덱스:', slideOrder[currentSlide]);
+    
+    showSlide(slideOrder[currentSlide]);
+    
+     // 이벤트 리스너 설정
+    if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('이전 버튼 클릭');
+            previousSlide();
+        });
+        console.log('이전 버튼 이벤트 리스너 등록됨');
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('다음 버튼 클릭');
+            nextSlide();
+        });
+        console.log('다음 버튼 이벤트 리스너 등록됨');
+    }
     
     // 키보드 이벤트
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft') previousSlide();
-        if (e.key === 'ArrowRight') nextSlide();
-        if (e.key === ' ') {
-            e.preventDefault();
-            toggleAutoplay();
+        // 히어로 섹션이 화면에 보일 때만 작동
+        const heroSection = document.getElementById('heroSection');
+        if (heroSection) {
+            const rect = heroSection.getBoundingClientRect();
+            const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+            
+            if (isVisible) {
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    console.log('왼쪽 화살표 키 눌림');
+                    previousSlide();
+                }
+                if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    console.log('오른쪽 화살표 키 눌림');
+                    nextSlide();
+                }
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    console.log('스페이스바 눌림');
+                    toggleAutoplay();
+                }
+            }
         }
     });
 
@@ -1272,19 +1318,9 @@ function initBackgroundSlider() {
     //     }, { passive: false });
     // }
     
-    // 자동 재생 시작
-    startAutoplay();
     
-    // 포커스 이벤트 (탭이 비활성화될 때 자동재생 멈춤)
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            stopAutoplay();
-        } else if (isAutoplay) {
-            startAutoplay();
-        }
-    });
     
-    // 배경 이미지 정보 수집 (API 호출 대신 DOM에서 직접)
+    // 배경 이미지 정보 수집
     backgroundImages = Array.from(slides).map((slide, index) => {
         const projectId = slide.dataset.projectId;
         const info = slide.querySelector('.background-info');
@@ -1295,44 +1331,69 @@ function initBackgroundSlider() {
             category: info ? info.querySelector('.project-category')?.textContent : ''
         };
     });
+    
+    console.log('배경 이미지 정보:', backgroundImages);
+    
+    // 자동 재생 시작
+    startAutoplay();
+    
+    // 포커스 이벤트 (탭이 비활성화될 때 자동재생 멈춤)
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            console.log('페이지 숨김 - 자동재생 중지');
+            stopAutoplay();
+        } else if (isAutoplay) {
+            console.log('페이지 다시 보임 - 자동재생 시작');
+            startAutoplay();
+        }
+    });
 }
 
-// 슬라이드 표시
-function showSlide(index) {
+// 슬라이드 표시 (수정됨)
+function showSlide(slideIndex) {
     const slides = document.querySelectorAll('.background-slide');
-    const indicators = document.querySelectorAll('.bg-indicator');
     
-    if (index >= totalSlides) currentSlide = 0;
-    if (index < 0) currentSlide = totalSlides - 1;
+    console.log(`슬라이드 표시: ${slideIndex}`);
     
     // 모든 슬라이드 비활성화
-    slides.forEach(slide => slide.classList.remove('active'));
-    indicators.forEach(indicator => indicator.classList.remove('active'));
+    slides.forEach((slide, index) => {
+        slide.classList.remove('active');
+        if (index === slideIndex) {
+            console.log(`슬라이드 ${index} 활성화`);
+        }
+    });
     
     // 현재 슬라이드 활성화
-    if (slides[currentSlide]) {
-        slides[currentSlide].classList.add('active');
-    }
-    if (indicators[currentSlide]) {
-        indicators[currentSlide].classList.add('active');
+    if (slides[slideIndex]) {
+        slides[slideIndex].classList.add('active');
     }
     
-    // 배경 정보 업데이트 (선택사항)
-    updateBackgroundInfo();
+    // 배경 정보 업데이트
+    updateBackgroundInfo(slideIndex);
 }
 
+
 // 다음 슬라이드
-// 다음 슬라이드 (랜덤 순서)
+// 다음 슬라이드 (수정됨)
 function nextSlide() {
-    currentSlide++;
-    if (currentSlide >= slideOrder.length) {
-        // 새로운 랜덤 순서 생성
-        for (let i = slideOrder.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [slideOrder[i], slideOrder[j]] = [slideOrder[j], slideOrder[i]];
-        }
-        currentSlide = 0;
+    console.log(`다음 슬라이드 호출 - 현재: ${currentSlide}/${slideOrder.length}`);
+    
+    if (slideOrder.length === 0) {
+        console.error('slideOrder 배열이 비어있습니다!');
+        return;
     }
+    
+    currentSlide++;
+    
+    // 랜덤 배열의 끝에 도달하면 새로운 랜덤 순서 생성
+    if (currentSlide >= slideOrder.length) {
+        console.log('배열 끝 도달 - 새로운 랜덤 순서 생성');
+        slideOrder = shuffleArray(Array.from({length: totalSlides}, (_, i) => i));
+        currentSlide = 0;
+        console.log('새로운 순서:', slideOrder);
+    }
+    
+    console.log(`다음 슬라이드로 이동: ${currentSlide} -> 실제 슬라이드: ${slideOrder[currentSlide]}`);
     showSlide(slideOrder[currentSlide]);
     
     // 수동 조작시 잠시 자동재생 멈춤
@@ -1344,11 +1405,27 @@ function nextSlide() {
     }
 }
 
-// 이전 슬라이드
+// 이전 슬라이드 (수정됨)
 function previousSlide() {
+    console.log(`이전 슬라이드 호출 - 현재: ${currentSlide}/${slideOrder.length}`);
+    
+    if (slideOrder.length === 0) {
+        console.error('slideOrder 배열이 비어있습니다!');
+        return;
+    }
+    
     currentSlide--;
-    if (currentSlide < 0) currentSlide = totalSlides - 1;
-    showSlide(currentSlide);
+    
+    // 랜덤 배열의 시작에 도달하면 새로운 랜덤 순서 생성 후 마지막으로
+    if (currentSlide < 0) {
+        console.log('배열 시작 도달 - 새로운 랜덤 순서 생성');
+        slideOrder = shuffleArray(Array.from({length: totalSlides}, (_, i) => i));
+        currentSlide = slideOrder.length - 1;
+        console.log('새로운 순서 (역방향):', slideOrder);
+    }
+    
+    console.log(`이전 슬라이드로 이동: ${currentSlide} -> 실제 슬라이드: ${slideOrder[currentSlide]}`);
+    showSlide(slideOrder[currentSlide]);
     
     // 수동 조작시 잠시 자동재생 멈춤
     if (isAutoplay) {
@@ -1359,51 +1436,21 @@ function previousSlide() {
     }
 }
 
-// 특정 슬라이드로 이동
-function goToSlide(index) {
-    currentSlide = index;
-    showSlide(currentSlide);
-    
-    // 수동 조작시 잠시 자동재생 멈춤
-    if (isAutoplay) {
-        stopAutoplay();
-        setTimeout(() => {
-            if (isAutoplay) startAutoplay();
-        }, 3000);
-    }
-}
-
-// 자동재생 토글
-function toggleAutoplay() {
-    const autoplayBtn = document.getElementById('bgAutoplay');
-    
-    if (isAutoplay) {
-        stopAutoplay();
-        isAutoplay = false;
-        if (autoplayBtn) {
-            autoplayBtn.classList.remove('active');
-            autoplayBtn.classList.add('paused');
-            autoplayBtn.innerHTML = '<i class="fas fa-pause"></i>';
-            autoplayBtn.title = '자동 재생 중지됨';
-        }
-    } else {
-        startAutoplay();
-        isAutoplay = true;
-        if (autoplayBtn) {
-            autoplayBtn.classList.remove('paused');
-            autoplayBtn.classList.add('active');
-            autoplayBtn.innerHTML = '<i class="fas fa-play"></i>';
-            autoplayBtn.title = '자동 재생';
-        }
-    }
-}
-
-// 자동재생 시작
+// 자동재생 시작 (수정됨)
 function startAutoplay() {
     stopAutoplay(); // 기존 인터벌 정리
+    
+    if (totalSlides <= 1) {
+        console.log('슬라이드가 1개 이하여서 자동재생하지 않습니다.');
+        return;
+    }
+    
     autoplayInterval = setInterval(() => {
+        console.log('자동재생으로 다음 슬라이드 이동');
         nextSlide();
-    }, 28800); // 2.88초마다 변경
+    }, 4000); // 4초마다 변경 (더 길게 설정)
+    
+    console.log('자동재생 시작됨 (4초 간격)');
 }
 
 // 자동재생 중지
@@ -1411,17 +1458,31 @@ function stopAutoplay() {
     if (autoplayInterval) {
         clearInterval(autoplayInterval);
         autoplayInterval = null;
+        console.log('자동재생 중지됨');
     }
 }
 
-// 배경 정보 업데이트 (선택사항)
-function updateBackgroundInfo() {
-    const currentBg = backgroundImages[currentSlide];
+// 자동재생 토글
+function toggleAutoplay() {
+    if (isAutoplay) {
+        stopAutoplay();
+        isAutoplay = false;
+        console.log('자동재생 비활성화');
+    } else {
+        startAutoplay();
+        isAutoplay = true;
+        console.log('자동재생 활성화');
+    }
+}
+
+// 배경 정보 업데이트
+function updateBackgroundInfo(slideIndex) {
+    const currentBg = backgroundImages[slideIndex];
     if (currentBg && currentBg.projectId) {
-        // 프로젝트 상세 정보를 표시하거나 다른 UI 업데이트
         console.log(`현재 배경: ${currentBg.title} (${currentBg.category})`);
     }
 }
+
 
 // 기존 함수들...
 function animateCounters() {
@@ -1484,24 +1545,8 @@ function animateProgressBars() {
     progressBars.forEach(bar => observer.observe(bar));
 }
 
-// 이력서 다운로드 함수
-function downloadResume() {
-    alert('이력서 다운로드 기능이 곧 제공될 예정입니다.');
-}
 
-// 부드러운 스크롤
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-    });
-});
+
 
 // 프로젝트 카드 호버 효과
 document.querySelectorAll('.project-card').forEach(card => {
@@ -1514,42 +1559,35 @@ document.querySelectorAll('.project-card').forEach(card => {
     });
 });
 
-// 성능 최적화: 스크롤 이벤트 쓰로틀링
-let ticking = false;
 
-function updateScrollElements() {
-    ticking = false;
-}
 
-window.addEventListener('scroll', function() {
-    if (!ticking) {
-        requestAnimationFrame(updateScrollElements);
-        ticking = true;
-    }
-});
-
-// 터치 이벤트 지원 (모바일)
+// 터치 이벤트 지원 (모바일) - 수정됨
 let touchStartX = 0;
 let touchEndX = 0;
 
 document.getElementById('heroSection')?.addEventListener('touchstart', e => {
     touchStartX = e.changedTouches[0].screenX;
+    console.log('터치 시작:', touchStartX);
 });
 
 document.getElementById('heroSection')?.addEventListener('touchend', e => {
     touchEndX = e.changedTouches[0].screenX;
+    console.log('터치 종료:', touchEndX);
     handleSwipe();
 });
-
 function handleSwipe() {
     const swipeThreshold = 50;
     const diff = touchStartX - touchEndX;
     
+    console.log('스와이프 거리:', Math.abs(diff));
+    
     if (Math.abs(diff) > swipeThreshold) {
         if (diff > 0) {
-            nextSlide(); // 왼쪽으로 스와이프 -> 다음 슬라이드
+            console.log('왼쪽 스와이프 - 다음 슬라이드');
+            nextSlide();
         } else {
-            previousSlide(); // 오른쪽으로 스와이프 -> 이전 슬라이드
+            console.log('오른쪽 스와이프 - 이전 슬라이드');
+            previousSlide();
         }
     }
 }
@@ -1558,16 +1596,19 @@ function handleSwipe() {
 const heroObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
+            console.log('히어로 섹션이 화면에 보임 - 자동재생 시작');
             if (isAutoplay) startAutoplay();
         } else {
+            console.log('히어로 섹션이 화면에서 사라짐 - 자동재생 중지');
             stopAutoplay();
         }
     });
-}, { threshold: 0.5 });
+}, { threshold: 0.3 });
 
 const heroSection = document.getElementById('heroSection');
 if (heroSection) {
     heroObserver.observe(heroSection);
+    console.log('히어로 섹션 관찰자 등록됨');
 }
 </script>
 {% endblock %}
