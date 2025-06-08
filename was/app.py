@@ -2098,20 +2098,34 @@ def learning_search():
 
 
     ##################################################################################
+# app.py에서 카테고리 관리 라우트 수정
+
 @app.route('/admin/learning/category', methods=['POST'])
 @app.route('/admin/learning/category/<int:category_id>', methods=['PUT', 'DELETE'])
 @login_required
 def admin_learning_category_manage(category_id=None):
-    """학습 카테고리 생성/수정/삭제"""
+    """학습 카테고리 생성/수정/삭제 - CSRF 토큰 처리 개선"""
     if not current_user.is_admin:
         return jsonify({'success': False, 'message': '권한이 없습니다.'}), 403
     
     try:
         if request.method == 'POST':
             # 새 카테고리 생성
+            logger.info(f"카테고리 생성 요청 - 사용자: {current_user.username}")
+            
+            # 필수 필드 검증
+            name = request.form.get('name', '').strip()
+            if not name:
+                return jsonify({'success': False, 'message': '카테고리명을 입력해주세요.'}), 400
+            
+            # 중복 검사
+            existing = LearningCategory.query.filter_by(name=name).first()
+            if existing:
+                return jsonify({'success': False, 'message': '이미 존재하는 카테고리명입니다.'}), 400
+            
             category = LearningCategory(
-                name=request.form.get('name'),
-                description=request.form.get('description'),
+                name=name,
+                description=request.form.get('description', '').strip(),
                 color=request.form.get('color', '#007bff'),
                 icon_class=request.form.get('icon_class', 'fas fa-book'),
                 sort_order=int(request.form.get('sort_order', 0)),
@@ -2121,14 +2135,31 @@ def admin_learning_category_manage(category_id=None):
             db.session.add(category)
             db.session.commit()
             
-            return jsonify({'success': True, 'message': '카테고리가 생성되었습니다.'})
+            logger.info(f"카테고리 생성 완료: {category.name} (ID: {category.id})")
+            return jsonify({'success': True, 'message': f'카테고리 "{name}"이 생성되었습니다.'})
             
         elif request.method == 'PUT':
             # 카테고리 수정
+            logger.info(f"카테고리 수정 요청 - ID: {category_id}, 사용자: {current_user.username}")
+            
             category = LearningCategory.query.get_or_404(category_id)
             
-            category.name = request.form.get('name')
-            category.description = request.form.get('description')
+            # 필수 필드 검증
+            name = request.form.get('name', '').strip()
+            if not name:
+                return jsonify({'success': False, 'message': '카테고리명을 입력해주세요.'}), 400
+            
+            # 중복 검사 (자기 자신 제외)
+            existing = LearningCategory.query.filter(
+                LearningCategory.name == name,
+                LearningCategory.id != category_id
+            ).first()
+            if existing:
+                return jsonify({'success': False, 'message': '이미 존재하는 카테고리명입니다.'}), 400
+            
+            old_name = category.name
+            category.name = name
+            category.description = request.form.get('description', '').strip()
             category.color = request.form.get('color', '#007bff')
             category.icon_class = request.form.get('icon_class', 'fas fa-book')
             category.sort_order = int(request.form.get('sort_order', 0))
@@ -2136,29 +2167,35 @@ def admin_learning_category_manage(category_id=None):
             
             db.session.commit()
             
-            return jsonify({'success': True, 'message': '카테고리가 수정되었습니다.'})
+            logger.info(f"카테고리 수정 완료: {old_name} -> {category.name}")
+            return jsonify({'success': True, 'message': f'카테고리 "{name}"이 수정되었습니다.'})
             
         elif request.method == 'DELETE':
             # 카테고리 삭제
-            category = LearningCategory.query.get_or_404(category_id)
+            logger.info(f"카테고리 삭제 요청 - ID: {category_id}, 사용자: {current_user.username}")
             
-            # 해당 카테고리의 포스트들을 다른 카테고리로 이동하거나 삭제
+            category = LearningCategory.query.get_or_404(category_id)
+            category_name = category.name
+            
+            # 해당 카테고리의 포스트들 확인
             posts_count = LearningPost.query.filter_by(category_id=category_id).count()
             if posts_count > 0:
                 return jsonify({
                     'success': False, 
-                    'message': f'이 카테고리에 {posts_count}개의 포스트가 있습니다. 먼저 포스트들을 이동하거나 삭제해주세요.'
+                    'message': f'이 카테고리에 {posts_count}개의 포스트가 있습니다. 먼저 포스트들을 다른 카테고리로 이동하거나 삭제해주세요.'
                 }), 400
             
             db.session.delete(category)
             db.session.commit()
             
-            return jsonify({'success': True, 'message': '카테고리가 삭제되었습니다.'})
+            logger.info(f"카테고리 삭제 완료: {category_name} (ID: {category_id})")
+            return jsonify({'success': True, 'message': f'카테고리 "{category_name}"이 삭제되었습니다.'})
             
     except Exception as e:
         db.session.rollback()
-        logger.error(f"카테고리 관리 오류: {e}")
-        return jsonify({'success': False, 'message': '처리 중 오류가 발생했습니다.'}), 500
+        error_msg = f"카테고리 관리 중 오류가 발생했습니다: {str(e)}"
+        logger.error(f"카테고리 관리 오류: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'message': error_msg}), 500
     
 @app.route('/admin/learning/upload-image', methods=['POST'])
 @login_required

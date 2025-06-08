@@ -199,6 +199,8 @@
 </div>
 {% endblock %}
 
+<!-- was/templates/admin/learning/categories.html의 scripts 블록 전체 교체 -->
+
 {% block scripts %}
 <style>
 .category-card {
@@ -242,26 +244,55 @@
 
 <script>
 let deleteCategoryId = null;
+let editMode = false;
 
-// 카테고리 수정
+// CSRF 토큰 가져오기 함수
+function getCSRFToken() {
+    // 메타 태그에서 토큰 가져오기
+    const metaToken = document.querySelector('meta[name="csrf-token"]');
+    if (metaToken) {
+        return metaToken.getAttribute('content');
+    }
+    
+    // 숨겨진 input에서 토큰 가져오기
+    const hiddenInput = document.querySelector('input[name="csrf_token"]');
+    if (hiddenInput) {
+        return hiddenInput.value;
+    }
+    
+    console.warn('CSRF token not found');
+    return null;
+}
+
+// 카테고리 수정 함수
 function editCategory(id, name, description, color, iconClass, sortOrder, isActive) {
+    console.log('카테고리 수정 시작:', {id, name, description, color, iconClass, sortOrder, isActive});
+    
+    editMode = true;
+    
     document.getElementById('categoryModalTitle').innerHTML = '<i class="fas fa-edit me-2"></i>카테고리 수정';
     document.getElementById('categorySubmitBtn').innerHTML = '<i class="fas fa-save me-1"></i>수정';
     
     document.getElementById('categoryId').value = id;
     document.getElementById('categoryName').value = name;
-    document.getElementById('categoryDescription').value = description;
+    document.getElementById('categoryDescription').value = description || '';
     document.getElementById('categoryColor').value = color;
     document.getElementById('categoryIcon').value = iconClass;
     document.getElementById('categorySortOrder').value = sortOrder;
     document.getElementById('categoryActive').checked = isActive;
     
     showIconPreview();
-    new bootstrap.Modal(document.getElementById('categoryModal')).show();
+    
+    const modal = new bootstrap.Modal(document.getElementById('categoryModal'));
+    modal.show();
 }
 
-// 새 카테고리 추가
+// 새 카테고리 추가 모드로 리셋
 function resetCategoryForm() {
+    console.log('카테고리 폼 리셋');
+    
+    editMode = false;
+    
     document.getElementById('categoryModalTitle').innerHTML = '<i class="fas fa-folder me-2"></i>새 카테고리 추가';
     document.getElementById('categorySubmitBtn').innerHTML = '<i class="fas fa-save me-1"></i>저장';
     
@@ -272,9 +303,6 @@ function resetCategoryForm() {
     document.getElementById('categoryActive').checked = true;
     showIconPreview();
 }
-
-// 모달이 닫힐 때 폼 리셋
-document.getElementById('categoryModal').addEventListener('hidden.bs.modal', resetCategoryForm);
 
 // 아이콘 미리보기
 function showIconPreview() {
@@ -290,73 +318,272 @@ function showIconPreview() {
     }
 }
 
-// 아이콘 클래스 변경시 미리보기 업데이트
-document.getElementById('categoryIcon').addEventListener('input', showIconPreview);
-document.getElementById('categoryColor').addEventListener('change', showIconPreview);
-
 // 폼 제출 처리
-document.getElementById('categoryForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+function handleCategoryFormSubmit(event) {
+    event.preventDefault();
     
-    const formData = new FormData(this);
+    console.log('카테고리 폼 제출 시작, editMode:', editMode);
+    
+    const form = event.target;
+    const formData = new FormData(form);
     const categoryId = document.getElementById('categoryId').value;
     
-    const url = categoryId ? `/admin/learning/category/${categoryId}` : '/admin/learning/category';
-    const method = categoryId ? 'PUT' : 'POST';
+    // URL과 HTTP 메서드 결정
+    let url, method;
+    if (editMode && categoryId) {
+        url = `/admin/learning/category/${categoryId}`;
+        method = 'PUT';
+        console.log('수정 모드:', url);
+    } else {
+        url = '/admin/learning/category';
+        method = 'POST';
+        console.log('생성 모드:', url);
+    }
     
+    // CSRF 토큰 가져오기
+    const csrfToken = getCSRFToken();
+    if (!csrfToken) {
+        showNotification('보안 토큰을 찾을 수 없습니다. 페이지를 새로고침해주세요.', 'error');
+        return;
+    }
+    
+    // 제출 버튼 상태 변경
+    const submitBtn = document.getElementById('categorySubmitBtn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>처리 중...';
+    submitBtn.disabled = true;
+    
+    // 요청 전송
     fetch(url, {
         method: method,
-        body: formData
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData,
+        credentials: 'same-origin'
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('응답 상태:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('응답 데이터:', data);
+        
         if (data.success) {
-            location.reload();
+            showNotification(data.message, 'success');
+            
+            // 모달 닫기
+            const modal = bootstrap.Modal.getInstance(document.getElementById('categoryModal'));
+            if (modal) {
+                modal.hide();
+            }
+            
+            // 페이지 새로고침
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
         } else {
-            alert('저장에 실패했습니다: ' + data.message);
+            throw new Error(data.message || '처리에 실패했습니다.');
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('저장 중 오류가 발생했습니다.');
+        console.error('카테고리 처리 오류:', error);
+        showNotification(error.message || '처리 중 오류가 발생했습니다.', 'error');
+    })
+    .finally(() => {
+        // 버튼 상태 복원
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
     });
-});
+}
 
 // 카테고리 삭제
 function deleteCategory(categoryId, categoryName) {
+    console.log('카테고리 삭제 요청:', categoryId, categoryName);
+    
     deleteCategoryId = categoryId;
     document.getElementById('deleteCategoryName').textContent = categoryName;
-    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
 }
 
-document.getElementById('confirmCategoryDelete').addEventListener('click', function() {
-    if (deleteCategoryId) {
-        fetch(`/admin/learning/category/${deleteCategoryId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
+// 삭제 확인 처리
+function handleCategoryDelete() {
+    if (!deleteCategoryId) {
+        showNotification('삭제할 카테고리를 선택해주세요.', 'error');
+        return;
+    }
+    
+    console.log('카테고리 삭제 실행:', deleteCategoryId);
+    
+    const btn = document.getElementById('confirmCategoryDelete');
+    const originalText = btn.innerHTML;
+    
+    // 버튼 상태 변경
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>삭제 중...';
+    btn.disabled = true;
+    
+    // CSRF 토큰 가져오기
+    const csrfToken = getCSRFToken();
+    if (!csrfToken) {
+        showNotification('보안 토큰을 찾을 수 없습니다.', 'error');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        return;
+    }
+    
+    // 삭제 요청
+    fetch(`/admin/learning/category/${deleteCategoryId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+            csrf_token: csrfToken
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('삭제에 실패했습니다: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('삭제 중 오류가 발생했습니다.');
-        });
+    })
+    .then(response => {
+        console.log('삭제 응답 상태:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('삭제 응답 데이터:', data);
         
-        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+        if (data.success) {
+            showNotification(data.message, 'success');
+            
+            // 모달 닫기
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+            if (modal) {
+                modal.hide();
+            }
+            
+            // 페이지 새로고침
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            throw new Error(data.message || '삭제에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('카테고리 삭제 오류:', error);
+        showNotification(error.message || '삭제 중 오류가 발생했습니다.', 'error');
+    })
+    .finally(() => {
+        // 버튼 상태 복원
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+// 알림 표시 함수
+function showNotification(message, type = 'info') {
+    // 기존 알림 제거
+    const existingNotification = document.querySelector('.category-notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const alertClass = type === 'error' ? 'alert-danger' :
+                       type === 'success' ? 'alert-success' :
+                       type === 'warning' ? 'alert-warning' : 'alert-info';
+    
+    const iconClass = type === 'error' ? 'fa-exclamation-triangle' :
+                      type === 'success' ? 'fa-check-circle' :
+                      type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+    
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} category-notification alert-dismissible fade show`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        max-width: 500px;
+    `;
+    notification.innerHTML = `
+        <i class="fas ${iconClass} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // 자동 제거
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// DOM 로드 완료시 이벤트 리스너 등록
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('카테고리 관리 페이지 초기화');
+    
+    // 폼 제출 이벤트
+    const categoryForm = document.getElementById('categoryForm');
+    if (categoryForm) {
+        categoryForm.addEventListener('submit', handleCategoryFormSubmit);
+        console.log('카테고리 폼 이벤트 리스너 등록됨');
+    }
+    
+    // 삭제 확인 버튼 이벤트
+    const confirmDeleteBtn = document.getElementById('confirmCategoryDelete');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', handleCategoryDelete);
+        console.log('삭제 확인 버튼 이벤트 리스너 등록됨');
+    }
+    
+    // 모달 이벤트
+    const categoryModal = document.getElementById('categoryModal');
+    if (categoryModal) {
+        categoryModal.addEventListener('hidden.bs.modal', resetCategoryForm);
+        console.log('모달 이벤트 리스너 등록됨');
+    }
+    
+    // 아이콘 미리보기 이벤트
+    const iconInput = document.getElementById('categoryIcon');
+    const colorInput = document.getElementById('categoryColor');
+    
+    if (iconInput) {
+        iconInput.addEventListener('input', showIconPreview);
+    }
+    if (colorInput) {
+        colorInput.addEventListener('change', showIconPreview);
+    }
+    
+    // 초기 아이콘 미리보기
+    showIconPreview();
+    
+    // CSRF 토큰 확인
+    const token = getCSRFToken();
+    if (!token) {
+        console.warn('CSRF 토큰을 찾을 수 없습니다.');
+        showNotification('보안 토큰이 없습니다. 페이지를 새로고침해주세요.', 'warning');
+    } else {
+        console.log('CSRF 토큰 확인됨');
     }
 });
 
-// 페이지 로드시 첫 번째 카테고리의 아이콘 미리보기 설정
-document.addEventListener('DOMContentLoaded', function() {
-    showIconPreview();
+// 새 카테고리 추가 버튼 클릭시 폼 리셋
+document.addEventListener('click', function(event) {
+    if (event.target.matches('[data-bs-target="#categoryModal"]')) {
+        resetCategoryForm();
+    }
 });
 </script>
 {% endblock %}
